@@ -16,39 +16,39 @@ VERSION="$1"
 VERSION_NO_V=${VERSION#v}
 
 gh release create "$VERSION" \
-  .genreleases/spec-kit-template-copilot-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-copilot-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-claude-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-claude-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-gemini-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-gemini-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-cursor-agent-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-cursor-agent-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-opencode-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-opencode-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-qwen-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-qwen-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-windsurf-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-windsurf-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-codex-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-codex-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-kilocode-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-kilocode-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-auggie-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-auggie-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-roo-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-roo-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-codebuddy-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-codebuddy-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-qoder-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-qoder-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-amp-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-amp-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-shai-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-shai-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-q-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-q-ps-"$VERSION".zip \
-  .genreleases/spec-kit-template-bob-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-bob-ps-"$VERSION".zip \
-  --title "Spec Kit Templates - $VERSION_NO_V" \
+  .genreleases/minispec-template-copilot-sh.zip \
+  .genreleases/minispec-template-copilot-ps.zip \
+  .genreleases/minispec-template-claude-sh.zip \
+  .genreleases/minispec-template-claude-ps.zip \
+  .genreleases/minispec-template-gemini-sh.zip \
+  .genreleases/minispec-template-gemini-ps.zip \
+  .genreleases/minispec-template-cursor-agent-sh.zip \
+  .genreleases/minispec-template-cursor-agent-ps.zip \
+  .genreleases/minispec-template-opencode-sh.zip \
+  .genreleases/minispec-template-opencode-ps.zip \
+  .genreleases/minispec-template-qwen-sh.zip \
+  .genreleases/minispec-template-qwen-ps.zip \
+  .genreleases/minispec-template-windsurf-sh.zip \
+  .genreleases/minispec-template-windsurf-ps.zip \
+  .genreleases/minispec-template-codex-sh.zip \
+  .genreleases/minispec-template-codex-ps.zip \
+  .genreleases/minispec-template-kilocode-sh.zip \
+  .genreleases/minispec-template-kilocode-ps.zip \
+  .genreleases/minispec-template-auggie-sh.zip \
+  .genreleases/minispec-template-auggie-ps.zip \
+  .genreleases/minispec-template-roo-sh.zip \
+  .genreleases/minispec-template-roo-ps.zip \
+  .genreleases/minispec-template-codebuddy-sh.zip \
+  .genreleases/minispec-template-codebuddy-ps.zip \
+  .genreleases/minispec-template-qoder-sh.zip \
+  .genreleases/minispec-template-qoder-ps.zip \
+  .genreleases/minispec-template-amp-sh.zip \
+  .genreleases/minispec-template-amp-ps.zip \
+  .genreleases/minispec-template-shai-sh.zip \
+  .genreleases/minispec-template-shai-ps.zip \
+  .genreleases/minispec-template-q-sh.zip \
+  .genreleases/minispec-template-q-ps.zip \
+  .genreleases/minispec-template-bob-sh.zip \
+  .genreleases/minispec-template-bob-ps.zip \
+  --title "MiniSpec Templates - $VERSION_NO_V" \
   --notes-file release_notes.md
