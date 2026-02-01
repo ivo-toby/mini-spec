@@ -410,12 +410,47 @@ MiniSpec builds on SpecKit's foundation:
 - Same template system for commands
 - Constitution concept extended with MiniSpec preferences
 
-### New Infrastructure Needed
+### Template Files (Source)
 
-1. **Knowledge base structure** - `.minispec/knowledge/` directory layout
-2. **Document templates** - Frontmatter schemas for decisions, patterns, modules
-3. **State tracking** - Track current task, progress, chunk history
-4. **Conversation context** - Design decisions need to flow into task creation and implementation
+These templates in the MiniSpec repo get copied to target projects:
+
+```
+memory/
+└── constitution.md              # Constitution template with MiniSpec preferences
+
+templates/
+├── commands/
+│   └── constitution.md          # Interactive constitution command
+│
+└── knowledge/                   # Knowledge base document templates
+    ├── decision-template.md     # ADR format for architectural decisions
+    ├── pattern-template.md      # Template for documenting code patterns
+    └── module-template.md       # Template for module documentation
+```
+
+### Target Project Structure
+
+When a project is initialized, it gets:
+
+```
+.minispec/
+├── memory/
+│   └── constitution.md          # Filled-in constitution
+│
+└── knowledge/
+    ├── architecture.md          # System overview (grows over time)
+    ├── conventions.md           # Code conventions (grows over time)
+    ├── glossary.md              # Domain terms (grows over time)
+    ├── decisions/               # ADRs created during /minispec.design
+    ├── patterns/                # Patterns documented during /minispec.next
+    └── modules/                 # Module docs created as features complete
+```
+
+### Still Needed
+
+1. **State tracking** - Track current task, progress, chunk history for `/minispec.next`
+2. **Conversation context** - Design decisions need to flow into task creation and implementation
+3. **Remaining commands** - `/minispec.design`, `/minispec.tasks`, `/minispec.next`, etc.
 
 ### Migration Path from SpecKit
 
