@@ -11,7 +11,8 @@ Spec-driven AI development has a fundamental flaw: AI generates hundreds of line
 2. **Lost mental models** - You become a tourist in your own codebase. You didn't write it, so you don't really understand it. Debugging becomes archaeology.
 
 The current approach:
-```
+
+```text
 AI works alone → dumps massive PR → Engineer reviews (or pretends to)
 ```
 
@@ -22,7 +23,7 @@ MiniSpec flips the model. Instead of AI working alone and engineers reviewing af
 - **Engineer = Navigator** - You make decisions, ask questions, approve small chunks
 - **AI = Driver** - Implements, documents, explains
 
-```
+```text
 AI + Engineer work together → small chunks reviewed continuously → understanding built
 ```
 
@@ -35,6 +36,7 @@ uv tool install minispec-cli --from git+https://github.com/ivo-toby/mini-spec.gi
 ```
 
 Or run directly:
+
 ```bash
 uvx --from git+https://github.com/ivo-toby/mini-spec.git minispec init my-project
 ```
@@ -68,18 +70,20 @@ claude
 Something powerful happens when AI has to explain its reasoning to you, and you have to make decisions: **documentation writes itself**.
 
 During `/minispec.design`:
+
 - Every trade-off discussion becomes a **decision record** (ADR)
 - Architecture choices are captured as you make them
 - The "why" behind decisions is preserved automatically
 
 During `/minispec.next`:
+
 - Code patterns get documented as they're implemented
 - Module documentation grows as features complete
 - Knowledge accumulates as a byproduct of pairing
 
 The result: a living knowledge base that stays fresh because it's created during development, not after.
 
-```
+```text
 .minispec/knowledge/
 ├── architecture.md          # System overview (grows over time)
 ├── conventions.md           # Code patterns and style
@@ -99,32 +103,32 @@ Use `/minispec.validate-docs` to check documentation freshness against code chan
 
 ## Commands
 
-| Command | Purpose |
-|---------|---------|
-| `/minispec.constitution` | Set up project principles + preferences |
-| `/minispec.walkthrough` | Guided codebase tour |
-| `/minispec.design` | Interactive design conversation |
-| `/minispec.tasks` | Break design into reviewable chunks |
-| `/minispec.analyze` | Validate design ↔ tasks alignment |
-| `/minispec.next` | Implement next chunk (pair programming loop) |
-| `/minispec.checklist` | Generate quality checklists for requirements |
-| `/minispec.validate-docs` | Check documentation freshness |
-| `/minispec.status` | Show progress dashboard |
+| Command                    | Purpose                                      |
+| -------------------------- | -------------------------------------------- |
+| `/minispec.constitution`   | Set up project principles + preferences      |
+| `/minispec.walkthrough`    | Guided codebase tour                         |
+| `/minispec.design`         | Interactive design conversation              |
+| `/minispec.tasks`          | Break design into reviewable chunks          |
+| `/minispec.analyze`        | Validate design ↔ tasks alignment            |
+| `/minispec.next`           | Implement next chunk (pair programming loop) |
+| `/minispec.checklist`      | Generate quality checklists for requirements |
+| `/minispec.validate-docs`  | Check documentation freshness                |
+| `/minispec.status`         | Show progress dashboard                      |
 
 ## How It's Different
 
-| | Traditional Spec-Driven | MiniSpec |
-|---|---|---|
-| **Planning** | AI generates document | Interactive conversation |
-| **Implementation** | All at once, massive PR | Small chunks, continuous review |
-| **Engineer role** | Reviewer (post-hoc) | Navigator (real-time) |
-| **Documentation** | Manual afterthought | Automatic byproduct |
-| **Mental model** | Hope you read carefully | Built through dialogue |
-| **Knowledge base** | Gets stale immediately | Living, grows with code |
+|                    | Traditional Spec-Driven    | MiniSpec                       |
+| ------------------ | -------------------------- | ------------------------------ |
+| **Planning**       | AI generates document      | Interactive conversation       |
+| **Implementation** | All at once, massive PR    | Small chunks, continuous review|
+| **Engineer role**  | Reviewer (post-hoc)        | Navigator (real-time)          |
+| **Documentation**  | Manual afterthought        | Automatic byproduct            |
+| **Mental model**   | Hope you read carefully    | Built through dialogue         |
+| **Knowledge base** | Gets stale immediately     | Living, grows with code        |
 
 ## Example Session
 
-```
+```text
 > /minispec.design "add user authentication"
 
 AI: "Let's design authentication. First: what's your expected user scale?"
@@ -180,26 +184,29 @@ AI: "Committed. 7 tasks remaining. /minispec.next when ready."
 
 Set these during `/minispec.constitution`:
 
-**Review Chunk Size**
+### Review Chunk Size
+
 - Small (20-40 lines) - Maximum engagement
 - Medium (40-80 lines) - Balanced (recommended)
 - Large (80-150 lines) - Move faster
 - Adaptive - AI asks based on complexity
 
-**Autonomy Level**
+### Autonomy Level
+
 - Always confirm - Pause after every chunk
 - Tests passing - Auto-proceed if tests pass
 - Familiar areas - Auto-proceed in reviewed code
 - Explicit batch - Only when you say "next 3"
 
-**Documentation Review**
+### Documentation Review
+
 - Review all changes
 - Only review decisions
 - Trust AI (recommended)
 
 ## Project Structure
 
-```
+```text
 .minispec/
 ├── memory/
 │   └── constitution.md          # Project principles + preferences

@@ -10,7 +10,7 @@ Spec-Driven Development with full AI implementation has two critical issues:
 
 The current SpecKit workflow:
 
-```
+```text
 AI works alone → dumps artifacts → Engineer reads/reviews alone
 ```
 
@@ -25,7 +25,7 @@ MiniSpec reimagines the workflow as **pair programming** where:
 
 The new workflow:
 
-```
+```text
 AI + Engineer collaborate in real-time → decisions are shared → understanding is built
 ```
 
@@ -61,7 +61,7 @@ Engineers can tune how much AI asks for confirmation vs. proceeds independently,
 | `/minispec.walkthrough`   | Guided tour of codebase for context-building       | Before starting work, onboarding new engineers |
 | `/minispec.design`        | Interactive design conversation                    | Starting a new feature                         |
 | `/minispec.tasks`         | Break design into reviewable chunks (interactive)  | After design is complete                       |
-| `/minispec.analyze`       | Validate design ↔ tasks coherence                 | Before starting implementation                 |
+| `/minispec.analyze`       | Validate design-to-tasks coherence                 | Before starting implementation                 |
 | `/minispec.next`          | Implement next chunk in pair programming style     | During implementation (loop)                   |
 | `/minispec.validate-docs` | Check documentation freshness against code         | Ongoing maintenance                            |
 | `/minispec.status`        | Show current progress, what's next, what's changed | Anytime                                        |
@@ -70,7 +70,7 @@ Engineers can tune how much AI asks for confirmation vs. proceeds independently,
 
 ## Workflow
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                        PROJECT SETUP                            │
 ├─────────────────────────────────────────────────────────────────┤
@@ -160,7 +160,7 @@ Engineers can tune how much AI asks for confirmation vs. proceeds independently,
 
 MiniSpec maintains a living knowledge base that serves both humans and AI:
 
-```
+```text
 .minispec/
 ├── knowledge/
 │   ├── architecture.md          # System overview (auto-updated)
@@ -308,7 +308,7 @@ When implementation reveals design issues, AI should:
 
 ## Example Session
 
-```
+```text
 Engineer: /minispec.design "add user authentication"
 
 AI: "Let's design authentication together. First question:
@@ -432,7 +432,7 @@ MiniSpec builds on SpecKit's foundation:
 
 These templates in the MiniSpec repo get copied to target projects:
 
-```
+```text
 memory/
 └── constitution.md              # Constitution template with MiniSpec preferences
 
@@ -450,7 +450,7 @@ templates/
 
 When a project is initialized, it gets:
 
-```
+```text
 .minispec/
 ├── memory/
 │   └── constitution.md          # Filled-in constitution

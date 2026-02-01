@@ -62,7 +62,7 @@ This isn't about removing human judgment. It's about putting it where it matters
 
 ## What It Actually Looks Like
 
-```
+```text
 > /minispec.design "add user authentication"
 
 AI: "Let's design authentication. First: what's your expected user scale?"

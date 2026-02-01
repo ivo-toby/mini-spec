@@ -12,16 +12,16 @@ Key insight: Engineers need to understand code going to production. Reviewing 50
 
 This is a fork of SpecKit with a fundamentally different approach:
 
-| Aspect | SpecKit | MiniSpec |
-|--------|---------|----------|
-| Planning | AI generates documents | Interactive conversation |
-| Implementation | Batch generation | Small chunks (20-80 lines) |
-| Engineer role | Reviewer (post-hoc) | Navigator (real-time) |
-| Documentation | Manual | Automatic byproduct |
+| Aspect           | SpecKit                | MiniSpec                   |
+| ---------------- | ---------------------- | -------------------------- |
+| Planning         | AI generates documents | Interactive conversation   |
+| Implementation   | Batch generation       | Small chunks (20-80 lines) |
+| Engineer role    | Reviewer (post-hoc)    | Navigator (real-time)      |
+| Documentation    | Manual                 | Automatic byproduct        |
 
 ## Directory Structure
 
-```
+```text
 .minispec/
 ├── memory/
 │   └── constitution.md          # Project principles + preferences
@@ -40,17 +40,17 @@ This is a fork of SpecKit with a fundamentally different approach:
 
 ## Slash Commands
 
-| Command | Purpose |
-|---------|---------|
-| `/minispec.constitution` | Set up project principles + preferences |
-| `/minispec.walkthrough` | Guided codebase tour |
-| `/minispec.design` | Interactive design conversation |
-| `/minispec.tasks` | Break design into reviewable chunks |
-| `/minispec.analyze` | Validate design ↔ tasks alignment |
-| `/minispec.next` | Implement next chunk (pair programming loop) |
-| `/minispec.checklist` | Generate quality checklists |
-| `/minispec.validate-docs` | Check documentation freshness |
-| `/minispec.status` | Show progress dashboard |
+| Command                  | Purpose                                      |
+| ------------------------ | -------------------------------------------- |
+| `/minispec.constitution` | Set up project principles + preferences      |
+| `/minispec.walkthrough`  | Guided codebase tour                         |
+| `/minispec.design`       | Interactive design conversation              |
+| `/minispec.tasks`        | Break design into reviewable chunks          |
+| `/minispec.analyze`      | Validate design ↔ tasks alignment            |
+| `/minispec.next`         | Implement next chunk (pair programming loop) |
+| `/minispec.checklist`    | Generate quality checklists                  |
+| `/minispec.validate-docs`| Check documentation freshness                |
+| `/minispec.status`       | Show progress dashboard                      |
 
 ## Development Commands
 
@@ -95,10 +95,12 @@ uv build
 ## Current State
 
 MiniSpec is release-ready:
+
 - All slash commands: constitution, design, tasks, analyze, next, walkthrough, validate-docs, status, checklist
 - CLI rebranded to `minispec` with updated banner, tagline, and all references
 - Template files renamed (design-template.md, tasks-template.md)
 - Documentation updated (README, AGENTS, CONTRIBUTING, SUPPORT, CHANGELOG)
 
 To release:
+
 - Create GitHub releases with template assets for `minispec init` to work

@@ -22,6 +22,9 @@
     }
   },
   "ignores": [
-    ".genreleases/"
+    ".genreleases/",
+    "templates/",
+    "memory/",
+    "scripts/"
   ]
 }
