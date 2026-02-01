@@ -31,18 +31,18 @@ AI + Engineer work together → small chunks reviewed continuously → understan
 ### Install
 
 ```bash
-uv tool install specify-cli --from git+https://github.com/ivo-toby/mini-spec.git
+uv tool install minispec-cli --from git+https://github.com/ivo-toby/mini-spec.git
 ```
 
 Or run directly:
 ```bash
-uvx --from git+https://github.com/ivo-toby/mini-spec.git specify init my-project
+uvx --from git+https://github.com/ivo-toby/mini-spec.git minispec init my-project
 ```
 
 ### Initialize a Project
 
 ```bash
-specify init my-project --ai claude
+minispec init my-project --ai claude
 cd my-project
 claude
 ```

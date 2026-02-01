@@ -59,13 +59,13 @@ This is a fork of SpecKit with a fundamentally different approach:
 uv sync
 
 # Run CLI directly
-python -m src.specify_cli --help
-python -m src.specify_cli init demo --ai claude --ignore-agent-tools
+python -m src.minispec_cli --help
+python -m src.minispec_cli init demo --ai claude --ignore-agent-tools
 
 # Editable install
 uv venv && source .venv/bin/activate
 uv pip install -e .
-specify --help
+minispec --help
 
 # Build
 uv build
@@ -73,7 +73,7 @@ uv build
 
 ## Source Structure
 
-- `src/specify_cli/__init__.py` - CLI implementation (Typer)
+- `src/minispec_cli/__init__.py` - CLI implementation (Typer)
 - `templates/commands/` - MiniSpec command templates
 - `templates/knowledge/` - Knowledge base document templates
 - `scripts/bash/` and `scripts/powershell/` - Shell scripts
@@ -94,9 +94,10 @@ uv build
 
 ## Current State
 
-MiniSpec commands are complete:
-- constitution, design, tasks, analyze, next, walkthrough, validate-docs, status, checklist
+MiniSpec commands and CLI are complete:
+- All slash commands: constitution, design, tasks, analyze, next, walkthrough, validate-docs, status, checklist
+- CLI rebranded to `minispec` with updated banner, tagline, and all references
 
 Still needed:
-- CLI updates for MiniSpec branding
-- Template file renames (spec-template.md → design-template.md)
+- Template file renames (spec-template.md → design-template.md, plan-template.md → tasks-template.md)
+- Create GitHub releases with template assets for `minispec init` to work
