@@ -1,98 +1,102 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with this repository.
 
 ## Project Overview
 
-**Spec Kit** is a toolkit for Spec-Driven Development (SDD) - a methodology where specifications drive implementation rather than the reverse. The **Specify CLI** (`specify`) bootstraps projects with templates, scripts, and AI agent integrations for structured development.
+**MiniSpec** is a pair programming workflow for AI-assisted development. Instead of AI generating large artifacts for engineers to review, MiniSpec structures collaboration as real-time pairing where engineers navigate and AI drives.
 
-## Commands
+Key insight: Engineers need to understand code going to production. Reviewing 500-line AI-generated PRs doesn't build mental models. Small chunks with continuous dialogue does.
 
-### Development
+## MiniSpec vs SpecKit
+
+This is a fork of SpecKit with a fundamentally different approach:
+
+| Aspect | SpecKit | MiniSpec |
+|--------|---------|----------|
+| Planning | AI generates documents | Interactive conversation |
+| Implementation | Batch generation | Small chunks (20-80 lines) |
+| Engineer role | Reviewer (post-hoc) | Navigator (real-time) |
+| Documentation | Manual | Automatic byproduct |
+
+## Directory Structure
+
+```
+.minispec/
+├── memory/
+│   └── constitution.md          # Project principles + preferences
+├── specs/
+│   └── [feature-name]/
+│       ├── design.md            # Feature design (interactive)
+│       ├── tasks.md             # Implementation tasks
+│       └── checklists/          # Quality checklists
+└── knowledge/
+    ├── architecture.md          # System overview
+    ├── conventions.md           # Code patterns
+    ├── decisions/               # ADRs (auto-created during design)
+    ├── patterns/                # Code patterns (auto-created)
+    └── modules/                 # Module docs (auto-created)
+```
+
+## Slash Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/minispec.constitution` | Set up project principles + preferences |
+| `/minispec.walkthrough` | Guided codebase tour |
+| `/minispec.design` | Interactive design conversation |
+| `/minispec.tasks` | Break design into reviewable chunks |
+| `/minispec.analyze` | Validate design ↔ tasks alignment |
+| `/minispec.next` | Implement next chunk (pair programming loop) |
+| `/minispec.checklist` | Generate quality checklists |
+| `/minispec.validate-docs` | Check documentation freshness |
+| `/minispec.status` | Show progress dashboard |
+
+## Development Commands
 
 ```bash
 # Install dependencies
 uv sync
 
-# Run CLI directly (fastest feedback during development)
+# Run CLI directly
 python -m src.specify_cli --help
 python -m src.specify_cli init demo --ai claude --ignore-agent-tools
 
-# Editable install (isolated environment)
+# Editable install
 uv venv && source .venv/bin/activate
 uv pip install -e .
 specify --help
 
-# Run from anywhere using uvx
-uvx --from . specify init demo --ai copilot --script sh
-```
-
-### Testing Template Changes
-
-```bash
-# Generate release packages locally
-./.github/workflows/scripts/create-release-packages.sh v1.0.0
-
-# Copy package to test project
-cp -r .genreleases/sdd-copilot-package-sh/. <path-to-test-project>/
-```
-
-### Build
-
-```bash
+# Build
 uv build
 ```
 
-## Architecture
+## Source Structure
 
-### Source Structure
+- `src/specify_cli/__init__.py` - CLI implementation (Typer)
+- `templates/commands/` - MiniSpec command templates
+- `templates/knowledge/` - Knowledge base document templates
+- `scripts/bash/` and `scripts/powershell/` - Shell scripts
+- `memory/constitution.md` - Constitution template with MiniSpec preferences
 
-- `src/specify_cli/__init__.py` - Single-file CLI implementation using Typer
-- `templates/` - Markdown templates for specs, plans, tasks, checklists
-- `templates/commands/` - Slash command definitions (specify.md, plan.md, tasks.md, etc.)
-- `scripts/bash/` and `scripts/powershell/` - Shell scripts for feature creation, agent context updates
-- `memory/constitution.md` - Template for project governance principles
+## Key Files Changed from SpecKit
 
-### Agent Configuration
+- `templates/commands/*.md` - All commands now use `/minispec.*` prefix
+- `scripts/` - Use `.minispec/` paths, `MINISPEC_FEATURE` env var
+- `memory/constitution.md` - Added MiniSpec preferences section
+- Old commands removed: `specify.md`, `plan.md`, `implement.md`, `clarify.md`
 
-All supported AI agents are defined in `AGENT_CONFIG` dict in `__init__.py`:
-- Key: actual CLI tool name (e.g., `"cursor-agent"`, not `"cursor"`)
-- Fields: `name`, `folder`, `install_url`, `requires_cli`
+## Template Placeholders
 
-When adding new agents, use the exact executable name as the key to avoid special-case mappings throughout the codebase.
+- `$ARGUMENTS` - User input for command
+- `{SCRIPT}` - Script path during generation
+- `__AGENT__` - Agent name
 
-### CLI Commands
+## Current State
 
-- `specify init <project>` - Initialize new project from GitHub release template
-- `specify check` - Verify installed tools (git, AI agents, VS Code)
-- `specify version` - Display CLI and template version info
+MiniSpec commands are complete:
+- constitution, design, tasks, analyze, next, walkthrough, validate-docs, status, checklist
 
-### Slash Commands (Generated)
-
-After `specify init`, projects get these AI agent commands:
-- `/speckit.constitution` - Establish project principles
-- `/speckit.specify` - Create feature specification
-- `/speckit.plan` - Generate implementation plan
-- `/speckit.tasks` - Break plan into tasks
-- `/speckit.implement` - Execute implementation
-- `/speckit.clarify`, `/speckit.analyze`, `/speckit.checklist` - Optional quality commands
-
-## Key Conventions
-
-### Version Management
-
-Changes to `__init__.py` require:
-1. Version bump in `pyproject.toml`
-2. Entry in `CHANGELOG.md`
-
-### Template Placeholders
-
-- `$ARGUMENTS` - User input for Markdown-based agents
-- `{{args}}` - User input for TOML-based agents (Gemini, Qwen)
-- `{SCRIPT}` - Replaced with script path during generation
-- `__AGENT__` - Replaced with agent name
-
-### Agent Directory Patterns
-
-- CLI agents: `.<agent-name>/commands/`
-- IDE agents follow IDE-specific patterns (`.github/agents/`, `.windsurf/workflows/`, etc.)
+Still needed:
+- CLI updates for MiniSpec branding
+- Template file renames (spec-template.md → design-template.md)
