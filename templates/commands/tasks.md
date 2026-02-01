@@ -1,17 +1,5 @@
 ---
-description: Generate an actionable, dependency-ordered tasks.md for the feature based on available design artifacts.
-handoffs: 
-  - label: Analyze For Consistency
-    agent: speckit.analyze
-    prompt: Run a project analysis for consistency
-    send: true
-  - label: Implement Project
-    agent: speckit.implement
-    prompt: Start the implementation in phases
-    send: true
-scripts:
-  sh: scripts/bash/check-prerequisites.sh --json
-  ps: scripts/powershell/check-prerequisites.ps1 -Json
+description: Interactively break down a design into reviewable implementation chunks sized for pair programming.
 ---
 
 ## User Input
@@ -20,121 +8,293 @@ scripts:
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
+You are helping break down a design into **implementable tasks** through conversation. Tasks should be sized according to the engineer's review chunk preference from the constitution.
 
-## Outline
+## Philosophy
 
-1. **Setup**: Run `{SCRIPT}` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+Task breakdown is not just about creating a list—it's about:
+- Understanding the implementation sequence
+- Identifying dependencies and parallelization opportunities
+- Sizing chunks for comfortable review
+- Ensuring the engineer understands what each task involves
 
-2. **Load design documents**: Read from FEATURE_DIR:
-   - **Required**: plan.md (tech stack, libraries, structure), spec.md (user stories with priorities)
-   - **Optional**: data-model.md (entities), contracts/ (API endpoints), research.md (decisions), quickstart.md (test scenarios)
-   - Note: Not all projects have all documents. Generate tasks based on what's available.
+## Prerequisites
 
-3. **Execute task generation workflow**:
-   - Load plan.md and extract tech stack, libraries, project structure
-   - Load spec.md and extract user stories with their priorities (P1, P2, P3, etc.)
-   - If data-model.md exists: Extract entities and map to user stories
-   - If contracts/ exists: Map endpoints to user stories
-   - If research.md exists: Extract decisions for setup tasks
-   - Generate tasks organized by user story (see Task Generation Rules below)
-   - Generate dependency graph showing user story completion order
-   - Create parallel execution examples per user story
-   - Validate task completeness (each user story has all needed tasks, independently testable)
+Before starting, verify:
 
-4. **Generate tasks.md**: Use `templates/tasks-template.md` as structure, fill with:
-   - Correct feature name from plan.md
-   - Phase 1: Setup tasks (project initialization)
-   - Phase 2: Foundational tasks (blocking prerequisites for all user stories)
-   - Phase 3+: One phase per user story (in priority order from spec.md)
-   - Each phase includes: story goal, independent test criteria, tests (if requested), implementation tasks
-   - Final Phase: Polish & cross-cutting concerns
-   - All tasks must follow the strict checklist format (see Task Generation Rules below)
-   - Clear file paths for each task
-   - Dependencies section showing story completion order
-   - Parallel execution examples per story
-   - Implementation strategy section (MVP first, incremental delivery)
+1. **Constitution exists** at `.minispec/memory/constitution.md`
+   - Read the `Review Chunk Size` preference (small/medium/large/adaptive)
+   - This determines target lines per task
 
-5. **Report**: Output path to generated tasks.md and summary:
-   - Total task count
-   - Task count per user story
-   - Parallel opportunities identified
-   - Independent test criteria for each story
-   - Suggested MVP scope (typically just User Story 1)
-   - Format validation: Confirm ALL tasks follow the checklist format (checkbox, ID, labels, file paths)
+2. **Design exists** - Look for:
+   - `.minispec/specs/[feature-name]/design.md`
+   - If `$ARGUMENTS` specifies a feature, use that
+   - If not, check for recent designs or ask which feature
 
-Context for task generation: {ARGS}
+If no design exists:
+> "I don't see a design for this feature yet. Want to run `/minispec.design` first, or give me a quick overview of what we're building?"
 
-The tasks.md should be immediately executable - each task must be specific enough that an LLM can complete it without additional context.
+## Chunk Size Guidelines
 
-## Task Generation Rules
+Based on constitution preference:
 
-**CRITICAL**: Tasks MUST be organized by user story to enable independent implementation and testing.
+| Preference | Target Lines | Typical Scope |
+|------------|--------------|---------------|
+| Small | 20-40 lines | Single function, one test |
+| Medium | 40-80 lines | Related functions, model + migration |
+| Large | 80-150 lines | Full component, endpoint + tests |
+| Adaptive | Varies | AI suggests based on complexity |
 
-**Tests are OPTIONAL**: Only generate test tasks if explicitly requested in the feature specification or if user requests TDD approach.
+## Execution Flow
 
-### Checklist Format (REQUIRED)
+### Phase 1: Load Context
 
-Every task MUST strictly follow this format:
+1. **Read the design document**:
+   - Understand components, data model, API
+   - Note any open questions or deferred decisions
 
-```text
-- [ ] [TaskID] [P?] [Story?] Description with file path
+2. **Read related decisions** from `.minispec/knowledge/decisions/`
+
+3. **Check existing codebase**:
+   - How are similar features structured?
+   - What's the typical test-to-implementation ratio?
+   - Are there shared utilities to leverage?
+
+4. **Acknowledge the starting point**:
+   > "I've read the design for [feature]. You've got [N] components to build:
+   > - [Component 1]
+   > - [Component 2]
+   > - ...
+   >
+   > Your chunk size preference is [size] (~[N] lines per task).
+   > Let me propose a breakdown."
+
+### Phase 2: Propose Task Breakdown
+
+Present an initial breakdown organized by implementation phase:
+
+```
+## Proposed Task Breakdown
+
+### Foundation (do first)
+These tasks set up the base that other tasks depend on.
+
+1. **[Task name]** (~[N] lines)
+   - [What it creates/changes]
+   - Files: `path/to/file.ts`
+
+2. **[Task name]** (~[N] lines)
+   - [What it creates/changes]
+   - Files: `path/to/file.ts`
+
+### Core Implementation
+These can potentially run in parallel (marked with [P]).
+
+3. **[Task name]** (~[N] lines) [P]
+   - [What it creates/changes]
+   - Files: `path/to/file.ts`
+
+4. **[Task name]** (~[N] lines) [P]
+   - [What it creates/changes]
+   - Files: `path/to/file.ts`
+
+5. **[Task name]** (~[N] lines)
+   - Depends on: Task 3, 4
+   - [What it creates/changes]
+   - Files: `path/to/file.ts`
+
+### Integration & Polish
+Final tasks that bring everything together.
+
+6. **[Task name]** (~[N] lines)
+   - [What it creates/changes]
+   - Files: `path/to/file.ts`
+
+---
+
+Total: [N] tasks, estimated ~[N] lines of code
+
+What would you like to adjust?
 ```
 
-**Format Components**:
+### Phase 3: Collaborative Refinement
 
-1. **Checkbox**: ALWAYS start with `- [ ]` (markdown checkbox)
-2. **Task ID**: Sequential number (T001, T002, T003...) in execution order
-3. **[P] marker**: Include ONLY if task is parallelizable (different files, no dependencies on incomplete tasks)
-4. **[Story] label**: REQUIRED for user story phase tasks only
-   - Format: [US1], [US2], [US3], etc. (maps to user stories from spec.md)
-   - Setup phase: NO story label
-   - Foundational phase: NO story label  
-   - User Story phases: MUST have story label
-   - Polish phase: NO story label
-5. **Description**: Clear action with exact file path
+Invite feedback and adjust:
 
-**Examples**:
+**If they want to combine tasks:**
+> "Sure, I can combine [Task A] and [Task B]. That brings it to ~[N] lines—still comfortable for review?"
 
-- ✅ CORRECT: `- [ ] T001 Create project structure per implementation plan`
-- ✅ CORRECT: `- [ ] T005 [P] Implement authentication middleware in src/middleware/auth.py`
-- ✅ CORRECT: `- [ ] T012 [P] [US1] Create User model in src/models/user.py`
-- ✅ CORRECT: `- [ ] T014 [US1] Implement UserService in src/services/user_service.py`
-- ❌ WRONG: `- [ ] Create User model` (missing ID and Story label)
-- ❌ WRONG: `T001 [US1] Create model` (missing checkbox)
-- ❌ WRONG: `- [ ] [US1] Create User model` (missing Task ID)
-- ❌ WRONG: `- [ ] T001 [US1] Create model` (missing file path)
+**If they want to split tasks:**
+> "Good idea. I'll split [Task] into:
+> - [Task A]: [scope] (~[N] lines)
+> - [Task B]: [scope] (~[N] lines)"
 
-### Task Organization
+**If they question the order:**
+> "You're right, [Task B] could come before [Task A] because [reason]. Want me to reorder?"
 
-1. **From User Stories (spec.md)** - PRIMARY ORGANIZATION:
-   - Each user story (P1, P2, P3...) gets its own phase
-   - Map all related components to their story:
-     - Models needed for that story
-     - Services needed for that story
-     - Endpoints/UI needed for that story
-     - If tests requested: Tests specific to that story
-   - Mark story dependencies (most stories should be independent)
+**If they want to defer something:**
+> "Okay, I'll mark [Task] as 'future' and remove it from this implementation. We can pick it up later."
 
-2. **From Contracts**:
-   - Map each contract/endpoint → to the user story it serves
-   - If tests requested: Each contract → contract test task [P] before implementation in that story's phase
+**If a task seems too vague:**
+> "Let me be more specific about [Task]. It would involve:
+> 1. [Step 1]
+> 2. [Step 2]
+> 3. [Step 3]
+>
+> Does that clarify it?"
 
-3. **From Data Model**:
-   - Map each entity to the user story(ies) that need it
-   - If entity serves multiple stories: Put in earliest story or Setup phase
-   - Relationships → service layer tasks in appropriate story phase
+### Phase 4: Identify Dependencies and Parallel Opportunities
 
-4. **From Setup/Infrastructure**:
-   - Shared infrastructure → Setup phase (Phase 1)
-   - Foundational/blocking tasks → Foundational phase (Phase 2)
-   - Story-specific setup → within that story's phase
+Make dependencies explicit:
 
-### Phase Structure
+> "Looking at the tasks:
+>
+> **Parallel groups:**
+> - Tasks 3, 4 can run simultaneously (no shared dependencies)
+> - Tasks 6, 7 can run simultaneously
+>
+> **Sequential requirements:**
+> - Task 5 needs Tasks 3, 4 complete first
+> - Task 8 needs everything else done
+>
+> This means you could batch 'next 2' for the parallel groups if you're comfortable. Make sense?"
 
-- **Phase 1**: Setup (project initialization)
-- **Phase 2**: Foundational (blocking prerequisites - MUST complete before user stories)
-- **Phase 3+**: User Stories in priority order (P1, P2, P3...)
-  - Within each story: Tests (if requested) → Models → Services → Endpoints → Integration
-  - Each phase should be a complete, independently testable increment
-- **Final Phase**: Polish & Cross-Cutting Concerns
+### Phase 5: Testing Strategy
+
+Discuss how testing fits in:
+
+> "For testing, I suggest:
+> - Tasks 1-2 (foundation): Include unit tests in the same task
+> - Tasks 3-5 (core): Tests bundled with implementation
+> - Task 6: Dedicated integration test task
+>
+> Or would you prefer separate test tasks? Some engineers like to review tests separately."
+
+Adjust based on their preference.
+
+### Phase 6: Finalize and Save
+
+Once agreed:
+
+1. **Confirm the final list**:
+   > "Final task breakdown:
+   >
+   > 1. [Task] (~N lines)
+   > 2. [Task] (~N lines)
+   > ...
+   >
+   > [N] tasks total. Ready to save?"
+
+2. **Write tasks to file** at `.minispec/specs/[feature-name]/tasks.md`:
+
+```markdown
+---
+feature: [feature-name]
+status: planned
+created: [YYYY-MM-DD]
+chunk_size: [small|medium|large|adaptive]
+total_tasks: [N]
+estimated_lines: [N]
+---
+
+# [Feature Name] Tasks
+
+## Overview
+[Brief description of what this task list implements]
+
+## Task List
+
+### Foundation
+
+#### Task 1: [Task Name]
+- **Estimate:** ~[N] lines
+- **Files:** `path/to/file.ts`
+- **Description:** [What this task accomplishes]
+- **Depends on:** None
+- **Acceptance:** [How to verify it's done]
+
+#### Task 2: [Task Name]
+- **Estimate:** ~[N] lines
+- **Files:** `path/to/file.ts`, `path/to/other.ts`
+- **Description:** [What this task accomplishes]
+- **Depends on:** Task 1
+- **Acceptance:** [How to verify it's done]
+
+### Core Implementation
+
+#### Task 3: [Task Name] [P]
+- **Estimate:** ~[N] lines
+- **Parallel:** Can run with Task 4
+- **Files:** `path/to/file.ts`
+- **Description:** [What this task accomplishes]
+- **Depends on:** Task 2
+- **Acceptance:** [How to verify it's done]
+
+[... continue for all tasks ...]
+
+## Notes
+- [Any implementation notes or gotchas discussed]
+- [Deferred items for future work]
+
+## Progress
+- [ ] Task 1: [Task Name]
+- [ ] Task 2: [Task Name]
+- [ ] Task 3: [Task Name]
+[... checklist for tracking ...]
+```
+
+3. **Update design status**:
+   - Change design.md status from `designed` to `planned`
+
+### Phase 7: Handoff
+
+> "Tasks saved to `.minispec/specs/[feature-name]/tasks.md`
+>
+> **Summary:**
+> - [N] tasks total
+> - ~[N] estimated lines
+> - [N] parallel opportunities
+>
+> **Next steps:**
+> - `/minispec.analyze` - Validate design-task alignment
+> - `/minispec.next` - Start implementing
+>
+> Ready when you are."
+
+## Important Guidelines
+
+- **Size matters**: Tasks too big = review fatigue; too small = overhead. Respect preferences.
+- **Dependencies are critical**: Getting the order wrong wastes time
+- **Parallel opportunities save time**: Identify where the engineer can batch
+- **Tests aren't optional**: Include them in task estimates
+- **Be specific about files**: Engineers should know exactly what's changing
+- **Acceptance criteria**: Each task should have a clear "done" state
+
+## Handling Edge Cases
+
+**Design has open questions:**
+> "The design has some open questions about [X]. Should we:
+> a) Resolve them now before creating tasks
+> b) Create a 'spike' task to investigate
+> c) Make an assumption and note it"
+
+**Feature is too large:**
+> "This feature might be [N]+ tasks. Consider splitting into phases:
+> - Phase 1: [Core functionality]
+> - Phase 2: [Enhanced features]
+> - Phase 3: [Polish and edge cases]
+>
+> Want to scope Phase 1 first?"
+
+**Unclear complexity:**
+> "I'm not sure how complex [component] will be. Want me to:
+> a) Estimate conservatively (might be smaller tasks than needed)
+> b) Create a spike task to investigate first
+> c) Start with one task and split during implementation if needed"
+
+## Output Artifacts
+
+By the end of this command, you will have created/updated:
+
+1. `.minispec/specs/[feature-name]/tasks.md` - The task breakdown
+2. `.minispec/specs/[feature-name]/design.md` - Status updated to `planned`
