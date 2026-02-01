@@ -8,17 +8,17 @@ ARGS=()
 
 for arg in "$@"; do
     case "$arg" in
-        --json) 
-            JSON_MODE=true 
+        --json)
+            JSON_MODE=true
             ;;
-        --help|-h) 
+        --help|-h)
             echo "Usage: $0 [--json]"
             echo "  --json    Output results in JSON format"
             echo "  --help    Show this help message"
-            exit 0 
+            exit 0
             ;;
-        *) 
-            ARGS+=("$arg") 
+        *)
+            ARGS+=("$arg")
             ;;
     esac
 done
@@ -36,25 +36,25 @@ check_feature_branch "$CURRENT_BRANCH" "$HAS_GIT" || exit 1
 # Ensure the feature directory exists
 mkdir -p "$FEATURE_DIR"
 
-# Copy plan template if it exists
-TEMPLATE="$REPO_ROOT/.specify/templates/plan-template.md"
+# Copy tasks template if it exists
+TEMPLATE="$REPO_ROOT/.minispec/templates/tasks-template.md"
 if [[ -f "$TEMPLATE" ]]; then
-    cp "$TEMPLATE" "$IMPL_PLAN"
-    echo "Copied plan template to $IMPL_PLAN"
+    cp "$TEMPLATE" "$TASKS"
+    echo "Copied tasks template to $TASKS"
 else
-    echo "Warning: Plan template not found at $TEMPLATE"
-    # Create a basic plan file if template doesn't exist
-    touch "$IMPL_PLAN"
+    echo "Warning: Tasks template not found at $TEMPLATE"
+    # Create a basic tasks file if template doesn't exist
+    touch "$TASKS"
 fi
 
 # Output results
 if $JSON_MODE; then
-    printf '{"FEATURE_SPEC":"%s","IMPL_PLAN":"%s","SPECS_DIR":"%s","BRANCH":"%s","HAS_GIT":"%s"}\n' \
-        "$FEATURE_SPEC" "$IMPL_PLAN" "$FEATURE_DIR" "$CURRENT_BRANCH" "$HAS_GIT"
+    printf '{"DESIGN":"%s","TASKS":"%s","FEATURE_DIR":"%s","BRANCH":"%s","HAS_GIT":"%s"}\n' \
+        "$DESIGN" "$TASKS" "$FEATURE_DIR" "$CURRENT_BRANCH" "$HAS_GIT"
 else
-    echo "FEATURE_SPEC: $FEATURE_SPEC"
-    echo "IMPL_PLAN: $IMPL_PLAN" 
-    echo "SPECS_DIR: $FEATURE_DIR"
+    echo "DESIGN: $DESIGN"
+    echo "TASKS: $TASKS"
+    echo "FEATURE_DIR: $FEATURE_DIR"
     echo "BRANCH: $CURRENT_BRANCH"
     echo "HAS_GIT: $HAS_GIT"
 fi

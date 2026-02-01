@@ -41,7 +41,7 @@ $featureDesc = ($FeatureDescription -join ' ').Trim()
 function Find-RepositoryRoot {
     param(
         [string]$StartDir,
-        [string[]]$Markers = @('.git', '.specify')
+        [string[]]$Markers = @('.git', '.minispec')
     )
     $current = Resolve-Path $StartDir
     while ($true) {
@@ -149,7 +149,7 @@ try {
 
 Set-Location $repoRoot
 
-$specsDir = Join-Path $repoRoot 'specs'
+$specsDir = Join-Path $repoRoot '.minispec/specs'
 New-Item -ItemType Directory -Path $specsDir -Force | Out-Null
 
 # Function to generate branch name with stop word filtering and length filtering
@@ -236,9 +236,9 @@ if ($branchName.Length -gt $maxBranchLength) {
     $originalBranchName = $branchName
     $branchName = "$featureNum-$truncatedSuffix"
     
-    Write-Warning "[specify] Branch name exceeded GitHub's 244-byte limit"
-    Write-Warning "[specify] Original: $originalBranchName ($($originalBranchName.Length) bytes)"
-    Write-Warning "[specify] Truncated to: $branchName ($($branchName.Length) bytes)"
+    Write-Warning "[minispec] Branch name exceeded GitHub's 244-byte limit"
+    Write-Warning "[minispec] Original: $originalBranchName ($($originalBranchName.Length) bytes)"
+    Write-Warning "[minispec] Truncated to: $branchName ($($branchName.Length) bytes)"
 }
 
 if ($hasGit) {
@@ -248,36 +248,36 @@ if ($hasGit) {
         Write-Warning "Failed to create git branch: $branchName"
     }
 } else {
-    Write-Warning "[specify] Warning: Git repository not detected; skipped branch creation for $branchName"
+    Write-Warning "[minispec] Warning: Git repository not detected; skipped branch creation for $branchName"
 }
 
 $featureDir = Join-Path $specsDir $branchName
 New-Item -ItemType Directory -Path $featureDir -Force | Out-Null
 
-$template = Join-Path $repoRoot '.specify/templates/spec-template.md'
-$specFile = Join-Path $featureDir 'spec.md'
-if (Test-Path $template) { 
-    Copy-Item $template $specFile -Force 
-} else { 
-    New-Item -ItemType File -Path $specFile | Out-Null 
+$template = Join-Path $repoRoot '.minispec/templates/design-template.md'
+$designFile = Join-Path $featureDir 'design.md'
+if (Test-Path $template) {
+    Copy-Item $template $designFile -Force
+} else {
+    New-Item -ItemType File -Path $designFile | Out-Null
 }
 
-# Set the SPECIFY_FEATURE environment variable for the current session
-$env:SPECIFY_FEATURE = $branchName
+# Set the MINISPEC_FEATURE environment variable for the current session
+$env:MINISPEC_FEATURE = $branchName
 
 if ($Json) {
-    $obj = [PSCustomObject]@{ 
+    $obj = [PSCustomObject]@{
         BRANCH_NAME = $branchName
-        SPEC_FILE = $specFile
+        DESIGN_FILE = $designFile
         FEATURE_NUM = $featureNum
         HAS_GIT = $hasGit
     }
     $obj | ConvertTo-Json -Compress
 } else {
     Write-Output "BRANCH_NAME: $branchName"
-    Write-Output "SPEC_FILE: $specFile"
+    Write-Output "DESIGN_FILE: $designFile"
     Write-Output "FEATURE_NUM: $featureNum"
     Write-Output "HAS_GIT: $hasGit"
-    Write-Output "SPECIFY_FEATURE environment variable set to: $branchName"
+    Write-Output "MINISPEC_FEATURE environment variable set to: $branchName"
 }
 

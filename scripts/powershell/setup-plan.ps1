@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-# Setup implementation plan for a feature
+# Setup tasks for a MiniSpec feature
 
 [CmdletBinding()]
 param(
@@ -24,38 +24,38 @@ if ($Help) {
 $paths = Get-FeaturePathsEnv
 
 # Check if we're on a proper feature branch (only for git repos)
-if (-not (Test-FeatureBranch -Branch $paths.CURRENT_BRANCH -HasGit $paths.HAS_GIT)) { 
-    exit 1 
+if (-not (Test-FeatureBranch -Branch $paths.CURRENT_BRANCH -HasGit $paths.HAS_GIT)) {
+    exit 1
 }
 
 # Ensure the feature directory exists
 New-Item -ItemType Directory -Path $paths.FEATURE_DIR -Force | Out-Null
 
-# Copy plan template if it exists, otherwise note it or create empty file
-$template = Join-Path $paths.REPO_ROOT '.specify/templates/plan-template.md'
-if (Test-Path $template) { 
-    Copy-Item $template $paths.IMPL_PLAN -Force
-    Write-Output "Copied plan template to $($paths.IMPL_PLAN)"
+# Copy tasks template if it exists, otherwise note it or create empty file
+$template = Join-Path $paths.REPO_ROOT '.minispec/templates/tasks-template.md'
+if (Test-Path $template) {
+    Copy-Item $template $paths.TASKS -Force
+    Write-Output "Copied tasks template to $($paths.TASKS)"
 } else {
-    Write-Warning "Plan template not found at $template"
-    # Create a basic plan file if template doesn't exist
-    New-Item -ItemType File -Path $paths.IMPL_PLAN -Force | Out-Null
+    Write-Warning "Tasks template not found at $template"
+    # Create a basic tasks file if template doesn't exist
+    New-Item -ItemType File -Path $paths.TASKS -Force | Out-Null
 }
 
 # Output results
 if ($Json) {
-    $result = [PSCustomObject]@{ 
-        FEATURE_SPEC = $paths.FEATURE_SPEC
-        IMPL_PLAN = $paths.IMPL_PLAN
-        SPECS_DIR = $paths.FEATURE_DIR
+    $result = [PSCustomObject]@{
+        DESIGN = $paths.DESIGN
+        TASKS = $paths.TASKS
+        FEATURE_DIR = $paths.FEATURE_DIR
         BRANCH = $paths.CURRENT_BRANCH
         HAS_GIT = $paths.HAS_GIT
     }
     $result | ConvertTo-Json -Compress
 } else {
-    Write-Output "FEATURE_SPEC: $($paths.FEATURE_SPEC)"
-    Write-Output "IMPL_PLAN: $($paths.IMPL_PLAN)"
-    Write-Output "SPECS_DIR: $($paths.FEATURE_DIR)"
+    Write-Output "DESIGN: $($paths.DESIGN)"
+    Write-Output "TASKS: $($paths.TASKS)"
+    Write-Output "FEATURE_DIR: $($paths.FEATURE_DIR)"
     Write-Output "BRANCH: $($paths.CURRENT_BRANCH)"
     Write-Output "HAS_GIT: $($paths.HAS_GIT)"
 }

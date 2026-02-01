@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Common functions and variables for all scripts
+# Common functions and variables for MiniSpec workflow scripts
 
 # Get repository root, with fallback for non-git repositories
 get_repo_root() {
@@ -14,9 +14,9 @@ get_repo_root() {
 
 # Get current branch, with fallback for non-git repositories
 get_current_branch() {
-    # First check if SPECIFY_FEATURE environment variable is set
-    if [[ -n "${SPECIFY_FEATURE:-}" ]]; then
-        echo "$SPECIFY_FEATURE"
+    # First check if MINISPEC_FEATURE environment variable is set
+    if [[ -n "${MINISPEC_FEATURE:-}" ]]; then
+        echo "$MINISPEC_FEATURE"
         return
     fi
 
@@ -28,7 +28,7 @@ get_current_branch() {
 
     # For non-git repos, try to find the latest feature directory
     local repo_root=$(get_repo_root)
-    local specs_dir="$repo_root/specs"
+    local specs_dir="$repo_root/.minispec/specs"
 
     if [[ -d "$specs_dir" ]]; then
         local latest_feature=""
@@ -68,7 +68,7 @@ check_feature_branch() {
 
     # For non-git repos, we can't enforce branch naming but still provide output
     if [[ "$has_git_repo" != "true" ]]; then
-        echo "[specify] Warning: Git repository not detected; skipped branch validation" >&2
+        echo "[minispec] Warning: Git repository not detected; skipped branch validation" >&2
         return 0
     fi
 
@@ -81,14 +81,14 @@ check_feature_branch() {
     return 0
 }
 
-get_feature_dir() { echo "$1/specs/$2"; }
+get_feature_dir() { echo "$1/.minispec/specs/$2"; }
 
 # Find feature directory by numeric prefix instead of exact branch match
 # This allows multiple branches to work on the same spec (e.g., 004-fix-bug, 004-add-feature)
 find_feature_dir_by_prefix() {
     local repo_root="$1"
     local branch_name="$2"
-    local specs_dir="$repo_root/specs"
+    local specs_dir="$repo_root/.minispec/specs"
 
     # Extract numeric prefix from branch (e.g., "004" from "004-whatever")
     if [[ ! "$branch_name" =~ ^([0-9]{3})- ]]; then
@@ -141,13 +141,12 @@ REPO_ROOT='$repo_root'
 CURRENT_BRANCH='$current_branch'
 HAS_GIT='$has_git_repo'
 FEATURE_DIR='$feature_dir'
-FEATURE_SPEC='$feature_dir/spec.md'
-IMPL_PLAN='$feature_dir/plan.md'
+DESIGN='$feature_dir/design.md'
 TASKS='$feature_dir/tasks.md'
-RESEARCH='$feature_dir/research.md'
-DATA_MODEL='$feature_dir/data-model.md'
-QUICKSTART='$feature_dir/quickstart.md'
-CONTRACTS_DIR='$feature_dir/contracts'
+CHECKLISTS_DIR='$feature_dir/checklists'
+MINISPEC_DIR='$repo_root/.minispec'
+MEMORY_DIR='$repo_root/.minispec/memory'
+KNOWLEDGE_DIR='$repo_root/.minispec/knowledge'
 EOF
 }
 

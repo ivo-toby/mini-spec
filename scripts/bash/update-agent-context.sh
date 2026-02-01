@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
-# Update agent context files with information from plan.md
+# Update agent context files with information from design.md
 #
-# This script maintains AI agent context files by parsing feature specifications 
+# This script maintains AI agent context files by parsing feature designs
 # and updating agent-specific configuration files with project information.
 #
 # MAIN FUNCTIONS:
 # 1. Environment Validation
 #    - Verifies git repository structure and branch information
-#    - Checks for required plan.md files and templates
+#    - Checks for required design.md files and templates
 #    - Validates file permissions and accessibility
 #
-# 2. Plan Data Extraction
-#    - Parses plan.md files to extract project metadata
+# 2. Design Data Extraction
+#    - Parses design.md files to extract project metadata
 #    - Identifies language/version, frameworks, databases, and project types
 #    - Handles missing or incomplete specification data gracefully
 #
@@ -55,20 +55,20 @@ source "$SCRIPT_DIR/common.sh"
 # Get all paths and variables from common functions
 eval $(get_feature_paths)
 
-NEW_PLAN="$IMPL_PLAN"  # Alias for compatibility with existing code
+DESIGN_FILE="$DESIGN"  # Alias for compatibility with existing code
 AGENT_TYPE="${1:-}"
 
-# Agent-specific file paths  
+# Agent-specific file paths
 CLAUDE_FILE="$REPO_ROOT/CLAUDE.md"
 GEMINI_FILE="$REPO_ROOT/GEMINI.md"
 COPILOT_FILE="$REPO_ROOT/.github/agents/copilot-instructions.md"
-CURSOR_FILE="$REPO_ROOT/.cursor/rules/specify-rules.mdc"
+CURSOR_FILE="$REPO_ROOT/.cursor/rules/minispec-rules.mdc"
 QWEN_FILE="$REPO_ROOT/QWEN.md"
 AGENTS_FILE="$REPO_ROOT/AGENTS.md"
-WINDSURF_FILE="$REPO_ROOT/.windsurf/rules/specify-rules.md"
-KILOCODE_FILE="$REPO_ROOT/.kilocode/rules/specify-rules.md"
-AUGGIE_FILE="$REPO_ROOT/.augment/rules/specify-rules.md"
-ROO_FILE="$REPO_ROOT/.roo/rules/specify-rules.md"
+WINDSURF_FILE="$REPO_ROOT/.windsurf/rules/minispec-rules.md"
+KILOCODE_FILE="$REPO_ROOT/.kilocode/rules/minispec-rules.md"
+AUGGIE_FILE="$REPO_ROOT/.augment/rules/minispec-rules.md"
+ROO_FILE="$REPO_ROOT/.roo/rules/minispec-rules.md"
 CODEBUDDY_FILE="$REPO_ROOT/CODEBUDDY.md"
 QODER_FILE="$REPO_ROOT/QODER.md"
 AMP_FILE="$REPO_ROOT/AGENTS.md"
@@ -77,7 +77,7 @@ Q_FILE="$REPO_ROOT/AGENTS.md"
 BOB_FILE="$REPO_ROOT/AGENTS.md"
 
 # Template file
-TEMPLATE_FILE="$REPO_ROOT/.specify/templates/agent-file-template.md"
+TEMPLATE_FILE="$REPO_ROOT/.minispec/templates/agent-file-template.md"
 
 # Global variables for parsed plan data
 NEW_LANG=""
@@ -127,21 +127,21 @@ validate_environment() {
         if [[ "$HAS_GIT" == "true" ]]; then
             log_info "Make sure you're on a feature branch"
         else
-            log_info "Set SPECIFY_FEATURE environment variable or create a feature first"
+            log_info "Set MINISPEC_FEATURE environment variable or create a feature first"
         fi
         exit 1
     fi
-    
-    # Check if plan.md exists
-    if [[ ! -f "$NEW_PLAN" ]]; then
-        log_error "No plan.md found at $NEW_PLAN"
+
+    # Check if design.md exists
+    if [[ ! -f "$DESIGN_FILE" ]]; then
+        log_error "No design.md found at $DESIGN_FILE"
         log_info "Make sure you're working on a feature with a corresponding spec directory"
         if [[ "$HAS_GIT" != "true" ]]; then
-            log_info "Use: export SPECIFY_FEATURE=your-feature-name or create a new feature first"
+            log_info "Use: export MINISPEC_FEATURE=your-feature-name or create a new feature first"
         fi
         exit 1
     fi
-    
+
     # Check if template exists (needed for new files)
     if [[ ! -f "$TEMPLATE_FILE" ]]; then
         log_warning "Template file not found at $TEMPLATE_FILE"
@@ -165,41 +165,41 @@ extract_plan_field() {
         grep -v "^N/A$" || echo ""
 }
 
-parse_plan_data() {
-    local plan_file="$1"
-    
-    if [[ ! -f "$plan_file" ]]; then
-        log_error "Plan file not found: $plan_file"
+parse_design_data() {
+    local design_file="$1"
+
+    if [[ ! -f "$design_file" ]]; then
+        log_error "Design file not found: $design_file"
         return 1
     fi
-    
-    if [[ ! -r "$plan_file" ]]; then
-        log_error "Plan file is not readable: $plan_file"
+
+    if [[ ! -r "$design_file" ]]; then
+        log_error "Design file is not readable: $design_file"
         return 1
     fi
-    
-    log_info "Parsing plan data from $plan_file"
-    
-    NEW_LANG=$(extract_plan_field "Language/Version" "$plan_file")
-    NEW_FRAMEWORK=$(extract_plan_field "Primary Dependencies" "$plan_file")
-    NEW_DB=$(extract_plan_field "Storage" "$plan_file")
-    NEW_PROJECT_TYPE=$(extract_plan_field "Project Type" "$plan_file")
-    
+
+    log_info "Parsing design data from $design_file"
+
+    NEW_LANG=$(extract_plan_field "Language/Version" "$design_file")
+    NEW_FRAMEWORK=$(extract_plan_field "Primary Dependencies" "$design_file")
+    NEW_DB=$(extract_plan_field "Storage" "$design_file")
+    NEW_PROJECT_TYPE=$(extract_plan_field "Project Type" "$design_file")
+
     # Log what we found
     if [[ -n "$NEW_LANG" ]]; then
         log_info "Found language: $NEW_LANG"
     else
-        log_warning "No language information found in plan"
+        log_warning "No language information found in design"
     fi
-    
+
     if [[ -n "$NEW_FRAMEWORK" ]]; then
         log_info "Found framework: $NEW_FRAMEWORK"
     fi
-    
+
     if [[ -n "$NEW_DB" ]] && [[ "$NEW_DB" != "N/A" ]]; then
         log_info "Found database: $NEW_DB"
     fi
-    
+
     if [[ -n "$NEW_PROJECT_TYPE" ]]; then
         log_info "Found project type: $NEW_PROJECT_TYPE"
     fi
@@ -757,9 +757,9 @@ main() {
     
     log_info "=== Updating agent context files for feature $CURRENT_BRANCH ==="
     
-    # Parse the plan file to extract project information
-    if ! parse_plan_data "$NEW_PLAN"; then
-        log_error "Failed to parse plan data"
+    # Parse the design file to extract project information
+    if ! parse_design_data "$DESIGN_FILE"; then
+        log_error "Failed to parse design data"
         exit 1
     fi
     
