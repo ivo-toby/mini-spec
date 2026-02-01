@@ -10,6 +10,8 @@ Spec-driven AI development has a fundamental flaw: AI generates hundreds of line
 
 2. **Lost mental models** - You become a tourist in your own codebase. You didn't write it, so you don't really understand it. Debugging becomes archaeology.
 
+[Read more why I made MiniSpec](./WHY-MINI-SPEC.md).
+
 The current approach:
 
 ```text
@@ -103,29 +105,29 @@ Use `/minispec.validate-docs` to check documentation freshness against code chan
 
 ## Commands
 
-| Command                    | Purpose                                      |
-| -------------------------- | -------------------------------------------- |
-| `/minispec.constitution`   | Set up project principles + preferences      |
-| `/minispec.walkthrough`    | Guided codebase tour                         |
-| `/minispec.import`         | Import SpecKit/OpenSpec specs into workflow  |
-| `/minispec.design`         | Interactive design conversation              |
-| `/minispec.tasks`          | Break design into reviewable chunks          |
-| `/minispec.analyze`        | Validate design ↔ tasks alignment            |
-| `/minispec.next`           | Implement next chunk (pair programming loop) |
-| `/minispec.checklist`      | Generate quality checklists for requirements |
-| `/minispec.validate-docs`  | Check documentation freshness                |
-| `/minispec.status`         | Show progress dashboard                      |
+| Command                   | Purpose                                      |
+| ------------------------- | -------------------------------------------- |
+| `/minispec.constitution`  | Set up project principles + preferences      |
+| `/minispec.walkthrough`   | Guided codebase tour                         |
+| `/minispec.import`        | Import SpecKit/OpenSpec specs into workflow  |
+| `/minispec.design`        | Interactive design conversation              |
+| `/minispec.tasks`         | Break design into reviewable chunks          |
+| `/minispec.analyze`       | Validate design ↔ tasks alignment           |
+| `/minispec.next`          | Implement next chunk (pair programming loop) |
+| `/minispec.checklist`     | Generate quality checklists for requirements |
+| `/minispec.validate-docs` | Check documentation freshness                |
+| `/minispec.status`        | Show progress dashboard                      |
 
 ## How It's Different
 
-|                    | Traditional Spec-Driven    | MiniSpec                       |
-| ------------------ | -------------------------- | ------------------------------ |
-| **Planning**       | AI generates document      | Interactive conversation       |
-| **Implementation** | All at once, massive PR    | Small chunks, continuous review|
-| **Engineer role**  | Reviewer (post-hoc)        | Navigator (real-time)          |
-| **Documentation**  | Manual afterthought        | Automatic byproduct            |
-| **Mental model**   | Hope you read carefully    | Built through dialogue         |
-| **Knowledge base** | Gets stale immediately     | Living, grows with code        |
+|                    | Traditional Spec-Driven | MiniSpec                        |
+| ------------------ | ----------------------- | ------------------------------- |
+| **Planning**       | AI generates document   | Interactive conversation        |
+| **Implementation** | All at once, massive PR | Small chunks, continuous review |
+| **Engineer role**  | Reviewer (post-hoc)     | Navigator (real-time)           |
+| **Documentation**  | Manual afterthought     | Automatic byproduct             |
+| **Mental model**   | Hope you read carefully | Built through dialogue          |
+| **Knowledge base** | Gets stale immediately  | Living, grows with code         |
 
 ## Example Session
 
