@@ -9,6 +9,7 @@ Spec-Driven Development with full AI implementation has two critical issues:
 2. **Lost Mental Models**: Engineers become "code tourists" in their own codebase. Without writing the code, they don't build the mental models needed to trust, maintain, and debug it.
 
 The current SpecKit workflow:
+
 ```
 AI works alone → dumps artifacts → Engineer reads/reviews alone
 ```
@@ -18,10 +19,12 @@ This creates a disconnect between implementation and understanding.
 ## The Solution
 
 MiniSpec reimagines the workflow as **pair programming** where:
+
 - **Engineer = Navigator**: Makes decisions, directs, reviews in small chunks
 - **AI = Driver**: Executes, implements, documents
 
 The new workflow:
+
 ```
 AI + Engineer collaborate in real-time → decisions are shared → understanding is built
 ```
@@ -29,34 +32,39 @@ AI + Engineer collaborate in real-time → decisions are shared → understandin
 ## Core Principles
 
 ### 1. Interactive Over Generative
+
 Instead of AI generating large documents for engineers to read, every phase is a conversation where engineers make decisions with AI guidance.
 
 ### 2. Small Chunks, Continuous Review
+
 Implementation happens in reviewable increments (20-80 lines). Engineers never face overwhelming PRs.
 
 ### 3. Document by Default
+
 Documentation is a natural byproduct of the pairing process, not a separate task. Decisions made during conversations are automatically captured.
 
 ### 4. Living Documentation
+
 A structured knowledge base serves as shared memory for both human and AI. It's queryable, version-controlled, and kept fresh.
 
 ### 5. Configurable Autonomy
+
 Engineers can tune how much AI asks for confirmation vs. proceeds independently, based on their comfort level and familiarity with the code.
 
 ---
 
 ## Commands
 
-| Command | Purpose | When to Use |
-|---------|---------|-------------|
-| `/minispec.constitution` | Set up project principles + MiniSpec preferences | Project setup |
-| `/minispec.walkthrough` | Guided tour of codebase for context-building | Before starting work, onboarding new engineers |
-| `/minispec.design` | Interactive design conversation | Starting a new feature |
-| `/minispec.tasks` | Break design into reviewable chunks (interactive) | After design is complete |
-| `/minispec.analyze` | Validate design ↔ tasks coherence | Before starting implementation |
-| `/minispec.next` | Implement next chunk in pair programming style | During implementation (loop) |
-| `/minispec.validate-docs` | Check documentation freshness against code | Ongoing maintenance |
-| `/minispec.status` | Show current progress, what's next, what's changed | Anytime |
+| Command                   | Purpose                                            | When to Use                                    |
+| ------------------------- | -------------------------------------------------- | ---------------------------------------------- |
+| `/minispec.constitution`  | Set up project principles + MiniSpec preferences   | Project setup                                  |
+| `/minispec.walkthrough`   | Guided tour of codebase for context-building       | Before starting work, onboarding new engineers |
+| `/minispec.design`        | Interactive design conversation                    | Starting a new feature                         |
+| `/minispec.tasks`         | Break design into reviewable chunks (interactive)  | After design is complete                       |
+| `/minispec.analyze`       | Validate design ↔ tasks coherence                 | Before starting implementation                 |
+| `/minispec.next`          | Implement next chunk in pair programming style     | During implementation (loop)                   |
+| `/minispec.validate-docs` | Check documentation freshness against code         | Ongoing maintenance                            |
+| `/minispec.status`        | Show current progress, what's next, what's changed | Anytime                                        |
 
 ---
 
@@ -203,6 +211,7 @@ session store, adding operational complexity.
 ## Decision
 
 We use JWT tokens with:
+
 - Access token: 15 min expiry, stored in memory
 - Refresh token: 7 days, httpOnly cookie
 
@@ -222,12 +231,12 @@ We use JWT tokens with:
 
 ### When Documentation Is Created
 
-| Command | Documentation Created |
-|---------|----------------------|
-| `/minispec.design` | `decisions/` files as choices are made |
-| `/minispec.next` | `patterns/` and `modules/` as code is written |
-| `/minispec.validate-docs` | Updates or marks docs as superseded |
-| `/minispec.walkthrough` | Reads from `knowledge/` to explain codebase |
+| Command                   | Documentation Created                         |
+| ------------------------- | --------------------------------------------- |
+| `/minispec.design`        | `decisions/` files as choices are made        |
+| `/minispec.next`          | `patterns/` and `modules/` as code is written |
+| `/minispec.validate-docs` | Updates or marks docs as superseded           |
+| `/minispec.walkthrough`   | Reads from `knowledge/` to explain codebase   |
 
 ### Documentation Principles
 
@@ -245,27 +254,35 @@ The constitution setup (`/minispec.constitution`) should capture these MiniSpec-
 ## MiniSpec Preferences
 
 ### Review Chunk Size
+
 How much code can you comfortably review in one sitting?
+
 - [ ] Small (20-40 lines) - Maximum engagement, best for learning
 - [ ] Medium (40-80 lines) - Balanced pace (recommended)
 - [ ] Large (80-150 lines) - Comfortable with larger chunks
 - [ ] Adaptive - AI asks based on complexity of each task
 
 ### Documentation Review
+
 Should AI ask you to review documentation changes?
+
 - [ ] Yes, review all doc changes
 - [ ] Only for decisions/, trust AI on patterns/modules
 - [ ] No, trust AI for all documentation (recommended)
 
 ### Autonomy Triggers
+
 When can AI proceed to next chunk without explicit confirmation?
+
 - [ ] Never - always pause for review
 - [ ] Tests passing - if tests pass, auto-proceed
 - [ ] Familiar areas - proceed in areas already reviewed in this session
 - [ ] Explicit batch - only when I say "next N"
 
 ### Design Evolution
+
 When implementation reveals design issues, AI should:
+
 - [ ] Always stop and discuss
 - [ ] Flag it, propose spec update, continue if minor
 - [ ] Update specs automatically, notify after (recommended for experienced teams)
@@ -275,17 +292,17 @@ When implementation reveals design issues, AI should:
 
 ## Comparison with SpecKit
 
-| Aspect | SpecKit | MiniSpec |
-|--------|---------|----------|
-| **Planning** | AI generates plan document | Interactive conversation, engineer decides |
-| **Task creation** | Batch generation | Interactive breakdown with engineer input |
-| **Implementation** | All at once, then review | Small chunks, continuous review |
-| **Documentation** | Manual/optional | Automatic byproduct of pairing |
-| **Engineer role** | Reviewer (post-hoc) | Navigator (real-time decision maker) |
-| **AI role** | Solo implementer | Pair programming driver |
-| **Mental model** | Hope engineer reads carefully | Built through dialogue and decisions |
-| **Review burden** | Large PRs (100s of lines) | Small chunks (20-80 lines) |
-| **Spec evolution** | Specs often become stale | AI proactively proposes spec updates |
+| Aspect             | SpecKit                       | MiniSpec                                   |
+| ------------------ | ----------------------------- | ------------------------------------------ |
+| **Planning**       | AI generates plan document    | Interactive conversation, engineer decides |
+| **Task creation**  | Batch generation              | Interactive breakdown with engineer input  |
+| **Implementation** | All at once, then review      | Small chunks, continuous review            |
+| **Documentation**  | Manual/optional               | Automatic byproduct of pairing             |
+| **Engineer role**  | Reviewer (post-hoc)           | Navigator (real-time decision maker)       |
+| **AI role**        | Solo implementer              | Pair programming driver                    |
+| **Mental model**   | Hope engineer reads carefully | Built through dialogue and decisions       |
+| **Review burden**  | Large PRs (100s of lines)     | Small chunks (20-80 lines)                 |
+| **Spec evolution** | Specs often become stale      | AI proactively proposes spec updates       |
 
 ---
 
@@ -405,6 +422,7 @@ AI: "Committed: 'Add User model and migration'
 ### Reusing SpecKit Infrastructure
 
 MiniSpec builds on SpecKit's foundation:
+
 - Similar project structure (`.minispec/` instead of SpecKit's `.specify/`)
 - Same script infrastructure (bash/powershell)
 - Same template system for commands
@@ -455,6 +473,7 @@ When a project is initialized, it gets:
 ### Migration Path from SpecKit
 
 Projects can adopt MiniSpec incrementally:
+
 - Start with `/minispec.walkthrough` on existing SpecKit projects
 - Use `/minispec.next` for implementation instead of `/speckit.implement`
 - Gradually add documentation structure
