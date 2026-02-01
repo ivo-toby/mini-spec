@@ -1,8 +1,5 @@
 ---
-description: Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation.
-scripts:
-  sh: scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
-  ps: scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks
+description: Validate design-task alignment and cross-artifact consistency before implementation begins.
 ---
 
 ## User Input
@@ -11,177 +8,263 @@ scripts:
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
+You are performing a **pre-implementation validation** to catch issues before they become expensive to fix. This is a conversation about readiness, not just a report dump.
 
-## Goal
+## Philosophy
 
-Identify inconsistencies, duplications, ambiguities, and underspecified items across the three core artifacts (`spec.md`, `plan.md`, `tasks.md`) before implementation. This command MUST run only after `/speckit.tasks` has successfully produced a complete `tasks.md`.
+The goal isn't to generate a lengthy report—it's to answer one question:
+**"Are we ready to start implementing?"**
 
-## Operating Constraints
+If yes, confirm and move on. If no, explain what needs attention and help fix it.
 
-**STRICTLY READ-ONLY**: Do **not** modify any files. Output a structured analysis report. Offer an optional remediation plan (user must explicitly approve before any follow-up editing commands would be invoked manually).
+## Prerequisites
 
-**Constitution Authority**: The project constitution (`/memory/constitution.md`) is **non-negotiable** within this analysis scope. Constitution conflicts are automatically CRITICAL and require adjustment of the spec, plan, or tasks—not dilution, reinterpretation, or silent ignoring of the principle. If a principle itself needs to change, that must occur in a separate, explicit constitution update outside `/speckit.analyze`.
+Verify these artifacts exist:
 
-## Execution Steps
+1. **Constitution** at `.minispec/memory/constitution.md`
+2. **Design** at `.minispec/specs/[feature-name]/design.md`
+3. **Tasks** at `.minispec/specs/[feature-name]/tasks.md`
+4. **Decisions** in `.minispec/knowledge/decisions/`
 
-### 1. Initialize Analysis Context
+If `$ARGUMENTS` specifies a feature, use that. Otherwise, detect the current feature or ask.
 
-Run `{SCRIPT}` once from repo root and parse JSON for FEATURE_DIR and AVAILABLE_DOCS. Derive absolute paths:
+If any required artifact is missing:
+> "I can't run a full analysis yet. Missing:
+> - [x] Constitution ✓
+> - [ ] Design - Run `/minispec.design` first
+> - [ ] Tasks - Run `/minispec.tasks` first
+>
+> Want me to help with the missing piece?"
 
-- SPEC = FEATURE_DIR/spec.md
-- PLAN = FEATURE_DIR/plan.md
-- TASKS = FEATURE_DIR/tasks.md
+## Analysis Areas
 
-Abort with an error message if any required file is missing (instruct the user to run missing prerequisite command).
-For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+### 1. Design ↔ Tasks Alignment
 
-### 2. Load Artifacts (Progressive Disclosure)
+Check that every design element has corresponding tasks:
 
-Load only the minimal necessary context from each artifact:
+**Components:**
+- Each component in design.md should have implementation tasks
+- Flag components with no associated tasks
 
-**From spec.md:**
+**Decisions:**
+- Each decision in `.minispec/knowledge/decisions/` should be reflected in tasks
+- Flag decisions that imply work but have no tasks
 
-- Overview/Context
-- Functional Requirements
-- Non-Functional Requirements
-- User Stories
-- Edge Cases (if present)
+**Data Model:**
+- Each entity should have model/migration tasks
+- Flag entities missing from task list
 
-**From plan.md:**
+**API/Interface:**
+- Each endpoint/function should have implementation tasks
+- Flag APIs without coverage
 
-- Architecture/stack choices
-- Data Model references
-- Phases
-- Technical constraints
+### 2. Task Completeness
 
-**From tasks.md:**
+Check that tasks are well-formed:
 
-- Task IDs
-- Descriptions
-- Phase grouping
-- Parallel markers [P]
-- Referenced file paths
+**Required elements:**
+- Estimate (lines)
+- Files affected
+- Description
+- Acceptance criteria
 
-**From constitution:**
+**Dependency validity:**
+- No circular dependencies
+- Dependencies reference existing tasks
+- Order makes sense (can't integrate before building)
 
-- Load `/memory/constitution.md` for principle validation
+**Size appropriateness:**
+- Compare estimates against constitution chunk size preference
+- Flag tasks significantly over/under target size
 
-### 3. Build Semantic Models
+### 3. Constitution Compliance
 
-Create internal representations (do not include raw artifacts in output):
+Check alignment with project principles:
 
-- **Requirements inventory**: Each functional + non-functional requirement with a stable key (derive slug based on imperative phrase; e.g., "User can upload file" → `user-can-upload-file`)
-- **User story/action inventory**: Discrete user actions with acceptance criteria
-- **Task coverage mapping**: Map each task to one or more requirements or stories (inference by keyword / explicit reference patterns like IDs or key phrases)
-- **Constitution rule set**: Extract principle names and MUST/SHOULD normative statements
+**Core principles:**
+- Do design decisions respect stated principles?
+- Are there tasks that would violate principles?
 
-### 4. Detection Passes (Token-Efficient Analysis)
+**MiniSpec preferences:**
+- Are tasks sized appropriately for review chunk preference?
+- Is documentation approach consistent with doc review policy?
 
-Focus on high-signal findings. Limit to 50 findings total; aggregate remainder in overflow summary.
+### 4. Knowledge Base Consistency
 
-#### A. Duplication Detection
+Check documentation coherence:
 
-- Identify near-duplicate requirements
-- Mark lower-quality phrasing for consolidation
+**Decisions:**
+- All decisions have required frontmatter
+- No contradictory decisions
+- Referenced code paths exist or will be created by tasks
 
-#### B. Ambiguity Detection
+**Cross-references:**
+- Design references correct decision IDs
+- Tasks reference correct design components
 
-- Flag vague adjectives (fast, scalable, secure, intuitive, robust) lacking measurable criteria
-- Flag unresolved placeholders (TODO, TKTK, ???, `<placeholder>`, etc.)
+### 5. Gap Detection
 
-#### C. Underspecification
+Look for missing pieces:
 
-- Requirements with verbs but missing object or measurable outcome
-- User stories missing acceptance criteria alignment
-- Tasks referencing files or components not defined in spec/plan
+**Coverage gaps:**
+- Requirements without tasks
+- Tasks without clear requirements
 
-#### D. Constitution Alignment
+**Edge cases:**
+- Error handling mentioned but no tasks
+- Edge cases in design but not covered
 
-- Any requirement or plan element conflicting with a MUST principle
-- Missing mandated sections or quality gates from constitution
+**Non-functional:**
+- Performance requirements without tasks
+- Security requirements without tasks
 
-#### E. Coverage Gaps
+## Execution Flow
 
-- Requirements with zero associated tasks
-- Tasks with no mapped requirement/story
-- Non-functional requirements not reflected in tasks (e.g., performance, security)
+### Phase 1: Load and Parse
 
-#### F. Inconsistency
+1. Read all artifacts quietly
+2. Build internal model of:
+   - Design components and requirements
+   - Task list with dependencies
+   - Decision records
+   - Constitution rules and preferences
 
-- Terminology drift (same concept named differently across files)
-- Data entities referenced in plan but absent in spec (or vice versa)
-- Task ordering contradictions (e.g., integration tasks before foundational setup tasks without dependency note)
-- Conflicting requirements (e.g., one requires Next.js while other specifies Vue)
+### Phase 2: Run Checks
 
-### 5. Severity Assignment
+Perform each analysis area. Track findings by severity:
 
-Use this heuristic to prioritize findings:
+- **CRITICAL**: Blocks implementation (missing core coverage, contradictions)
+- **WARNING**: Should fix but can proceed (sizing issues, minor gaps)
+- **INFO**: Suggestions for improvement (style, clarity)
 
-- **CRITICAL**: Violates constitution MUST, missing core spec artifact, or requirement with zero coverage that blocks baseline functionality
-- **HIGH**: Duplicate or conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion
-- **MEDIUM**: Terminology drift, missing non-functional task coverage, underspecified edge case
-- **LOW**: Style/wording improvements, minor redundancy not affecting execution order
+### Phase 3: Report Findings
 
-### 6. Produce Compact Analysis Report
+**If no issues found:**
+> "✅ Analysis complete. Everything looks good!
+>
+> **Summary:**
+> - [N] design components → [N] tasks covering them
+> - [N] decisions documented
+> - Tasks sized appropriately for your [size] preference
+> - No constitution violations
+>
+> Ready to implement. Run `/minispec.next` when you're ready."
 
-Output a Markdown report (no file writes) with the following structure:
+**If issues found:**
+> "Analysis found [N] items to review before implementing:
+>
+> **Critical (must fix):**
+> 1. [Issue description]
+>    - Location: [file:section]
+>    - Problem: [what's wrong]
+>    - Suggestion: [how to fix]
+>
+> **Warnings (should fix):**
+> 1. [Issue description]
+>    ...
+>
+> **Info (optional):**
+> 1. [Suggestion]
+>    ...
+>
+> Want me to help resolve the critical issues?"
 
-## Specification Analysis Report
+### Phase 4: Interactive Resolution
 
-| ID | Category | Severity | Location(s) | Summary | Recommendation |
-|----|----------|----------|-------------|---------|----------------|
-| A1 | Duplication | HIGH | spec.md:L120-134 | Two similar requirements ... | Merge phrasing; keep clearer version |
+If engineer wants help fixing issues:
 
-(Add one row per finding; generate stable IDs prefixed by category initial.)
+1. Start with critical issues
+2. For each issue:
+   - Explain the problem in context
+   - Propose a specific fix
+   - Ask for confirmation
+   - Make the change (or guide them to make it)
+3. Re-run affected checks after fixes
+4. Confirm when ready
 
-**Coverage Summary Table:**
+## Report Format (When Requested)
 
-| Requirement Key | Has Task? | Task IDs | Notes |
-|-----------------|-----------|----------|-------|
+If the engineer wants a formal report, generate:
 
-**Constitution Alignment Issues:** (if any)
+```markdown
+# Pre-Implementation Analysis Report
 
-**Unmapped Tasks:** (if any)
+**Feature:** [feature-name]
+**Date:** [YYYY-MM-DD]
+**Status:** [Ready | Blocked | Needs Review]
 
-**Metrics:**
+## Summary
 
-- Total Requirements
-- Total Tasks
-- Coverage % (requirements with >=1 task)
-- Ambiguity Count
-- Duplication Count
-- Critical Issues Count
+| Metric | Value |
+|--------|-------|
+| Design Components | [N] |
+| Tasks | [N] |
+| Coverage | [N]% |
+| Critical Issues | [N] |
+| Warnings | [N] |
 
-### 7. Provide Next Actions
+## Coverage Matrix
 
-At end of report, output a concise Next Actions block:
+| Design Component | Tasks | Status |
+|------------------|-------|--------|
+| [Component 1] | T1, T3 | ✅ Covered |
+| [Component 2] | T2 | ✅ Covered |
+| [Component 3] | - | ❌ No tasks |
 
-- If CRITICAL issues exist: Recommend resolving before `/speckit.implement`
-- If only LOW/MEDIUM: User may proceed, but provide improvement suggestions
-- Provide explicit command suggestions: e.g., "Run /speckit.specify with refinement", "Run /speckit.plan to adjust architecture", "Manually edit tasks.md to add coverage for 'performance-metrics'"
+## Issues
 
-### 8. Offer Remediation
+### Critical
 
-Ask the user: "Would you like me to suggest concrete remediation edits for the top N issues?" (Do NOT apply them automatically.)
+| ID | Location | Issue | Recommendation |
+|----|----------|-------|----------------|
+| C1 | design.md | [Description] | [Fix] |
 
-## Operating Principles
+### Warnings
 
-### Context Efficiency
+| ID | Location | Issue | Recommendation |
+|----|----------|-------|----------------|
+| W1 | tasks.md | [Description] | [Fix] |
 
-- **Minimal high-signal tokens**: Focus on actionable findings, not exhaustive documentation
-- **Progressive disclosure**: Load artifacts incrementally; don't dump all content into analysis
-- **Token-efficient output**: Limit findings table to 50 rows; summarize overflow
-- **Deterministic results**: Rerunning without changes should produce consistent IDs and counts
+## Decision Alignment
 
-### Analysis Guidelines
+| Decision | Tasks Reflecting It | Status |
+|----------|---------------------|--------|
+| 001-auth | T4, T5, T6 | ✅ Aligned |
+| 002-db | T2 | ✅ Aligned |
 
-- **NEVER modify files** (this is read-only analysis)
-- **NEVER hallucinate missing sections** (if absent, report them accurately)
-- **Prioritize constitution violations** (these are always CRITICAL)
-- **Use examples over exhaustive rules** (cite specific instances, not generic patterns)
-- **Report zero issues gracefully** (emit success report with coverage statistics)
+## Recommendations
 
-## Context
+1. [Specific action]
+2. [Specific action]
 
-{ARGS}
+## Next Steps
+
+- [ ] Resolve critical issues
+- [ ] Review warnings
+- [ ] Run `/minispec.next` to begin implementation
+```
+
+## Important Guidelines
+
+- **Be concise**: Don't generate a report if a simple "looks good" suffices
+- **Be actionable**: Every issue should have a clear fix
+- **Be conversational**: This is a checkpoint, not an audit
+- **Help fix issues**: Don't just report—offer to resolve
+- **Respect time**: If only minor issues, let them proceed with a note
+
+## Constitution Authority
+
+The constitution is non-negotiable. If something violates a constitution principle:
+- It's automatically CRITICAL
+- The fix is to change the design/tasks, not the constitution
+- If the principle itself needs to change, that's a separate conversation
+
+## Output Artifacts
+
+This command is primarily **read-only**, but may update:
+
+1. `.minispec/specs/[feature-name]/design.md` - If fixes are applied
+2. `.minispec/specs/[feature-name]/tasks.md` - If fixes are applied
+3. `.minispec/knowledge/decisions/*.md` - If fixes are applied
+
+Only with explicit engineer approval.
