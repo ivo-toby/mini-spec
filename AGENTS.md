@@ -1,10 +1,10 @@
 # AGENTS.md
 
-## About Spec Kit and Specify
+## About MiniSpec
 
-**GitHub Spec Kit** is a comprehensive toolkit for implementing Spec-Driven Development (SDD) - a methodology that emphasizes creating clear specifications before implementation. The toolkit includes templates, scripts, and workflows that guide development teams through a structured approach to building software.
+**MiniSpec** is a pair programming workflow for AI-assisted development. Instead of AI generating large artifacts for engineers to review, MiniSpec structures collaboration as real-time pairing where engineers navigate and AI drives.
 
-**Specify CLI** is the command-line interface that bootstraps projects with the Spec Kit framework. It sets up the necessary directory structures, templates, and AI agent integrations to support the Spec-Driven Development workflow.
+**MiniSpec CLI** is the command-line interface that bootstraps projects with the MiniSpec framework. It sets up the necessary directory structures, templates, and AI agent integrations to support the pair programming workflow.
 
 The toolkit supports multiple AI coding assistants, allowing teams to use their preferred tools while maintaining consistent project structure and development practices.
 
@@ -12,15 +12,15 @@ The toolkit supports multiple AI coding assistants, allowing teams to use their 
 
 ## General practices
 
-- Any changes to `__init__.py` for the Specify CLI require a version rev in `pyproject.toml` and addition of entries to `CHANGELOG.md`.
+- Any changes to `__init__.py` for the MiniSpec CLI require a version rev in `pyproject.toml` and addition of entries to `CHANGELOG.md`.
 
 ## Adding New Agent Support
 
-This section explains how to add support for new AI agents/assistants to the Specify CLI. Use this guide as a reference when integrating new AI tools into the Spec-Driven Development workflow.
+This section explains how to add support for new AI agents/assistants to the MiniSpec CLI. Use this guide as a reference when integrating new AI tools into the MiniSpec workflow.
 
 ### Overview
 
-Specify supports multiple AI agents by generating agent-specific command files and directory structures when initializing projects. Each agent has its own conventions for:
+MiniSpec supports multiple AI agents by generating agent-specific command files and directory structures when initializing projects. Each agent has its own conventions for:
 
 - **Command file formats** (Markdown, TOML, etc.)
 - **Directory structures** (`.claude/commands/`, `.windsurf/workflows/`, etc.)
@@ -57,7 +57,7 @@ Follow these steps to add a new agent (using a hypothetical new agent as an exam
 
 **IMPORTANT**: Use the actual CLI tool name as the key, not a shortened version.
 
-Add the new agent to the `AGENT_CONFIG` dictionary in `src/specify_cli/__init__.py`. This is the **single source of truth** for all agent metadata:
+Add the new agent to the `AGENT_CONFIG` dictionary in `src/minispec_cli/__init__.py`. This is the **single source of truth** for all agent metadata:
 
 ```python
 AGENT_CONFIG = {
@@ -125,26 +125,26 @@ case $agent in
 esac
 ```
 
-#### 4. Update GitHub Release Script
+#### 5. Update GitHub Release Script
 
 Modify `.github/workflows/scripts/create-github-release.sh` to include the new agent's packages:
 
 ```bash
 gh release create "$VERSION" \
   # ... existing packages ...
-  .genreleases/spec-kit-template-windsurf-sh-"$VERSION".zip \
-  .genreleases/spec-kit-template-windsurf-ps-"$VERSION".zip \
+  .genreleases/minispec-template-windsurf-sh-"$VERSION".zip \
+  .genreleases/minispec-template-windsurf-ps-"$VERSION".zip \
   # Add new agent packages here
 ```
 
-#### 5. Update Agent Context Scripts
+#### 6. Update Agent Context Scripts
 
 ##### Bash script (`scripts/bash/update-agent-context.sh`)
 
 Add file variable:
 
 ```bash
-WINDSURF_FILE="$REPO_ROOT/.windsurf/rules/specify-rules.md"
+WINDSURF_FILE="$REPO_ROOT/.windsurf/rules/minispec-rules.md"
 ```
 
 Add to case statement:
@@ -166,7 +166,7 @@ esac
 Add file variable:
 
 ```powershell
-$windsurfFile = Join-Path $repoRoot '.windsurf/rules/specify-rules.md'
+$windsurfFile = Join-Path $repoRoot '.windsurf/rules/minispec-rules.md'
 ```
 
 Add to switch statement:
@@ -187,7 +187,7 @@ switch ($AgentType) {
 }
 ```
 
-#### 6. Update CLI Tool Checks (Optional)
+#### 7. Update CLI Tool Checks (Optional)
 
 For agents that require CLI tools, add checks in the `check()` command and agent validation:
 
@@ -255,7 +255,7 @@ AGENT_CONFIG = {
 - Reduces the chance of bugs when adding new agents
 - Tool checking "just works" without additional mappings
 
-#### 7. Update Devcontainer files (Optional)
+#### 8. Update Devcontainer files (Optional)
 
 For agents that have VS Code extensions or require CLI installation, update the devcontainer configuration files:
 
@@ -346,7 +346,7 @@ Command content with {SCRIPT} and $ARGUMENTS placeholders.
 ```markdown
 ---
 description: "Command description"
-mode: speckit.command-name
+mode: minispec.command-name
 ---
 
 Command content with {SCRIPT} and $ARGUMENTS placeholders.
@@ -384,7 +384,7 @@ Different agents use different argument placeholders:
 ## Testing New Agent Integration
 
 1. **Build test**: Run package creation script locally
-2. **CLI test**: Test `specify init --ai <agent>` command
+2. **CLI test**: Test `minispec init --ai <agent>` command
 3. **File generation**: Verify correct directory structure and files
 4. **Command validation**: Ensure generated commands work with the agent
 5. **Context update**: Test agent context update scripts
@@ -403,7 +403,7 @@ Different agents use different argument placeholders:
 When adding new agents:
 
 - Consider the agent's native command/workflow patterns
-- Ensure compatibility with the Spec-Driven Development process
+- Ensure compatibility with the MiniSpec pair programming workflow
 - Document any special requirements or limitations
 - Update this guide with lessons learned
 - Verify the actual CLI tool name before adding to AGENT_CONFIG

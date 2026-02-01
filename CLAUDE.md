@@ -94,10 +94,11 @@ uv build
 
 ## Current State
 
-MiniSpec commands and CLI are complete:
+MiniSpec is release-ready:
 - All slash commands: constitution, design, tasks, analyze, next, walkthrough, validate-docs, status, checklist
 - CLI rebranded to `minispec` with updated banner, tagline, and all references
+- Template files renamed (design-template.md, tasks-template.md)
+- Documentation updated (README, AGENTS, CONTRIBUTING, SUPPORT, CHANGELOG)
 
-Still needed:
-- Template file renames (spec-template.md → design-template.md, plan-template.md → tasks-template.md)
+To release:
 - Create GitHub releases with template assets for `minispec init` to work

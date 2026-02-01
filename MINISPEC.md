@@ -405,7 +405,7 @@ AI: "Committed: 'Add User model and migration'
 ### Reusing SpecKit Infrastructure
 
 MiniSpec builds on SpecKit's foundation:
-- Same project structure (`.minispec/` instead of `.specify/`)
+- Similar project structure (`.minispec/` instead of SpecKit's `.specify/`)
 - Same script infrastructure (bash/powershell)
 - Same template system for commands
 - Constitution concept extended with MiniSpec preferences

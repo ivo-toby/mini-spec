@@ -63,6 +63,40 @@ claude
 
 7. **`/minispec.status`** - See where you are, what's next.
 
+## The Documentation Side Effect
+
+Something powerful happens when AI has to explain its reasoning to you, and you have to make decisions: **documentation writes itself**.
+
+During `/minispec.design`:
+- Every trade-off discussion becomes a **decision record** (ADR)
+- Architecture choices are captured as you make them
+- The "why" behind decisions is preserved automatically
+
+During `/minispec.next`:
+- Code patterns get documented as they're implemented
+- Module documentation grows as features complete
+- Knowledge accumulates as a byproduct of pairing
+
+The result: a living knowledge base that stays fresh because it's created during development, not after.
+
+```
+.minispec/knowledge/
+├── architecture.md          # System overview (grows over time)
+├── conventions.md           # Code patterns and style
+├── decisions/               # ADRs created during /minispec.design
+│   ├── 001-jwt-auth.md
+│   ├── 002-postgres-over-mongo.md
+│   └── ...
+├── patterns/                # Patterns documented during /minispec.next
+│   ├── error-handling.md
+│   └── api-response.md
+└── modules/                 # Module docs as features complete
+    ├── auth.md
+    └── payments.md
+```
+
+Use `/minispec.validate-docs` to check documentation freshness against code changes.
+
 ## Commands
 
 | Command | Purpose |
@@ -84,8 +118,9 @@ claude
 | **Planning** | AI generates document | Interactive conversation |
 | **Implementation** | All at once, massive PR | Small chunks, continuous review |
 | **Engineer role** | Reviewer (post-hoc) | Navigator (real-time) |
-| **Documentation** | Manual | Automatic byproduct |
+| **Documentation** | Manual afterthought | Automatic byproduct |
 | **Mental model** | Hope you read carefully | Built through dialogue |
+| **Knowledge base** | Gets stale immediately | Living, grows with code |
 
 ## Example Session
 
@@ -196,12 +231,17 @@ MiniSpec works with any AI agent that supports slash commands:
 - GitHub Copilot
 - Gemini CLI
 - Qwen Code
-- And [many more](./docs/agents.md)
+- And [many more](./AGENTS.md)
 
 ## Why "MiniSpec"?
 
 Mini = small chunks, incremental review, manageable PRs.
 Spec = still spec-driven, just collaborative instead of batch.
+
+## Learn More
+
+- **Spec-Driven Development methodology**: [speckit.org](https://speckit.org)
+- **Original SpecKit toolkit**: [github.com/github/spec-kit](https://github.com/github/spec-kit)
 
 ## Acknowledgements
 
