@@ -44,6 +44,7 @@ This is a fork of SpecKit with a fundamentally different approach:
 | ------------------------ | -------------------------------------------- |
 | `/minispec.constitution` | Set up project principles + preferences      |
 | `/minispec.walkthrough`  | Guided codebase tour                         |
+| `/minispec.import`       | Import SpecKit/OpenSpec specs into workflow  |
 | `/minispec.design`       | Interactive design conversation              |
 | `/minispec.tasks`        | Break design into reviewable chunks          |
 | `/minispec.analyze`      | Validate design ↔ tasks alignment            |

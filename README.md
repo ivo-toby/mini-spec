@@ -107,6 +107,7 @@ Use `/minispec.validate-docs` to check documentation freshness against code chan
 | -------------------------- | -------------------------------------------- |
 | `/minispec.constitution`   | Set up project principles + preferences      |
 | `/minispec.walkthrough`    | Guided codebase tour                         |
+| `/minispec.import`         | Import SpecKit/OpenSpec specs into workflow  |
 | `/minispec.design`         | Interactive design conversation              |
 | `/minispec.tasks`          | Break design into reviewable chunks          |
 | `/minispec.analyze`        | Validate design ↔ tasks alignment            |

@@ -59,10 +59,12 @@ Engineers can tune how much AI asks for confirmation vs. proceeds independently,
 | ------------------------- | -------------------------------------------------- | ---------------------------------------------- |
 | `/minispec.constitution`  | Set up project principles + MiniSpec preferences   | Project setup                                  |
 | `/minispec.walkthrough`   | Guided tour of codebase for context-building       | Before starting work, onboarding new engineers |
+| `/minispec.import`        | Import SpecKit/OpenSpec specs into MiniSpec        | When you have existing heavy specs             |
 | `/minispec.design`        | Interactive design conversation                    | Starting a new feature                         |
 | `/minispec.tasks`         | Break design into reviewable chunks (interactive)  | After design is complete                       |
 | `/minispec.analyze`       | Validate design-to-tasks coherence                 | Before starting implementation                 |
 | `/minispec.next`          | Implement next chunk in pair programming style     | During implementation (loop)                   |
+| `/minispec.checklist`     | Generate quality checklists for requirements       | Before or during implementation                |
 | `/minispec.validate-docs` | Check documentation freshness against code         | Ongoing maintenance                            |
 | `/minispec.status`        | Show current progress, what's next, what's changed | Anytime                                        |
 
