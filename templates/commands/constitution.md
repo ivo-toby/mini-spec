@@ -65,11 +65,64 @@ For each principle they mention:
 - Ask if it's a MUST (non-negotiable) or SHOULD (preferred)
 - Confirm with a summary before moving on
 
-### Phase 3: MiniSpec Preferences
+### Phase 3: Project Constraints
 
-After principles, transition to pairing preferences:
+After principles, transition to configurable constraints:
 
-> "Now let's set up how we'll work together. MiniSpec uses a pair programming model where you navigate and I drive. A few preferences will shape our collaboration."
+> "Now let's set up some guardrails for development. These are soft rules I'll enforce—things I'll check and prompt you about. They're different from hard safety hooks which always run automatically."
+
+**Commit Standards:**
+> "How should we handle commits?
+> - **Conventional commits**: I'll enforce feat:, fix:, docs:, etc. format
+> - **Ticket references**: Require issue numbers like #123 or JIRA-456
+> - **Flag TODOs**: When I see TODO/FIXME, I'll ask if it should become an issue
+> - **No rules**: You handle commit formatting yourself
+>
+> You can pick multiple. What makes sense for this project?"
+
+**Code Quality:**
+> "What code quality rules should I enforce?
+> - **Require tests**: I'll check that new code has corresponding tests
+> - **Coverage threshold**: Target coverage percentage for new code (e.g., 80%)
+> - **Linter before commit**: Run a specific linter (which one?)
+> - **Import conventions**: Validate imports follow a pattern (describe it)
+> - **No rules**: You handle code quality yourself
+>
+> What's important here?"
+
+**Chunk Size Enforcement:**
+> "You mentioned chunk size preferences earlier. Should I:
+> - **Soft warn**: Note when changes exceed the limit, but continue
+> - **Hard warn**: Pause and ask for confirmation when exceeded
+> - **No limit**: Don't track chunk size
+>
+> And what's the threshold? (Default is 80 lines)"
+
+**Documentation Requirements:**
+> "What documentation should I prompt for?
+> - **ADR for architecture**: When touching core infrastructure, prompt for an Architecture Decision Record
+> - **Changelog for features**: Require changelog entries for user-facing changes
+> - **Module doc updates**: Flag when public APIs change without doc updates
+> - **Pattern documentation**: Suggest documenting when similar code appears 3+ times
+> - **None**: I'll handle docs based on other preferences
+>
+> Which matter for this project?"
+
+**Knowledge Base Maintenance:**
+> "Should I help maintain the knowledge base?
+> - **Conventions prompts**: Ask about updating conventions.md when new patterns emerge
+> - **Architecture staleness**: Flag when architecture.md might be outdated
+> - **Decision logging**: Prompt to log significant decisions
+> - **Capture rationale**: Ask for 'why' explanations during implementation
+> - **None**: I won't prompt about knowledge base updates
+>
+> What level of knowledge maintenance do you want?"
+
+### Phase 4: MiniSpec Preferences
+
+After constraints, transition to pairing preferences:
+
+> "Finally, let's set up how we'll work together. MiniSpec uses a pair programming model where you navigate and I drive. A few preferences will shape our collaboration."
 
 **Chunk Size:**
 > "When I implement code, how much do you want to review at once?
@@ -99,7 +152,7 @@ After principles, transition to pairing preferences:
 > - Flag it and continue if it's minor, stop for major issues
 > - Update specs automatically and tell you after (for experienced teams)"
 
-### Phase 4: Synthesis and Writing
+### Phase 5: Synthesis and Writing
 
 Once you have the information:
 
@@ -109,6 +162,13 @@ Once you have the information:
    > **Principles:**
    > 1. [Principle]: [Brief description]
    > 2. ...
+   >
+   > **Project Constraints:**
+   > - Commit standards: [choices]
+   > - Code quality: [choices]
+   > - Chunk limits: [choice + threshold]
+   > - Documentation: [choices]
+   > - Knowledge maintenance: [choices]
    >
    > **MiniSpec Preferences:**
    > - Chunk size: [choice]
@@ -144,7 +204,7 @@ Once you have the information:
    - `conventions.md`: "# Conventions\n\n*Code conventions will be documented here as patterns emerge.*"
    - `glossary.md`: "# Glossary\n\n*Domain terms and definitions will be added during development.*"
 
-### Phase 5: Confirmation
+### Phase 6: Confirmation
 
 End with a clear summary:
 
@@ -152,6 +212,12 @@ End with a clear summary:
 >
 > **Your Principles:**
 > [List them]
+>
+> **Project Constraints I'll Enforce:**
+> - [Commit standards summary]
+> - [Code quality rules summary]
+> - [Documentation requirements summary]
+> - [Knowledge maintenance summary]
 >
 > **Pairing Setup:**
 > - I'll implement in [chunk size] chunks
