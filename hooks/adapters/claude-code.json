@@ -8,19 +8,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c '[ -f .minispec/hooks/scripts/protect-main.sh ] && .minispec/hooks/scripts/protect-main.sh || true'",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.minispec/hooks/scripts/claude-protect-main.sh",
             "timeout": 5
-          }
-        ]
-      }
-    ],
-
-    "SessionStart": [
-      {
-        "hooks": [
+          },
           {
-            "type": "prompt",
-            "prompt": "This project uses MiniSpec safety hooks. Before running destructive git commands (reset --hard, push --force, clean -f), always ask for explicit user confirmation. Before git push, summarize what will be pushed and confirm with the user. Check .minispec/hooks/ for available safety scripts."
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.minispec/hooks/scripts/claude-block-force.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.minispec/hooks/scripts/claude-secrets-scan.sh",
+            "timeout": 10
           }
         ]
       }
