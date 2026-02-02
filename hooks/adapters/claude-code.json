@@ -1,6 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "_comment": "Claude Code hooks configuration for MiniSpec. Copy to .claude/settings.json",
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
 
   "hooks": {
     "PreToolUse": [
@@ -9,63 +8,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .minispec/hooks/scripts/protect-main.sh",
-            "description": "Check if committing to protected branch",
-            "condition": "{{ command contains 'git commit' }}"
-          },
-          {
-            "type": "command",
-            "command": "bash .minispec/hooks/scripts/block-force.sh '{{ command }}'",
-            "description": "Block destructive git operations",
-            "condition": "{{ command contains 'git reset' or command contains 'git push -f' or command contains 'git push --force' or command contains 'git clean' }}"
-          },
-          {
-            "type": "command",
-            "command": "bash .minispec/hooks/scripts/secrets-scan.sh",
-            "description": "Scan for secrets before staging",
-            "condition": "{{ command contains 'git add' }}"
-          },
-          {
-            "type": "command",
-            "command": "bash .minispec/hooks/scripts/confirm-delete.sh '{{ args[0] }}'",
-            "description": "Confirm file deletion",
-            "condition": "{{ command starts_with 'rm ' }}"
+            "command": "bash -c '[ -f .minispec/hooks/scripts/protect-main.sh ] && .minispec/hooks/scripts/protect-main.sh || true'",
+            "timeout": 5
           }
         ]
       }
     ],
 
-    "PostToolUse": [
+    "SessionStart": [
       {
-        "matcher": "Bash",
         "hooks": [
           {
-            "type": "command",
-            "command": "bash .minispec/hooks/scripts/doc-staleness.sh",
-            "description": "Check documentation freshness",
-            "condition": "{{ command contains 'git commit' }}"
-          },
-          {
-            "type": "command",
-            "command": "bash .minispec/hooks/scripts/adr-prompt.sh",
-            "description": "Prompt for ADR on architectural changes",
-            "condition": "{{ command contains 'git commit' }}"
+            "type": "prompt",
+            "prompt": "This project uses MiniSpec safety hooks. Before running destructive git commands (reset --hard, push --force, clean -f), always ask for explicit user confirmation. Before git push, summarize what will be pushed and confirm with the user. Check .minispec/hooks/ for available safety scripts."
           }
         ]
       }
-    ],
-
-    "PrePush": [
-      {
-        "type": "command",
-        "command": "bash .minispec/hooks/scripts/pre-push.sh",
-        "description": "Require approval before push"
-      }
     ]
-  },
-
-  "permissions": {
-    "allow": [],
-    "deny": []
   }
 }

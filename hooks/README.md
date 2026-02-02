@@ -1,13 +1,13 @@
 # MiniSpec Hard Hooks
 
-This directory contains **hard hooks**—non-negotiable safety guardrails that AI agents must respect. Unlike soft rules in the constitution (which guide behavior), hard hooks enforce constraints.
+This directory contains **hard hooks**—safety guardrails that help prevent mistakes during development. Unlike soft rules in the constitution (which guide AI behavior), hard hooks enforce constraints through scripts and configuration.
 
 ## Two-Tier Enforcement
 
 | Tier | Location | Enforcement | Override |
 |------|----------|-------------|----------|
-| **Soft Rules** | `constitution.md` | Agent reads & follows | Can override with explanation |
-| **Hard Hooks** | This directory | Scripts + agent config | Requires explicit user action |
+| **Soft Rules** | `constitution.md` | AI reads & follows | Can override with explanation |
+| **Hard Hooks** | This directory | Scripts + config | Requires explicit user action |
 
 ## Directory Structure
 
@@ -33,61 +33,88 @@ hooks/
 
 ## Available Hooks
 
-### Blocking Hooks (must pass)
+| Hook | Purpose | Best Enforcement Method |
+|------|---------|------------------------|
+| `pre-push` | Human approval before pushing | Git hook |
+| `block-force` | Block `reset --hard`, `push -f`, etc. | Git hook + AI prompt |
+| `protect-main` | Prevent commits to main/master | Git hook |
+| `secrets-scan` | Detect hardcoded secrets | Git pre-commit hook |
+| `workflow-gate` | Verify design.md/tasks.md exist | AI prompt |
+| `confirm-delete` | Confirm before deleting files | AI prompt |
+| `doc-staleness` | Check if docs need update | Manual / AI prompt |
+| `adr-prompt` | Suggest ADR for architectural changes | AI prompt |
 
-| Hook | Trigger | Purpose |
-|------|---------|---------|
-| `pre-push` | Before `git push` | Require human approval |
-| `block-force` | Destructive git ops | Block `reset --hard`, `push -f`, etc. |
-| `protect-main` | Commit to main/master | Prevent direct commits |
-| `secrets-scan` | Before `git add` | Detect hardcoded secrets |
-| `workflow-gate` | Before implementation | Verify design.md/tasks.md exist |
+## Enforcement Methods
 
-### Prompting Hooks (inform, don't block)
+### 1. Git Hooks (Strongest)
 
-| Hook | Trigger | Purpose |
-|------|---------|---------|
-| `confirm-delete` | Before file deletion | Confirm before deleting |
-| `doc-staleness` | After structural changes | Check if docs need update |
-| `adr-prompt` | After architectural changes | Suggest ADR creation |
-
-## Setup by Agent
-
-### Claude Code
-
-Copy adapter to your project:
+Git hooks run automatically and can block operations. This is the most reliable enforcement.
 
 ```bash
-cp adapters/claude-code.json .claude/settings.json
+# Install git hooks
+cp scripts/secrets-scan.sh .git/hooks/pre-commit
+cp scripts/pre-push.sh .git/hooks/pre-push
+chmod +x .git/hooks/pre-commit .git/hooks/pre-push
 ```
 
-Or merge with existing settings.
+**Supported git hooks:**
+- `pre-commit` → secrets-scan, protect-main
+- `pre-push` → pre-push approval
 
-### Cursor
+### 2. AI Agent Configuration (Medium)
 
-Add content from `adapters/cursor.md` to your `.cursorrules` file.
+AI agents can be configured to run hooks or follow safety rules. However, each agent has different capabilities.
 
-### Aider
+#### Claude Code
 
-Follow instructions in `adapters/aider.md`.
+Claude Code hooks have limitations:
+- **No conditional execution** - Hooks run on ALL matching tool uses, not just specific commands
+- **No command inspection** - Hooks can't see what command is about to run before it executes
 
-### Other Agents
+The `adapters/claude-code.json` uses:
+- `PreToolUse` with `protect-main.sh` - Runs before every Bash command (lightweight check)
+- `SessionStart` prompt - Reminds Claude to ask for confirmation before destructive ops
 
-See `adapters/generic.md` for universal setup instructions.
+For full enforcement in Claude Code, combine with git hooks.
 
-## Manual Usage
+#### Cursor
 
-Scripts can be run directly:
+Add rules from `adapters/cursor.md` to your `.cursorrules` file. Cursor respects these as behavioral guidelines.
+
+#### Other Agents
+
+See `adapters/generic.md` for system prompt additions that work with any AI agent.
+
+### 3. Manual Execution (On-Demand)
+
+Run hooks manually when needed:
 
 ```bash
-# Check for secrets
-bash scripts/secrets-scan.sh src/config.ts
+# Before committing
+.minispec/hooks/scripts/secrets-scan.sh
+
+# Before pushing
+.minispec/hooks/scripts/pre-push.sh
 
 # Check protected branch
-bash scripts/protect-main.sh
+.minispec/hooks/scripts/protect-main.sh
+```
 
-# Simulate pre-push
-bash scripts/pre-push.sh origin https://github.com/user/repo
+## Recommended Setup
+
+For maximum protection, use multiple layers:
+
+```bash
+# 1. Install git hooks (automatic enforcement)
+cp .minispec/hooks/scripts/secrets-scan.sh .git/hooks/pre-commit
+cp .minispec/hooks/scripts/pre-push.sh .git/hooks/pre-push
+chmod +x .git/hooks/pre-commit .git/hooks/pre-push
+
+# 2. Keep AI agent config (behavioral guidance)
+# Claude Code: .claude/settings.json already configured
+# Cursor: Add adapters/cursor.md content to .cursorrules
+
+# 3. Manual checks available in .minispec/hooks/scripts/
 ```
 
 ## Customization
@@ -102,33 +129,42 @@ PROTECTED_BRANCHES=("main" "master" "develop" "production" "release/*")
 
 ### Modifying Secret Patterns
 
-Edit `scripts/secrets-scan.sh` `PATTERNS` array.
+Edit `scripts/secrets-scan.sh` `PATTERNS` array to add/remove patterns.
 
-### Disabling a Hook
+### Disabling Hooks
 
-In agent config, set `enabled: false` for the hook, or remove it from adapter files.
+**Git hooks:** Remove from `.git/hooks/`
 
-## Git Hooks Integration
+**Claude Code:** Remove from `.claude/settings.json`
 
-For maximum enforcement, install as git hooks:
-
-```bash
-# Create git hooks
-cp scripts/pre-push.sh .git/hooks/pre-push
-cp scripts/secrets-scan.sh .git/hooks/pre-commit
-
-# Make executable
-chmod +x .git/hooks/pre-push .git/hooks/pre-commit
-```
-
-This provides enforcement even outside AI agent sessions.
+**Cursor:** Remove from `.cursorrules`
 
 ## Philosophy
 
 > **Soft rules guide, hard hooks guard.**
 
 - Constitution constraints are suggestions the AI follows
-- Hard hooks are gates the AI cannot bypass
-- Together they create defense in depth
+- Hard hooks are gates that provide additional protection
+- Git hooks are the strongest enforcement mechanism
+- AI agent hooks provide behavioral guidance but aren't foolproof
 
-Use hard hooks sparingly—only for truly non-negotiable safety requirements.
+Use multiple layers for defense in depth. No single mechanism is perfect.
+
+## Troubleshooting
+
+### Hook not running?
+
+1. Check the script is executable: `chmod +x scripts/*.sh`
+2. For git hooks, ensure they're in `.git/hooks/` and executable
+3. For Claude Code, check `.claude/settings.json` syntax with `claude --version`
+
+### Hook runs but doesn't block?
+
+1. Git hooks block by exiting non-zero. Check the script's exit code.
+2. AI agent hooks are behavioral guidance, not hard blocks. Use git hooks for enforcement.
+
+### False positives in secrets scan?
+
+Edit `scripts/secrets-scan.sh` to:
+- Add patterns to `EXCLUDE_PATTERNS`
+- Rename test files to match exclusion patterns (e.g., `*.test.js`)
