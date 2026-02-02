@@ -13,8 +13,8 @@ INPUT=$(cat)
 # Extract the command from tool_input
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 
-# Only check git commit commands
-if [[ ! "$COMMAND" =~ ^git[[:space:]]+commit ]]; then
+# Only check commands that contain git commit (handles chained commands like "git add && git commit")
+if [[ ! "$COMMAND" =~ git[[:space:]]+commit ]]; then
     exit 0  # Allow non-commit commands
 fi
 

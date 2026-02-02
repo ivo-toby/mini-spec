@@ -13,13 +13,13 @@ INPUT=$(cat)
 # Extract the command from tool_input
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 
-# Only check git add and git commit commands
-if [[ ! "$COMMAND" =~ ^git[[:space:]]+(add|commit) ]]; then
+# Only check commands that contain git add or git commit (handles chained commands)
+if [[ ! "$COMMAND" =~ git[[:space:]]+(add|commit) ]]; then
     exit 0  # Allow non-git commands
 fi
 
 # Get staged files (or files being added)
-if [[ "$COMMAND" =~ ^git[[:space:]]+add ]]; then
+if [[ "$COMMAND" =~ git[[:space:]]+add ]]; then
     # Extract files from the add command
     FILES=$(echo "$COMMAND" | sed 's/^git add //')
     # If adding all, get staged files
