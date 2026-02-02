@@ -25,11 +25,11 @@ fi
 
 # Patterns that indicate secrets (regex)
 PATTERNS=(
-    # API Keys
-    '(api[_-]?key|apikey)\s*[=:]\s*["\x27][^"\x27]{10,}["\x27]'
-    '(secret[_-]?key|secretkey)\s*[=:]\s*["\x27][^"\x27]{10,}["\x27]'
-    '(access[_-]?token|accesstoken)\s*[=:]\s*["\x27][^"\x27]{10,}["\x27]'
-    '(auth[_-]?token|authtoken)\s*[=:]\s*["\x27][^"\x27]{10,}["\x27]'
+    # API Keys (min 6 chars to catch short test secrets too)
+    '(api[_-]?key|apikey)\s*[=:]\s*["\x27][^"\x27]{6,}["\x27]'
+    '(secret[_-]?key|secretkey)\s*[=:]\s*["\x27][^"\x27]{6,}["\x27]'
+    '(access[_-]?token|accesstoken)\s*[=:]\s*["\x27][^"\x27]{6,}["\x27]'
+    '(auth[_-]?token|authtoken)\s*[=:]\s*["\x27][^"\x27]{6,}["\x27]'
     # Passwords
     '(password|passwd|pwd)\s*[=:]\s*["\x27][^"\x27]{4,}["\x27]'
     # AWS
