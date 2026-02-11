@@ -42,6 +42,74 @@
 
 ---
 
+## Project Constraints
+
+<!--
+This section defines soft rules that the AI agent enforces during development.
+These are configurable per-project and shape AI behavior through prompts.
+For hard safety hooks (git push approval, secrets scanning), see .minispec/hooks/
+-->
+
+### Commit Standards
+
+[COMMIT_STANDARDS]
+<!--
+Options (can enable multiple):
+- conventional-commits: Enforce conventional commit format (feat:, fix:, docs:, chore:, etc.)
+- ticket-reference: Require issue/ticket reference in commit messages (e.g., #123, JIRA-456)
+- flag-todos: Flag TODO/FIXME comments and ask if they should be documented as issues
+- none: No specific commit format enforced
+-->
+
+### Code Quality Rules
+
+[CODE_QUALITY_RULES]
+<!--
+Options (can enable multiple):
+- require-tests: New functionality must include corresponding tests
+- coverage-threshold: Minimum coverage for new code (specify percentage, e.g., 80%)
+- linter-before-commit: Run linter/formatter before commits (specify tool, e.g., ruff, eslint, prettier)
+- import-conventions: Validate imports follow project patterns (describe pattern)
+- none: No automated code quality rules
+-->
+
+### Chunk Size Limits
+
+[CHUNK_SIZE_LIMITS]
+<!--
+Options:
+- warn-soft: Warn if changes exceed preferred chunk size (continues anyway)
+- warn-hard: Warn and pause for confirmation if changes exceed limit
+- no-limit: No warnings about chunk size
+- threshold: Line count that triggers warning (default: 80)
+-->
+
+### Documentation Requirements
+
+[DOCUMENTATION_REQUIREMENTS]
+<!--
+Options (can enable multiple):
+- adr-for-architecture: Prompt for ADR when touching core/architectural code
+- changelog-for-features: Require changelog entry for user-facing changes
+- update-module-docs: Flag when public APIs change without doc updates
+- pattern-documentation: Suggest documenting patterns when similar code appears 3+ times
+- none: No documentation requirements
+-->
+
+### Knowledge Base Maintenance
+
+[KNOWLEDGE_MAINTENANCE]
+<!--
+Options (can enable multiple):
+- conventions-prompts: Prompt to update conventions.md when new patterns are introduced
+- architecture-staleness: Flag when architecture.md might be stale after structural changes
+- decision-logging: Auto-prompt to log significant decisions to decisions/
+- capture-rationale: Prompt to capture "why" explanations during implementation
+- none: No knowledge base maintenance prompts
+-->
+
+---
+
 ## MiniSpec Preferences
 
 <!--

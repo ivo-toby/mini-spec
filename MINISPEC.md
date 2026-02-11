@@ -250,7 +250,48 @@ We use JWT tokens with:
 
 ## Constitution Additions
 
-The constitution setup (`/minispec.constitution`) should capture these MiniSpec-specific preferences:
+The constitution setup (`/minispec.constitution`) captures both project constraints and pairing preferences:
+
+### Project Constraints (Soft Rules)
+
+```markdown
+## Project Constraints
+
+### Commit Standards
+- [ ] Conventional commits (feat:, fix:, docs:, etc.)
+- [ ] Ticket references required (#123, JIRA-456)
+- [ ] Flag TODO/FIXME for documentation review
+- [ ] No specific rules
+
+### Code Quality Rules
+- [ ] Require tests for new functionality
+- [ ] Coverage threshold: ___% (e.g., 80%)
+- [ ] Linter before commit: ___________ (e.g., ruff, eslint)
+- [ ] Import conventions: ___________ (describe pattern)
+- [ ] No specific rules
+
+### Chunk Size Limits
+- [ ] Soft warn (note when exceeded, continue)
+- [ ] Hard warn (pause for confirmation)
+- [ ] No limit
+- Threshold: ___ lines (default: 80)
+
+### Documentation Requirements
+- [ ] ADR for architectural changes
+- [ ] Changelog for user-facing features
+- [ ] Update module docs when APIs change
+- [ ] Suggest pattern docs when code repeats 3+ times
+- [ ] No specific requirements
+
+### Knowledge Base Maintenance
+- [ ] Prompt for conventions.md updates
+- [ ] Flag architecture.md staleness
+- [ ] Auto-prompt for decision logging
+- [ ] Capture rationale during implementation
+- [ ] No maintenance prompts
+```
+
+### MiniSpec Preferences (Pairing Setup)
 
 ```markdown
 ## MiniSpec Preferences
@@ -289,6 +330,74 @@ When implementation reveals design issues, AI should:
 - [ ] Flag it, propose spec update, continue if minor
 - [ ] Update specs automatically, notify after (recommended for experienced teams)
 ```
+
+---
+
+## Enforcement: Constraints vs Hooks
+
+MiniSpec uses a two-tier system for enforcing development practices:
+
+### Tier 1: Project Constraints (Soft Rules)
+
+These are **agent-enforced rules** configured in the constitution. The AI reads these preferences and adjusts its behavior accordingly. They're flexible, configurable per-project, and can be overridden when needed.
+
+Configured during `/minispec.constitution`, stored in `constitution.md`:
+
+| Category | Options |
+|----------|---------|
+| **Commit Standards** | Conventional commits, ticket references, TODO/FIXME flagging |
+| **Code Quality** | Test requirements, coverage thresholds, linter enforcement, import conventions |
+| **Chunk Size Limits** | Soft/hard warnings when changes exceed threshold |
+| **Documentation Requirements** | ADR prompts, changelog requirements, module doc updates, pattern documentation |
+| **Knowledge Maintenance** | Conventions updates, architecture staleness checks, decision logging, rationale capture |
+
+Example in constitution:
+
+```markdown
+## Project Constraints
+
+### Commit Standards
+- conventional-commits: Enforce feat:, fix:, docs: format
+- flag-todos: Ask if TODO/FIXME should become issues
+
+### Code Quality Rules
+- require-tests: New functionality must include tests
+- linter-before-commit: Run `ruff check` before commits
+
+### Documentation Requirements
+- adr-for-architecture: Prompt for ADR when touching core infrastructure
+- changelog-for-features: Require changelog for user-facing changes
+```
+
+The AI will prompt, warn, and guide based on these rules, but the engineer can override with explanation.
+
+### Tier 2: Hard Hooks (Safety Nets)
+
+These are **actual Claude Code hooks** that run automatically and cannot be bypassed without explicit reconfiguration. They're for non-negotiable safety constraints.
+
+| Hook | Purpose |
+|------|---------|
+| **Pre-push approval** | Human confirmation before `git push` |
+| **Force operation block** | Block `reset --hard`, `push --force`, `rebase` |
+| **Direct main/master block** | Prevent commits directly to protected branches |
+| **Destructive action confirmation** | Confirm before deleting files/directories |
+| **Secrets scanning** | Block commits containing hardcoded secrets |
+| **Workflow gates** | Verify `design.md`/`tasks.md` exist before implementation |
+| **Doc staleness check** | Flag when docs might be outdated after structural changes |
+
+Hard hooks are configured in `.claude/settings.json` (for Claude Code) with scripts under `.minispec/hooks/`, scaffolded during `minispec init`. See [Hooks Configuration](#hooks-configuration) for setup details.
+
+### Why Two Tiers?
+
+| Soft Rules (Constitution) | Hard Hooks |
+|---------------------------|------------|
+| Configurable per-project | Always enforced |
+| AI-enforced through prompts | System-enforced through hooks |
+| Can be overridden with explanation | Require config change to bypass |
+| Guide behavior | Block behavior |
+| Examples: commit format, test coverage | Examples: push approval, secrets scan |
+
+The philosophy: **soft rules guide, hard hooks guard**. Engineers should be nudged toward best practices (soft), but prevented from catastrophic mistakes (hard).
 
 ---
 
@@ -479,6 +588,76 @@ Projects can adopt MiniSpec incrementally:
 - Start with `/minispec.walkthrough` on existing SpecKit projects
 - Use `/minispec.next` for implementation instead of `/speckit.implement`
 - Gradually add documentation structure
+
+---
+
+## Hooks Configuration
+
+Hard hooks are scaffolded during `minispec init` and live in the Claude Code hooks directory. These provide non-negotiable safety guardrails.
+
+### Directory Structure
+
+```text
+.claude/
+└── settings.json          # Hook configurations
+```
+
+### Available Hard Hooks
+
+| Hook ID | Trigger | Action |
+|---------|---------|--------|
+| `minispec.pre-push` | Before `git push` | Require human approval |
+| `minispec.block-force` | `reset --hard`, `push --force` | Block with warning |
+| `minispec.protect-main` | Commit to main/master | Block direct commits |
+| `minispec.confirm-delete` | File/directory deletion | Require confirmation |
+| `minispec.secrets-scan` | Before staging | Scan for hardcoded secrets |
+| `minispec.workflow-gate` | `/minispec.next` | Verify design.md/tasks.md exist |
+| `minispec.doc-staleness` | After structural changes | Check knowledge base freshness |
+
+### Example Hook Configuration
+
+```json
+{
+  "hooks": {
+    "pre-push": {
+      "command": "echo 'Push to remote?' && read -p '[y/N] ' confirm && [[ $confirm == [yY] ]]",
+      "description": "Require confirmation before pushing"
+    },
+    "pre-commit": {
+      "command": "! grep -rE '(api[_-]?key|password|secret)\\s*=\\s*[\"'\\'][^\"'\\'']+[\"'\\']' --include='*.py' --include='*.js' --include='*.ts' .",
+      "description": "Block commits with hardcoded secrets"
+    }
+  }
+}
+```
+
+### Enabling/Disabling Hooks
+
+Hooks can be toggled without removing them:
+
+```bash
+# Disable a hook temporarily
+minispec hooks disable pre-push
+
+# Re-enable
+minispec hooks enable pre-push
+
+# List hook status
+minispec hooks list
+```
+
+### Hook vs Constraint Decision Guide
+
+Use this to decide where a rule belongs:
+
+| If the rule... | Use |
+|----------------|-----|
+| Should never be bypassed | Hard Hook |
+| Can be overridden with good reason | Soft Constraint |
+| Involves safety (secrets, force ops) | Hard Hook |
+| Involves style (commit format, tests) | Soft Constraint |
+| Requires external tooling | Hard Hook |
+| Is about prompting/guiding behavior | Soft Constraint |
 
 ---
 

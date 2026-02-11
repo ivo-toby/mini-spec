@@ -1,0 +1,152 @@
+# MiniSpec Hard Hooks Configuration
+# These are non-negotiable safety guardrails that run automatically.
+# For soft rules (configurable, overridable), see constitution.md Project Constraints.
+#
+# Hook scripts live in ./scripts/ and can be called by any AI agent.
+# Agent-specific adapters in ./adapters/ translate these to each agent's format.
+
+version: "1.0"
+
+hooks:
+  # ============================================================================
+  # SAFETY GATES - Prevent catastrophic mistakes
+  # ============================================================================
+
+  pre-push:
+    id: minispec.pre-push
+    description: Require human approval before pushing to remote
+    trigger: Before git push
+    script: scripts/pre-push.sh
+    enabled: true
+    severity: blocking
+
+  block-force:
+    id: minispec.block-force
+    description: Block destructive git operations
+    trigger: Before reset --hard, push --force, rebase, clean -f
+    script: scripts/block-force.sh
+    enabled: true
+    severity: blocking
+    patterns:
+      - "git reset --hard"
+      - "git push --force"
+      - "git push -f"
+      - "git rebase"
+      - "git clean -f"
+
+  protect-main:
+    id: minispec.protect-main
+    description: Prevent direct commits to protected branches
+    trigger: Before commit to main/master/develop
+    script: scripts/protect-main.sh
+    enabled: true
+    severity: blocking
+    protected_branches:
+      - main
+      - master
+      - develop
+
+  confirm-delete:
+    id: minispec.confirm-delete
+    description: Require confirmation before deleting files/directories
+    trigger: Before rm, unlink, or delete operations
+    script: scripts/confirm-delete.sh
+    enabled: true
+    severity: prompting
+
+  # ============================================================================
+  # SECURITY - Prevent secrets exposure
+  # ============================================================================
+
+  secrets-scan:
+    id: minispec.secrets-scan
+    description: Scan for hardcoded secrets before staging
+    trigger: Before git add
+    script: scripts/secrets-scan.sh
+    enabled: true
+    severity: blocking
+    patterns:
+      # API keys and tokens
+      - "(api[_-]?key|apikey)\\s*[=:]\\s*['\"][^'\"]{10,}['\"]"
+      - "(secret[_-]?key|secretkey)\\s*[=:]\\s*['\"][^'\"]{10,}['\"]"
+      - "(access[_-]?token|accesstoken)\\s*[=:]\\s*['\"][^'\"]{10,}['\"]"
+      - "(auth[_-]?token|authtoken)\\s*[=:]\\s*['\"][^'\"]{10,}['\"]"
+      # Passwords
+      - "(password|passwd|pwd)\\s*[=:]\\s*['\"][^'\"]{4,}['\"]"
+      # AWS
+      - "AKIA[0-9A-Z]{16}"
+      - "aws[_-]?secret[_-]?access[_-]?key"
+      # Private keys
+      - "-----BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY-----"
+      # Database URLs with credentials
+      - "(mysql|postgres|mongodb)://[^:]+:[^@]+@"
+    exclude_patterns:
+      - "*.example"
+      - "*.sample"
+      - "*.template"
+      - "*_test.go"
+      - "*_test.py"
+      - "*.test.js"
+      - "*.test.ts"
+
+  # ============================================================================
+  # WORKFLOW GATES - Ensure MiniSpec process is followed
+  # ============================================================================
+
+  workflow-gate-design:
+    id: minispec.workflow-gate-design
+    description: Verify design.md exists before implementation
+    trigger: Before /minispec.next
+    script: scripts/workflow-gate.sh
+    enabled: true
+    severity: blocking
+    check: design
+
+  workflow-gate-tasks:
+    id: minispec.workflow-gate-tasks
+    description: Verify tasks.md exists before implementation
+    trigger: Before /minispec.next
+    script: scripts/workflow-gate.sh
+    enabled: true
+    severity: blocking
+    check: tasks
+
+  # ============================================================================
+  # DOCUMENTATION - Maintain knowledge base freshness
+  # ============================================================================
+
+  doc-staleness:
+    id: minispec.doc-staleness
+    description: Check if docs need updating after structural changes
+    trigger: After changes to core files
+    script: scripts/doc-staleness.sh
+    enabled: true
+    severity: prompting
+    watch_paths:
+      - "src/*/index.*"
+      - "src/core/**"
+      - "src/lib/**"
+      - "*/models/*"
+      - "*/schemas/*"
+      - "*/types/*"
+
+  adr-prompt:
+    id: minispec.adr-prompt
+    description: Prompt for ADR when touching architectural code
+    trigger: After changes to architecture-related files
+    script: scripts/adr-prompt.sh
+    enabled: true
+    severity: prompting
+    watch_paths:
+      - "src/core/**"
+      - "src/infrastructure/**"
+      - "*/config/*"
+      - "docker-compose*"
+      - "Dockerfile*"
+      - "*.config.js"
+      - "*.config.ts"
+
+# Severity levels:
+# - blocking: Operation cannot proceed until resolved
+# - prompting: User is prompted but can choose to continue
+# - warning: Warning is shown but operation continues

@@ -899,15 +899,33 @@ def download_and_extract_template(project_path: Path, ai_assistant: str, script_
 
 
 def ensure_executable_scripts(project_path: Path, tracker: StepTracker | None = None) -> None:
-    """Ensure POSIX .sh scripts under .minispec/scripts (recursively) have execute bits (no-op on Windows)."""
+    """Ensure POSIX .sh scripts under .minispec/scripts and .minispec/hooks/scripts (recursively) have execute bits (no-op on Windows)."""
     if os.name == "nt":
         return  # Windows: skip silently
-    scripts_root = project_path / ".minispec" / "scripts"
-    if not scripts_root.is_dir():
+
+    # Directories to scan for shell scripts
+    script_dirs = [
+        project_path / ".minispec" / "scripts",
+        project_path / ".minispec" / "hooks" / "scripts",
+    ]
+
+    # Filter to only existing directories
+    script_dirs = [d for d in script_dirs if d.is_dir()]
+
+    if not script_dirs:
         return
+
+    # Process all directories
+    all_scripts = []
+    for scripts_root in script_dirs:
+        all_scripts.extend(scripts_root.rglob("*.sh"))
+
+    if not all_scripts:
+        return
+
     failures: list[str] = []
     updated = 0
-    for script in scripts_root.rglob("*.sh"):
+    for script in all_scripts:
         try:
             if script.is_symlink() or not script.is_file():
                 continue
@@ -929,7 +947,7 @@ def ensure_executable_scripts(project_path: Path, tracker: StepTracker | None = 
             os.chmod(script, new_mode)
             updated += 1
         except Exception as e:
-            failures.append(f"{script.relative_to(scripts_root)}: {e}")
+            failures.append(f"{script.relative_to(project_path)}: {e}")
     if tracker:
         detail = f"{updated} updated" + (f", {len(failures)} failed" if failures else "")
         tracker.add("chmod", "Set script permissions recursively")
@@ -941,6 +959,35 @@ def ensure_executable_scripts(project_path: Path, tracker: StepTracker | None = 
             console.print("[yellow]Some scripts could not be updated:[/yellow]")
             for f in failures:
                 console.print(f"  - {f}")
+
+def verify_hooks_installed(project_path: Path, tracker: StepTracker | None = None) -> None:
+    """Verify that hooks were installed correctly and report status."""
+    hooks_dir = project_path / ".minispec" / "hooks"
+    scripts_dir = hooks_dir / "scripts"
+    adapters_dir = hooks_dir / "adapters"
+
+    if not hooks_dir.is_dir():
+        if tracker:
+            tracker.skip("hooks", "not included in template")
+        return
+
+    # Count installed hooks
+    hook_scripts = list(scripts_dir.glob("*.sh")) if scripts_dir.is_dir() else []
+    adapter_files = list(adapters_dir.iterdir()) if adapters_dir.is_dir() else []
+
+    if hook_scripts:
+        hook_names = [s.stem for s in hook_scripts]
+        adapter_count = len(adapter_files)
+        adapter_summary = f", {adapter_count} adapter{'s' if adapter_count != 1 else ''}" if adapter_count else ""
+        detail = f"{len(hook_scripts)} hooks ({', '.join(hook_names[:3])}{'...' if len(hook_names) > 3 else ''}){adapter_summary}"
+        if tracker:
+            tracker.complete("hooks", detail)
+        else:
+            console.print(f"[cyan]Installed {len(hook_scripts)} safety hooks{adapter_summary}[/cyan]")
+    else:
+        if tracker:
+            tracker.skip("hooks", "no hook scripts found")
+
 
 @app.command()
 def init(
@@ -1107,7 +1154,8 @@ def init(
         ("extract", "Extract template"),
         ("zip-list", "Archive contents"),
         ("extracted-summary", "Extraction summary"),
-        ("chmod", "Ensure scripts executable"),
+        ("chmod", "Set script permissions"),
+        ("hooks", "Configure safety hooks"),
         ("cleanup", "Cleanup"),
         ("git", "Initialize git repository"),
         ("final", "Finalize")
@@ -1127,6 +1175,9 @@ def init(
             download_and_extract_template(project_path, selected_ai, selected_script, here, verbose=False, tracker=tracker, client=local_client, debug=debug, github_token=github_token)
 
             ensure_executable_scripts(project_path, tracker=tracker)
+
+            # Verify hooks were installed
+            verify_hooks_installed(project_path, tracker=tracker)
 
             if not no_git:
                 tracker.start("git")

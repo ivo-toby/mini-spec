@@ -121,6 +121,59 @@ EOF
   done
 }
 
+setup_agent_hooks() {
+  local agent=$1 base_dir=$2 spec_dir=$3
+  local adapters_dir="$spec_dir/hooks/adapters"
+
+  # Map agents to their adapter type
+  case $agent in
+    claude)
+      # For Claude Code, copy adapter to .claude/settings.json (merge if exists)
+      if [[ -f "$adapters_dir/claude-code.json" ]]; then
+        local target_dir="$base_dir/.claude"
+        local target_file="$target_dir/settings.json"
+        mkdir -p "$target_dir"
+        if [[ -f "$target_file" ]]; then
+          # Merge with existing settings (simple concat for now, jq would be better)
+          echo "Note: Claude settings.json already exists, adapter not auto-merged"
+        else
+          cp "$adapters_dir/claude-code.json" "$target_file"
+          echo "Installed Claude Code hooks adapter"
+        fi
+      fi
+      ;;
+    cursor-agent)
+      # For Cursor, create .cursorrules if it doesn't exist
+      if [[ -f "$adapters_dir/cursor.md" ]]; then
+        local target_file="$base_dir/.cursorrules"
+        if [[ ! -f "$target_file" ]]; then
+          # Extract just the rules section from the adapter file
+          awk '/^## MiniSpec Hard Hooks$/,0' "$adapters_dir/cursor.md" > "$target_file"
+          echo "Installed Cursor hooks adapter to .cursorrules"
+        else
+          echo "Note: .cursorrules already exists, see hooks/adapters/cursor.md for hook rules"
+        fi
+      fi
+      ;;
+    copilot)
+      # For Copilot, add hook instructions to copilot-instructions.md
+      if [[ -f "$adapters_dir/generic.md" ]]; then
+        local target_dir="$base_dir/.github"
+        local target_file="$target_dir/copilot-instructions.md"
+        mkdir -p "$target_dir"
+        if [[ ! -f "$target_file" ]]; then
+          # Extract the universal system prompt section
+          awk '/^## Universal System Prompt$/,/^## Git Hooks Setup$/' "$adapters_dir/generic.md" | head -n -1 > "$target_file"
+          echo "Installed Copilot hooks instructions"
+        fi
+      fi
+      ;;
+    *)
+      # For other agents, they can use hooks/adapters/generic.md manually
+      ;;
+  esac
+}
+
 build_variant() {
   local agent=$1 script=$2
   local base_dir="$GENRELEASES_DIR/minispec-${agent}-package-${script}"
@@ -151,6 +204,15 @@ build_variant() {
   fi
 
   [[ -d templates ]] && { mkdir -p "$SPEC_DIR/templates"; find templates -type f -not -path "templates/commands/*" -not -name "vscode-settings.json" -exec cp --parents {} "$SPEC_DIR"/ \; ; echo "Copied templates -> .minispec/templates"; }
+
+  # Copy hooks to .minispec/hooks
+  if [[ -d hooks ]]; then
+    cp -r hooks "$SPEC_DIR/"
+    echo "Copied hooks -> .minispec/hooks"
+
+    # Set up agent-specific adapter
+    setup_agent_hooks "$agent" "$base_dir" "$SPEC_DIR"
+  fi
   
   # NOTE: We substitute {ARGS} internally. Outward tokens differ intentionally:
   #   * Markdown/prompt (claude, copilot, cursor-agent, opencode): $ARGUMENTS
