@@ -226,6 +226,39 @@ Set these during `/minispec.constitution`:
     └── modules/                 # Module docs (auto-created)
 ```
 
+## Safety Hooks
+
+MiniSpec includes hard hooks — scripts that guard against common mistakes during AI-assisted development. Unlike soft rules in the constitution, these actively block dangerous operations.
+
+| Hook | What it does |
+| --- | --- |
+| `protect-main` | Blocks commits to main, master, develop, production |
+| `block-force` | Blocks `git reset --hard`, `git push --force`, `git clean -f` |
+| `secrets-scan` | Scans staged files for API keys, passwords, private keys |
+
+### Claude Code
+
+Hooks are enforced automatically via [Claude Code hooks](https://docs.anthropic.com/en/docs/claude-code/hooks). When you run `minispec init`, the generated `.claude/settings.json` registers PreToolUse hooks that intercept Bash commands and return `permissionDecision: "deny"` for blocked operations.
+
+### Other Agents
+
+For Cursor, Aider, and other agents, see the adapter configs in [`hooks/adapters/`](./hooks/adapters/). These use system prompt rules and git hooks for enforcement.
+
+See [`hooks/README.md`](./hooks/README.md) for full details, customization, and troubleshooting.
+
+## Local Development
+
+```bash
+git clone https://github.com/ivo-toby/mini-spec.git
+cd mini-spec
+
+# Install globally (editable — picks up source changes)
+uv tool install -e .
+
+# Now works from any directory
+minispec --help
+```
+
 ## Prerequisites
 
 - Python 3.11+
