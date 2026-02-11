@@ -68,17 +68,15 @@ AI agents can be configured to run hooks or follow safety rules. However, each a
 
 #### Claude Code
 
-Claude Code hooks have limitations:
+Claude Code hooks use the PreToolUse JSON protocol — each script reads the pending command from stdin and returns a `permissionDecision` via stdout.
 
-- **No conditional execution** - Hooks run on ALL matching tool uses, not just specific commands
-- **No command inspection** - Hooks can't see what command is about to run before it executes
+The `adapters/claude-code.json` registers three PreToolUse hooks:
 
-The `adapters/claude-code.json` uses:
+- `claude-protect-main.sh` — Denies commits on protected branches
+- `claude-block-force.sh` — Denies destructive git commands
+- `claude-secrets-scan.sh` — Denies staging/committing files containing secrets
 
-- `PreToolUse` with `protect-main.sh` - Runs before every Bash command (lightweight check)
-- `SessionStart` prompt - Reminds Claude to ask for confirmation before destructive ops
-
-For full enforcement in Claude Code, combine with git hooks.
+For additional enforcement, combine with git hooks.
 
 #### Cursor
 

@@ -977,11 +977,13 @@ def verify_hooks_installed(project_path: Path, tracker: StepTracker | None = Non
 
     if hook_scripts:
         hook_names = [s.stem for s in hook_scripts]
-        detail = f"{len(hook_scripts)} hooks ({', '.join(hook_names[:3])}{'...' if len(hook_names) > 3 else ''})"
+        adapter_count = len(adapter_files)
+        adapter_summary = f", {adapter_count} adapter{'s' if adapter_count != 1 else ''}" if adapter_count else ""
+        detail = f"{len(hook_scripts)} hooks ({', '.join(hook_names[:3])}{'...' if len(hook_names) > 3 else ''}){adapter_summary}"
         if tracker:
             tracker.complete("hooks", detail)
         else:
-            console.print(f"[cyan]Installed {len(hook_scripts)} safety hooks[/cyan]")
+            console.print(f"[cyan]Installed {len(hook_scripts)} safety hooks{adapter_summary}[/cyan]")
     else:
         if tracker:
             tracker.skip("hooks", "no hook scripts found")

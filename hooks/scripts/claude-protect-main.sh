@@ -28,11 +28,11 @@ PROTECTED_BRANCHES=("main" "master" "develop" "production")
 for branch in "${PROTECTED_BRANCHES[@]}"; do
     if [[ "$CURRENT_BRANCH" == "$branch" ]]; then
         # Return deny decision as JSON
-        jq -n '{
+        jq -n --arg branch "$CURRENT_BRANCH" '{
             hookSpecificOutput: {
                 hookEventName: "PreToolUse",
                 permissionDecision: "deny",
-                permissionDecisionReason: "Direct commits to '"$CURRENT_BRANCH"' are blocked. Create a feature branch instead: git checkout -b feature/your-feature"
+                permissionDecisionReason: ("Direct commits to " + $branch + " are blocked. Create a feature branch instead: git checkout -b feature/your-feature")
             }
         }'
         exit 0

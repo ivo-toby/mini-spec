@@ -21,12 +21,11 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 # Defaults
-AGENT="${1:-claude}"
-SCRIPT_TYPE="${2:-sh}"
 TEST_DIR="/tmp/minispec-test"
 OPEN_CLAUDE=false
 
-# Parse flags
+# Parse arguments: separate flags from positional args
+POSITIONAL=()
 for arg in "$@"; do
     case $arg in
         --open)
@@ -50,14 +49,14 @@ for arg in "$@"; do
             echo "  $0 --open             # Claude + sh, then open Claude Code"
             exit 0
             ;;
+        *)
+            POSITIONAL+=("$arg")
+            ;;
     esac
 done
 
-# Filter out flags from positional args
-AGENT="${1:-claude}"
-[[ "$AGENT" == "--open" ]] && AGENT="claude"
-SCRIPT_TYPE="${2:-sh}"
-[[ "$SCRIPT_TYPE" == "--open" ]] && SCRIPT_TYPE="sh"
+AGENT="${POSITIONAL[0]:-claude}"
+SCRIPT_TYPE="${POSITIONAL[1]:-sh}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"

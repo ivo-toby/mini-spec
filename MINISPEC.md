@@ -385,7 +385,7 @@ These are **actual Claude Code hooks** that run automatically and cannot be bypa
 | **Workflow gates** | Verify `design.md`/`tasks.md` exist before implementation |
 | **Doc staleness check** | Flag when docs might be outdated after structural changes |
 
-Hard hooks are configured separately in `.claude/hooks/` and scaffolded during `minispec init`. See [Hooks Configuration](#hooks-configuration) for setup details.
+Hard hooks are configured in `.claude/settings.json` (for Claude Code) with scripts under `.minispec/hooks/`, scaffolded during `minispec init`. See [Hooks Configuration](#hooks-configuration) for setup details.
 
 ### Why Two Tiers?
 

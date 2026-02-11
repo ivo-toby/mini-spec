@@ -14,12 +14,12 @@ NC='\033[0m'
 
 # Files to scan (staged files if no args)
 if [[ $# -eq 0 ]]; then
-    FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || echo "")
+    mapfile -t FILES < <(git diff --cached --name-only --diff-filter=ACM 2>/dev/null)
 else
-    FILES="$*"
+    FILES=("$@")
 fi
 
-if [[ -z "$FILES" ]]; then
+if [[ ${#FILES[@]} -eq 0 ]]; then
     exit 0
 fi
 
@@ -78,7 +78,7 @@ should_exclude() {
 }
 
 # Scan each file
-for file in $FILES; do
+for file in "${FILES[@]}"; do
     if should_exclude "$file"; then
         continue
     fi

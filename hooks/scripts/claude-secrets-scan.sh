@@ -18,20 +18,15 @@ if [[ ! "$COMMAND" =~ git[[:space:]]+(add|commit) ]]; then
     exit 0  # Allow non-git commands
 fi
 
-# Get staged files (or files being added)
-if [[ "$COMMAND" =~ git[[:space:]]+add ]]; then
-    # Extract files from the add command
-    FILES=$(echo "$COMMAND" | sed 's/^git add //')
-    # If adding all, get staged files
-    if [[ "$FILES" == "." ]] || [[ "$FILES" == "-A" ]] || [[ "$FILES" == "--all" ]]; then
-        FILES=$(git diff --name-only 2>/dev/null || echo "")
-    fi
+# Get files to scan: for commit check staged files, for add check modified+untracked
+if [[ "$COMMAND" =~ git[[:space:]]+commit ]]; then
+    mapfile -t FILES < <(git diff --cached --name-only --diff-filter=ACM 2>/dev/null)
 else
-    # For commit, check already staged files
-    FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || echo "")
+    # For git add, check modified and untracked files
+    mapfile -t FILES < <(git ls-files -m -o --exclude-standard 2>/dev/null)
 fi
 
-if [[ -z "$FILES" ]]; then
+if [[ ${#FILES[@]} -eq 0 ]]; then
     exit 0
 fi
 
@@ -47,7 +42,7 @@ PATTERNS=(
 FOUND_SECRETS=""
 
 # Scan each file
-for file in $FILES; do
+for file in "${FILES[@]}"; do
     if [[ ! -f "$file" ]]; then
         continue
     fi

@@ -41,9 +41,9 @@ if [[ -n "$FEATURE_NAME" ]]; then
 elif [[ -n "${MINISPEC_FEATURE:-}" ]]; then
     FEATURE_DIR="$SPECS_DIR/$MINISPEC_FEATURE"
 else
-    # Try to find the most recent feature
+    # Try to find the most recently modified feature
     if [[ -d "$SPECS_DIR" ]]; then
-        FEATURE_DIR=$(find "$SPECS_DIR" -maxdepth 1 -type d ! -name specs | sort -r | head -1)
+        FEATURE_DIR=$(ls -td "$SPECS_DIR"/*/ 2>/dev/null | head -1)
     fi
 fi
 
