@@ -53,7 +53,7 @@ chmod +x .git/hooks/pre-commit .git/hooks/pre-push
 
 ### 3. Create `.aiderignore`
 
-```
+```text
 # Prevent Aider from modifying hook scripts
 .minispec/hooks/
 .git/hooks/
@@ -63,7 +63,7 @@ chmod +x .git/hooks/pre-commit .git/hooks/pre-push
 
 If using a custom system prompt with Aider, add:
 
-```
+```text
 ## MiniSpec Safety Rules
 
 You are working in a MiniSpec-enabled project. Follow these NON-NEGOTIABLE rules:

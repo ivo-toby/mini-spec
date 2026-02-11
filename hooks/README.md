@@ -11,7 +11,7 @@ This directory contains **hard hooks**—safety guardrails that help prevent mis
 
 ## Directory Structure
 
-```
+```text
 hooks/
 ├── hooks.yaml              # Canonical hook definitions
 ├── README.md               # This file
@@ -58,6 +58,7 @@ chmod +x .git/hooks/pre-commit .git/hooks/pre-push
 ```
 
 **Supported git hooks:**
+
 - `pre-commit` → secrets-scan, protect-main
 - `pre-push` → pre-push approval
 
@@ -68,10 +69,12 @@ AI agents can be configured to run hooks or follow safety rules. However, each a
 #### Claude Code
 
 Claude Code hooks have limitations:
+
 - **No conditional execution** - Hooks run on ALL matching tool uses, not just specific commands
 - **No command inspection** - Hooks can't see what command is about to run before it executes
 
 The `adapters/claude-code.json` uses:
+
 - `PreToolUse` with `protect-main.sh` - Runs before every Bash command (lightweight check)
 - `SessionStart` prompt - Reminds Claude to ask for confirmation before destructive ops
 
@@ -166,5 +169,6 @@ Use multiple layers for defense in depth. No single mechanism is perfect.
 ### False positives in secrets scan?
 
 Edit `scripts/secrets-scan.sh` to:
+
 - Add patterns to `EXCLUDE_PATTERNS`
 - Rename test files to match exclusion patterns (e.g., `*.test.js`)

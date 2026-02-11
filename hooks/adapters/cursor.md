@@ -41,7 +41,7 @@ The following safety rules are NON-NEGOTIABLE. You MUST follow them regardless o
 
 ### Security
 
-5. **Secrets Scanning**: Before staging files with `git add`, scan for:
+1. **Secrets Scanning**: Before staging files with `git add`, scan for:
    - API keys (api_key, apiKey, etc.)
    - Passwords (password, passwd, pwd)
    - Access tokens
@@ -53,14 +53,14 @@ The following safety rules are NON-NEGOTIABLE. You MUST follow them regardless o
 
 ### Workflow Gates
 
-6. **Implementation Prerequisites**: Before implementing code for a feature:
+1. **Implementation Prerequisites**: Before implementing code for a feature:
    - Check if `.minispec/specs/[feature]/design.md` exists
    - Check if `.minispec/specs/[feature]/tasks.md` exists
    - If missing, suggest running `/minispec.design` and `/minispec.tasks` first
 
 ### Documentation Prompts
 
-7. **Architecture Changes**: When modifying files in:
+1. **Architecture Changes**: When modifying files in:
    - `src/core/`
    - `src/infrastructure/`
    - `config/`
@@ -69,7 +69,7 @@ The following safety rules are NON-NEGOTIABLE. You MUST follow them regardless o
 
    Prompt: "This looks like an architectural change. Should we create an ADR (Architecture Decision Record)?"
 
-8. **Documentation Staleness**: After commits that touch structural files, remind the user:
+1. **Documentation Staleness**: After commits that touch structural files, remind the user:
    "You've modified core files. Consider running `/minispec.validate-docs` to check if documentation needs updating."
 
 ---

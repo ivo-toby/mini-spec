@@ -5,6 +5,7 @@ This guide helps configure any AI coding assistant to respect MiniSpec safety ho
 ## Overview
 
 MiniSpec hooks are shell scripts that enforce safety guardrails. Any AI agent can use them by:
+
 1. Adding rules to its system prompt/configuration
 2. Calling hook scripts before/after operations
 3. Using git hooks for automated enforcement
@@ -13,7 +14,7 @@ MiniSpec hooks are shell scripts that enforce safety guardrails. Any AI agent ca
 
 Add this to your AI agent's system prompt or configuration:
 
-```
+```text
 ## MiniSpec Safety Hooks (MANDATORY)
 
 This project uses MiniSpec safety hooks. The following rules are NON-NEGOTIABLE
@@ -114,6 +115,7 @@ fi
 ```
 
 Make executable:
+
 ```bash
 chmod +x .git/hooks/pre-commit .git/hooks/pre-push
 ```
@@ -121,19 +123,24 @@ chmod +x .git/hooks/pre-commit .git/hooks/pre-push
 ## Agent-Specific Notes
 
 ### GitHub Copilot
+
 - Add rules to `.github/copilot-instructions.md`
 - Copilot will read and follow these as guidelines
 
 ### Continue.dev
+
 - Add to `.continuerules` or system prompt in `config.json`
 
 ### Cody (Sourcegraph)
+
 - Add to workspace instructions or `.sourcegraph/cody.json`
 
 ### Windsurf/Codeium
+
 - Add to workspace rules or `.codeium/config.json`
 
 ### Custom Agents
+
 - Inject the system prompt above into your agent's context
 - Call hook scripts via shell execution when available
 
