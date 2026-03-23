@@ -23,7 +23,7 @@ Task breakdown is not just about creating a list—it's about:
 
 Before starting, verify:
 
-1. **Constitution exists** at `.minispec.minispec/memory/constitution.md`
+1. **Constitution exists** at `.minispec/memory/constitution.md`
    - Read the `Review Chunk Size` preference (small/medium/large/adaptive)
    - This determines target lines per task
 

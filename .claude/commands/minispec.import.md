@@ -25,7 +25,7 @@ The engineer should finish this process feeling like they understand and own the
 
 Before starting, verify:
 
-1. Constitution exists at `.minispec.minispec/memory/constitution.md`
+1. Constitution exists at `.minispec/memory/constitution.md`
    - If not: "Let's set up your MiniSpec preferences first. Run `/minispec.constitution` or I can use defaults (medium chunks, always confirm)."
 2. Knowledge base exists at `.minispec/knowledge/`
    - If not: Create the directory structure

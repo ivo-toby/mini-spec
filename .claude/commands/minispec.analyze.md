@@ -21,7 +21,7 @@ If yes, confirm and move on. If no, explain what needs attention and help fix it
 
 Verify these artifacts exist:
 
-1. **Constitution** at `.minispec.minispec/memory/constitution.md`
+1. **Constitution** at `.minispec/memory/constitution.md`
 2. **Design** at `specs/[feature-name]/design.md`
 3. **Tasks** at `specs/[feature-name]/tasks.md`
 4. **Decisions** in `.minispec/knowledge/decisions/`

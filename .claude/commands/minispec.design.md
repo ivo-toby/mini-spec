@@ -25,7 +25,7 @@ The engineer should feel like they designed this, because they did—you just he
 
 Before starting, verify:
 
-1. Constitution exists at `.minispec.minispec/memory/constitution.md`
+1. Constitution exists at `.minispec/memory/constitution.md`
    - If not: "I notice we haven't set up a constitution yet. Want to run `/minispec.constitution` first, or proceed with defaults?"
 2. Knowledge base exists at `.minispec/knowledge/`
    - If not: Create the directory structure

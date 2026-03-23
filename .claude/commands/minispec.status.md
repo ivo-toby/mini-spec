@@ -27,7 +27,7 @@ Keep it concise but complete.
 
 Read current state from:
 
-1. **Constitution** (`.minispec.minispec/memory/constitution.md`)
+1. **Constitution** (`.minispec/memory/constitution.md`)
    - Project name
    - MiniSpec preferences
 
