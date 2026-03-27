@@ -75,7 +75,7 @@ AI: "For that scale, both session-based and JWT work. Given your
 
 > JWT
 
-AI: "Documenting in decisions/001-jwt-auth.md. Next: token storage..."
+AI: "Documenting in decisions/20260327-1006-jwt-auth.md. Next: token storage..."
 ```
 
 The conversation continues through each decision. Then tasks get broken down. Then implementation happens in reviewable chunks.

@@ -43,7 +43,7 @@ Run this command:
 ```
 
 This will:
-- Create a numbered feature branch (e.g., `001-feature-name`)
+- Create a date-prefixed feature branch (e.g., `20260327-1130-feature-name`)
 - Create the `specs/[branch-name]/` directory
 - Copy the design template to `design.md`
 - Set the `MINISPEC_FEATURE` environment variable
@@ -85,7 +85,7 @@ Before designing, understand what exists:
 3. **Check for related decisions**:
    - Read `.minispec/knowledge/decisions/` for relevant past decisions
    - Reference them if applicable:
-   > "In decision-003, we chose [X] because [Y]. Does that still apply here?"
+   > "In [YYYYMMDD-HHmm]-[name], we chose [X] because [Y]. Does that still apply here?"
 
 ### Phase 3: Design Conversation
 
@@ -116,6 +116,7 @@ Work through design decisions **one at a time**. For each decision point:
    - Create/update a decision file in `.minispec/knowledge/decisions/`
    - Use the decision-template format
    - Include the reasoning from the conversation
+   - Name the file using the current date and time: `YYYYMMDD-HHmm-[decision-slug].md`
 
 ### Common Design Areas to Cover
 
@@ -231,7 +232,7 @@ End with clear next steps:
 
 > "Design complete! I've created:
 > - `specs/[feature-name]/design.md` - The design document
-> - `.minispec/knowledge/decisions/[NNN]-[decision].md` - [N] decision records
+> - `.minispec/knowledge/decisions/[YYYYMMDD-HHmm]-[decision].md` - [N] decision records
 >
 > **Next steps:**
 > - `/minispec.tasks` - Break this into implementable chunks
@@ -263,5 +264,5 @@ When updating an existing design:
 By the end of this command, you will have created/updated:
 
 1. `specs/[feature-name]/design.md` - The design document
-2. `.minispec/knowledge/decisions/[NNN]-*.md` - Decision records (1 or more)
+2. `.minispec/knowledge/decisions/[YYYYMMDD-HHmm]-*.md` - Decision records (1 or more)
 3. `.minispec/knowledge/architecture.md` - If system structure changed
