@@ -4,7 +4,6 @@
 param(
     [switch]$Json,
     [string]$ShortName,
-    [int]$Number = 0,
     [switch]$Help,
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$FeatureDescription
@@ -13,12 +12,11 @@ $ErrorActionPreference = 'Stop'
 
 # Show help if requested
 if ($Help) {
-    Write-Host "Usage: ./create-new-feature.ps1 [-Json] [-ShortName <name>] [-Number N] <feature description>"
+    Write-Host "Usage: ./create-new-feature.ps1 [-Json] [-ShortName <name>] <feature description>"
     Write-Host ""
     Write-Host "Options:"
     Write-Host "  -Json               Output in JSON format"
     Write-Host "  -ShortName <name>   Provide a custom short name (2-4 words) for the branch"
-    Write-Host "  -Number N           Specify branch number manually (overrides auto-detection)"
     Write-Host "  -Help               Show this help message"
     Write-Host ""
     Write-Host "Examples:"
@@ -57,71 +55,6 @@ function Find-RepositoryRoot {
         }
         $current = $parent
     }
-}
-
-function Get-HighestNumberFromSpecs {
-    param([string]$SpecsDir)
-    
-    $highest = 0
-    if (Test-Path $SpecsDir) {
-        Get-ChildItem -Path $SpecsDir -Directory | ForEach-Object {
-            if ($_.Name -match '^(\d+)') {
-                $num = [int]$matches[1]
-                if ($num -gt $highest) { $highest = $num }
-            }
-        }
-    }
-    return $highest
-}
-
-function Get-HighestNumberFromBranches {
-    param()
-    
-    $highest = 0
-    try {
-        $branches = git branch -a 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            foreach ($branch in $branches) {
-                # Clean branch name: remove leading markers and remote prefixes
-                $cleanBranch = $branch.Trim() -replace '^\*?\s+', '' -replace '^remotes/[^/]+/', ''
-                
-                # Extract feature number if branch matches pattern ###-*
-                if ($cleanBranch -match '^(\d+)-') {
-                    $num = [int]$matches[1]
-                    if ($num -gt $highest) { $highest = $num }
-                }
-            }
-        }
-    } catch {
-        # If git command fails, return 0
-        Write-Verbose "Could not check Git branches: $_"
-    }
-    return $highest
-}
-
-function Get-NextBranchNumber {
-    param(
-        [string]$SpecsDir
-    )
-
-    # Fetch all remotes to get latest branch info (suppress errors if no remotes)
-    try {
-        git fetch --all --prune 2>$null | Out-Null
-    } catch {
-        # Ignore fetch errors
-    }
-
-    # Get highest number from ALL branches (not just matching short name)
-    $highestBranch = Get-HighestNumberFromBranches
-
-    # Get highest number from ALL specs (not just matching short name)
-    $highestSpec = Get-HighestNumberFromSpecs -SpecsDir $SpecsDir
-
-    # Take the maximum of both
-    $maxNum = [Math]::Max($highestBranch, $highestSpec)
-
-    # Return next number
-    return $maxNum + 1
 }
 
 function ConvertTo-CleanBranchName {
@@ -206,27 +139,16 @@ if ($ShortName) {
     $branchSuffix = Get-BranchName -Description $featureDesc
 }
 
-# Determine branch number
-if ($Number -eq 0) {
-    if ($hasGit) {
-        # Check existing branches on remotes
-        $Number = Get-NextBranchNumber -SpecsDir $specsDir
-    } else {
-        # Fall back to local directory check
-        $Number = (Get-HighestNumberFromSpecs -SpecsDir $specsDir) + 1
-    }
-}
-
-$featureNum = ('{0:000}' -f $Number)
-$branchName = "$featureNum-$branchSuffix"
+$datePrefix = (Get-Date -Format 'yyyyMMdd-HHmmss')
+$branchName = "$datePrefix-$branchSuffix"
 
 # GitHub enforces a 244-byte limit on branch names
 # Validate and truncate if necessary
 $maxBranchLength = 244
 if ($branchName.Length -gt $maxBranchLength) {
     # Calculate how much we need to trim from suffix
-    # Account for: feature number (3) + hyphen (1) = 4 chars
-    $maxSuffixLength = $maxBranchLength - 4
+    # Account for: date prefix (13) + hyphen (1) = 14 chars
+    $maxSuffixLength = $maxBranchLength - 14
     
     # Truncate suffix
     $truncatedSuffix = $branchSuffix.Substring(0, [Math]::Min($branchSuffix.Length, $maxSuffixLength))
@@ -234,7 +156,7 @@ if ($branchName.Length -gt $maxBranchLength) {
     $truncatedSuffix = $truncatedSuffix -replace '-$', ''
     
     $originalBranchName = $branchName
-    $branchName = "$featureNum-$truncatedSuffix"
+    $branchName = "$datePrefix-$truncatedSuffix"
     
     Write-Warning "[minispec] Branch name exceeded GitHub's 244-byte limit"
     Write-Warning "[minispec] Original: $originalBranchName ($($originalBranchName.Length) bytes)"
@@ -269,14 +191,14 @@ if ($Json) {
     $obj = [PSCustomObject]@{
         BRANCH_NAME = $branchName
         DESIGN_FILE = $designFile
-        FEATURE_NUM = $featureNum
+        DATE_PREFIX = $datePrefix
         HAS_GIT = $hasGit
     }
     $obj | ConvertTo-Json -Compress
 } else {
     Write-Output "BRANCH_NAME: $branchName"
     Write-Output "DESIGN_FILE: $designFile"
-    Write-Output "FEATURE_NUM: $featureNum"
+    Write-Output "DATE_PREFIX: $datePrefix"
     Write-Output "HAS_GIT: $hasGit"
     Write-Output "MINISPEC_FEATURE environment variable set to: $branchName"
 }

@@ -229,8 +229,8 @@ If the engineer wants a formal report, generate:
 
 | Decision | Tasks Reflecting It | Status |
 |----------|---------------------|--------|
-| 001-auth | T4, T5, T6 | ✅ Aligned |
-| 002-db | T2 | ✅ Aligned |
+| 20260327-1006-auth | T4, T5, T6 | ✅ Aligned |
+| 20260327-1007-db | T2 | ✅ Aligned |
 
 ## Recommendations
 

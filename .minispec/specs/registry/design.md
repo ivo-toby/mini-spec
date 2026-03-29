@@ -5,7 +5,7 @@ created: 2026-02-15
 decisions:
   - 001-package-per-directory
   - 002-explicit-file-mapping
-  - 003-project-level-state
+  - 20260327-1130-project-level-state
   - 004-opt-in-registries
   - 005-cache-with-refresh
   - 006-explicit-on-ambiguity

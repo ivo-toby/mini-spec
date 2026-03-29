@@ -175,8 +175,8 @@ MiniSpec maintains a living knowledge base that serves both humans and AI:
 │   │   └── auth-flow.md
 │   │
 │   ├── decisions/               # ADR-style decision records
-│   │   ├── 001-jwt-over-sessions.md
-│   │   ├── 002-postgres-over-mongo.md
+│   │   ├── 20260327-1006-jwt-over-sessions.md
+│   │   ├── 20260327-1045-postgres-over-mongo.md
 │   │   └── ...
 │   │
 │   └── modules/                 # Per-module deep dives
@@ -335,17 +335,17 @@ AI: "For ~5000 users, both session-based and JWT work well.
 
 Engineer: "JWT makes sense for our setup"
 
-AI: "Good choice. I'm documenting this in decisions/001-jwt-auth.md
+AI: "Good choice. I'm documenting this in decisions/20260327-1006-jwt-auth.md
 
     Next: Token storage on client side. Options are..."
 
 [conversation continues through all design decisions]
 
 AI: "Design complete. I've documented 4 decisions:
-    - decisions/001-jwt-auth.md
-    - decisions/002-token-storage.md
-    - decisions/003-password-hashing.md
-    - decisions/004-refresh-strategy.md
+    - decisions/20260327-1006-jwt-auth.md
+    - decisions/20260327-1020-token-storage.md
+    - decisions/20260327-1130-password-hashing.md
+    - decisions/20260327-1050-refresh-strategy.md
 
     Ready to break this into tasks?"
 
@@ -370,7 +370,7 @@ AI: "Analyzing design ↔ tasks alignment...
 
     ✅ All decisions have corresponding tasks
     ✅ Dependencies are valid
-    ⚠️ decisions/004-refresh-strategy.md mentions rate limiting,
+    ⚠️ decisions/20260327-1050-refresh-strategy.md mentions rate limiting,
        but no task covers it. Add task or mark out-of-scope?"
 
 Engineer: "Add a task"
