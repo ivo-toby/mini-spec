@@ -196,7 +196,7 @@ Knowledge Base Status
 Decisions: 8 total
 ├─ Active: 6
 ├─ Superseded: 2
-└─ Last added: 001-jwt-auth (2d ago)
+└─ Last added: 20260327-1006-jwt-auth
 
 Patterns: 4 documented
 └─ Last updated: api-response (1d ago)

@@ -90,8 +90,8 @@ The result: a living knowledge base that stays fresh because it's created during
 ├── architecture.md          # System overview (grows over time)
 ├── conventions.md           # Code patterns and style
 ├── decisions/               # ADRs created during /minispec.design
-│   ├── 001-jwt-auth.md
-│   ├── 002-postgres-over-mongo.md
+│   ├── 20260327-1006-jwt-auth.md
+│   ├── 20260327-1045-postgres-over-mongo.md
 │   └── ...
 ├── patterns/                # Patterns documented during /minispec.next
 │   ├── error-handling.md
@@ -153,7 +153,7 @@ AI: "For ~5000 users, both session-based and JWT work.
 
 > JWT makes sense
 
-AI: "Documenting this in decisions/001-jwt-auth.md.
+AI: "Documenting this in decisions/20260327-1006-jwt-auth.md.
     Next question: client-side token storage..."
 
 [conversation continues through all decisions]

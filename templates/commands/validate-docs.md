@@ -140,7 +140,7 @@ Look for signals of outdated docs:
 > "Documentation check found [N] items needing attention:
 >
 > **Stale (code changed, docs didn't):**
-> 1. `decisions/003-auth.md`
+> 1. `decisions/20260327-1130-auth.md`
 >    - References `src/auth/jwt.ts` which no longer exists
 >    - Last updated: [date], file deleted: [date]
 >
@@ -191,11 +191,11 @@ For each issue, offer specific resolution:
 > Want me to update the module documentation?"
 
 **For superseded decisions:**
-> "Decision `003-session-auth` describes session-based auth, but I see JWT implementation in the code. Was this decision superseded?
+> "Decision `20260327-1130-session-auth` describes session-based auth, but I see JWT implementation in the code. Was this decision superseded?
 >
 > I can:
-> a) Mark 003 as superseded and create a new decision for JWT
-> b) Update 003 to reflect the change (if it was an evolution)
+> a) Mark [YYYYMMDD-HHmm]-session-auth as superseded and create a new decision for JWT
+> b) Update [YYYYMMDD-HHmm]-session-auth to reflect the change (if it was an evolution)
 > c) Leave it (if both approaches coexist)"
 
 ### Phase 6: Apply Fixes
@@ -214,12 +214,12 @@ After fixes:
 > "Documentation updated:
 >
 > **Fixed:**
-> - `decisions/003-auth.md` - Updated file references
+> - `decisions/20260327-1130-auth.md` - Updated file references
 > - `patterns/api-response.md` - Synced with current code
 > - `modules/payments.md` - Added new components
 >
 > **Marked as superseded:**
-> - `decisions/001-old-approach.md`
+> - `decisions/20260327-1006-old-approach.md`
 >
 > Knowledge base is now current with the codebase."
 

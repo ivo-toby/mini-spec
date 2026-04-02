@@ -65,7 +65,7 @@ Before designing, understand what exists:
 3. **Check for related decisions**:
    - Read `.minispec/knowledge/decisions/` for relevant past decisions
    - Reference them if applicable:
-   > "In decision-003, we chose [X] because [Y]. Does that still apply here?"
+   > "In [YYYYMMDD-HHmm]-[name], we chose [X] because [Y]. Does that still apply here?"
 
 ### Phase 3: Design Conversation
 
