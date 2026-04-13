@@ -178,7 +178,27 @@ Make dependencies explicit:
 >
 > This means you could batch 'next 2' for the parallel groups if you're comfortable. Make sense?"
 
-### Phase 5: Testing Strategy
+### Phase 5: Complexity Check
+
+Before finalizing, check the constitution's **Complexity Tolerance** preferences and review the task list against them:
+
+1. **Count new files vs modified files**:
+   > "This breakdown creates [N] new files and modifies [M] existing files. Does that ratio feel right for the scope of this feature?"
+
+2. **Flag potential overengineering**:
+   For any task that creates a new module, helper, utility, or abstraction:
+   > "Task [N] extracts [X] into its own module. What breaks if we inline that instead? If the answer is 'nothing breaks, it's just cleaner' — consider skipping the extraction."
+
+3. **Check for unnecessary symmetry**:
+   If tasks mirror an existing feature's structure without clear need:
+   > "Tasks [N-M] mirror how [existing feature] is structured. Does this feature actually need the same layering?"
+
+4. **Evidence requirements**:
+   For each task, define what evidence proves it's done. Keep it concrete:
+   - Good: "unit tests pass", "API returns expected response", "build succeeds"
+   - Bad: "code is clean", "implementation is complete", "works as expected"
+
+### Phase 6: Testing Strategy
 
 Discuss how testing fits in:
 
@@ -191,7 +211,7 @@ Discuss how testing fits in:
 
 Adjust based on their preference.
 
-### Phase 6: Finalize and Save
+### Phase 7: Finalize and Save
 
 **CRITICAL: You MUST write the tasks file to disk. The whole point of this command is to produce a persistent tasks file. Do not end the conversation without writing it.**
 
@@ -233,6 +253,7 @@ estimated_lines: [N]
 - **Description:** [What this task accomplishes]
 - **Depends on:** None
 - **Acceptance:** [How to verify it's done]
+- **Evidence:** [What proves this works — e.g., "tests pass", "build succeeds"]
 
 #### Task 2: [Task Name]
 - **Estimate:** ~[N] lines
@@ -240,6 +261,7 @@ estimated_lines: [N]
 - **Description:** [What this task accomplishes]
 - **Depends on:** Task 1
 - **Acceptance:** [How to verify it's done]
+- **Evidence:** [What proves this works — e.g., "tests pass", "endpoint returns 200", "build succeeds"]
 
 ### Core Implementation
 
@@ -250,6 +272,7 @@ estimated_lines: [N]
 - **Description:** [What this task accomplishes]
 - **Depends on:** Task 2
 - **Acceptance:** [How to verify it's done]
+- **Evidence:** [What proves this works]
 
 [... continue for all tasks ...]
 
@@ -267,7 +290,7 @@ estimated_lines: [N]
 3. **Update design status**:
    - Change design.md status from `designed` to `planned`
 
-### Phase 7: Handoff
+### Phase 8: Handoff
 
 > "Tasks saved to `specs/[feature-name]/tasks.md`
 >

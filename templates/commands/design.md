@@ -154,9 +154,35 @@ Depending on the feature, explore relevant areas:
 
 Don't cover all areas—focus on what's relevant to this feature.
 
-### Phase 4: Synthesize Design Summary
+### Phase 4: Scope Challenge
 
-After key decisions are made:
+Before finalizing, actively challenge the design's complexity. Read the constitution's **Complexity Tolerance** preferences to calibrate how hard to push.
+
+This phase exists because AI-assisted design has a natural bias toward more components, more abstractions, and more coverage than the problem requires. The engineer may not notice because each piece is individually reasonable.
+
+1. **Challenge scope**:
+   > "Before we finalize — let me push back on scope for a moment.
+   >
+   > [For each component or abstraction in the design, ask ONE of:]
+   > - 'What breaks if we skip [component] entirely and inline it?'
+   > - 'Is [component] solving a real problem you have today, or a hypothetical future one?'
+   > - 'Could [X and Y] be the same thing instead of two separate abstractions?'"
+
+2. **Challenge feature parity**:
+   If the design mirrors an existing feature's structure:
+   > "I notice this design follows the same pattern as [existing feature]. Does it actually need all of that, or are we matching structure out of symmetry?"
+
+3. **Count the pieces**:
+   > "This design has [N] components and [N] new files. For the problem we're solving, does that feel like the right amount? Could we get 90% of the value with fewer moving parts?"
+
+4. **Offer the minimal version**:
+   > "If we stripped this to the absolute minimum that solves your stated problem, it would be: [describe minimal version]. Want to start there and add complexity only when we hit a wall?"
+
+The engineer decides. If they want the full version, proceed. The point is to make the decision explicit rather than drifting toward maximal design by default.
+
+### Phase 5: Synthesize Design Summary
+
+After key decisions are made (and scope is challenged):
 
 1. **Summarize the design**:
    > "Here's what we've designed:
@@ -183,7 +209,7 @@ After key decisions are made:
 3. **Confirm scope boundaries**:
    > "To be clear, this design covers [X, Y, Z] but NOT [A, B, C]. Those could be follow-up features. Sound right?"
 
-### Phase 5: Write Design Artifacts
+### Phase 6: Write Design Artifacts
 
 Once confirmed, create the design artifacts:
 
@@ -226,7 +252,7 @@ Once confirmed, create the design artifacts:
 
 3. **Update architecture.md** if this feature changes system structure
 
-### Phase 6: Handoff
+### Phase 7: Handoff
 
 End with clear next steps:
 

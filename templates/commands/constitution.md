@@ -99,6 +99,29 @@ After principles, transition to pairing preferences:
 > - Flag it and continue if it's minor, stop for major issues
 > - Update specs automatically and tell you after (for experienced teams)"
 
+**Complexity Tolerance:**
+> "One more thing — AI coding tools have a bias toward adding more code, more abstractions, more tests. I want to calibrate how aggressively I should push back on that.
+>
+> **Change size:** When fixing a bug or adding a feature, should I:
+> - **Minimal first**: Show you the smallest change that works, then you decide if you want the thorough version
+> - **Thorough**: Go straight to the proper fix with full test coverage and error handling
+> - **Your call per task**: Ask me each time
+>
+> **Abstraction threshold:** When should I extract a helper, module, or utility?
+> - **Conservative**: Only extract when code is duplicated 3+ times or exceeds 50 lines
+> - **Standard**: Extract when it improves testability or readability
+> - **Aggressive**: Extract early for clean separation
+>
+> **Review findings:** When a code review tool (Codex, CodeRabbit, etc.) flags a medium-severity issue:
+> - **Always fix**: Every finding gets addressed
+> - **Triage first**: Ask whether it's worth fixing before writing code
+> - **Your call**: Present the finding, you decide
+>
+> **Deletion permission:** Can I suggest removing code during a feature task?
+> - **Yes**: If something is unnecessary, propose removing it
+> - **Only if related**: Remove only if directly related to the current task
+> - **No**: Only add/modify, never remove unless asked"
+
 ### Phase 4: Synthesis and Writing
 
 Once you have the information:
@@ -115,6 +138,12 @@ Once you have the information:
    > - Doc review: [choice]
    > - Autonomy: [choice]
    > - Design evolution: [choice]
+   >
+   > **Complexity Tolerance:**
+   > - Change size: [choice]
+   > - Abstraction threshold: [choice]
+   > - Review findings: [choice]
+   > - Deletion permission: [choice]
    >
    > Does this look right, or should we adjust anything?"
 
@@ -158,6 +187,12 @@ End with a clear summary:
 > - [Doc review approach]
 > - [Autonomy level]
 > - [Design evolution handling]
+>
+> **Complexity Guardrails:**
+> - [Change size approach]
+> - [Abstraction threshold]
+> - [Review finding triage policy]
+> - [Deletion permission]
 >
 > The knowledge base is ready at `.minispec/knowledge/`.
 >
