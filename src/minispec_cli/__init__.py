@@ -1114,15 +1114,15 @@ def download_and_extract_template(project_path: Path, ai_assistant: str, script_
 
 
 def ensure_executable_scripts(project_path: Path, tracker: StepTracker | None = None) -> None:
-    """Ensure POSIX .sh scripts under .minispec/scripts (recursively) have execute bits (no-op on Windows)."""
+    """Ensure POSIX .sh scripts under .minispec/ (recursively) have execute bits (no-op on Windows)."""
     if os.name == "nt":
         return  # Windows: skip silently
-    scripts_root = project_path / ".minispec" / "scripts"
-    if not scripts_root.is_dir():
+    minispec_root = project_path / ".minispec"
+    if not minispec_root.is_dir():
         return
     failures: list[str] = []
     updated = 0
-    for script in scripts_root.rglob("*.sh"):
+    for script in minispec_root.rglob("*.sh"):
         try:
             if script.is_symlink() or not script.is_file():
                 continue
@@ -1144,7 +1144,7 @@ def ensure_executable_scripts(project_path: Path, tracker: StepTracker | None = 
             os.chmod(script, new_mode)
             updated += 1
         except Exception as e:
-            failures.append(f"{script.relative_to(scripts_root)}: {e}")
+            failures.append(f"{script.relative_to(minispec_root)}: {e}")
     if tracker:
         detail = f"{updated} updated" + (f", {len(failures)} failed" if failures else "")
         tracker.add("chmod", "Set script permissions recursively")
