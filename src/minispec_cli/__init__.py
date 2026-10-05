@@ -260,6 +260,30 @@ AGENT_COMMAND_CONFIG = {
     "pi":           {"path": ".pi/prompts",         "ext": "md",       "fmt": "md",   "kind": "command"},
 }
 
+# Per-agent legacy command dirs from before the skills/hyphenated layouts.
+# Entries equal to the agent's current AGENT_COMMAND_CONFIG path mean the dir
+# persists but its dot-named files (minispec.*.md) are legacy.
+AGENT_LEGACY_COMMAND_DIRS = {
+    "claude":       (".claude/commands",),
+    "gemini":       (".gemini/commands",),
+    "copilot":      (".github/agents", ".github/prompts"),
+    "cursor-agent": (".cursor/commands",),
+    "qwen":         (".qwen/commands",),
+    "opencode":     (".opencode/command",),
+    "windsurf":     (".windsurf/workflows",),
+    "codex":        (".codex/prompts",),
+    "kilocode":     (".kilocode/workflows",),
+    "auggie":       (".augment/commands",),
+    "roo":          (".roo/commands",),
+    "codebuddy":    (".codebuddy/commands",),
+    "qoder":        (".qoder/commands",),
+    "amp":          (".agents/commands",),
+    "shai":         (".shai/commands",),
+    "q":            (".amazonq/prompts",),
+    "bob":          (".bob/commands",),
+    "pi":           (".pi/prompts",),
+}
+
 CLAUDE_LOCAL_PATH = Path.home() / ".claude" / "local" / "claude"
 
 BANNER = """
@@ -291,7 +315,19 @@ def _detect_project_config(project_path: Path) -> tuple[str, str]:
             detected_agents.append(agent_key)
 
     if not detected_agents:
-        console.print("[red]Error:[/red] Could not detect AI agent. Use --ai to specify.")
+        legacy_found = []
+        for agent_key, legacy_dirs in AGENT_LEGACY_COMMAND_DIRS.items():
+            for legacy_dir in legacy_dirs:
+                if legacy_dir not in AGENT_COMMAND_CONFIG[agent_key]["path"] and (project_path / legacy_dir).is_dir():
+                    legacy_found.append(legacy_dir)
+        if legacy_found:
+            console.print(
+                "[red]Error:[/red] Could not detect AI agent: found an older MiniSpec layout "
+                f"({', '.join(sorted(legacy_found))}). "
+                "Run `minispec upgrade --ai <agent> --script <sh|ps>` to migrate to the new layout."
+            )
+        else:
+            console.print("[red]Error:[/red] Could not detect AI agent. Use --ai to specify.")
         raise typer.Exit(1)
     if len(detected_agents) > 1:
         agents_str = ", ".join(detected_agents)
@@ -349,6 +385,93 @@ def _classify_upgrade_file(rel_path: str) -> str:
     # Everything else: silent overwrite
     return "overwrite"
 
+
+def _legacy_stem(filename: str) -> str | None:
+    """Return the stem of a legacy dot-named MiniSpec command file.
+
+    Matches minispec.<stem>.<ext>, minispec.<stem>.prompt.md and
+    minispec.<stem>.agent.md. Returns None for anything else.
+    """
+    if not filename.startswith("minispec."):
+        return None
+    stem = filename[len("minispec."):]
+    for suffix in (".prompt.md", ".agent.md"):
+        if stem.endswith(suffix):
+            return stem[: -len(suffix)] or None
+    stem = stem.rpartition(".")[0] if "." in stem else stem
+    return stem or None
+
+
+def _has_replacement_component(path_parts, stem: str) -> bool:
+    """Check whether a new-layout path contains the minispec-<stem> component.
+
+    Matches the skill dir minispec-<stem>/ and command files
+    minispec-<stem>.<ext> (but not minispec-<stem>2.md).
+    """
+    prefix = f"minispec-{stem}"
+    last = path_parts[-1]
+    return prefix in path_parts[:-1] or last == prefix or last.startswith(prefix + ".")
+
+
+def _migrate_legacy_commands(project_path: Path, agent: str, applied_rel_paths: set[str]) -> list[tuple[str, str]]:
+    """Move or delete legacy dot-named MiniSpec command files on upgrade.
+
+    A legacy file minispec.<stem>.<ext> is deleted only when its same-stem
+    replacement exists — either already applied by this upgrade (applied_rel_paths)
+    or present in the agent's current command/skills dir on disk. Non-MiniSpec
+    files are kept and the dir survives while non-empty.
+
+    Returns (relative_path, action) rows; actions: migrated, kept (no replacement),
+    kept (not MiniSpec).
+    """
+    rows: list[tuple[str, str]] = []
+
+    config = AGENT_COMMAND_CONFIG.get(agent)
+    on_disk_stems: set[str] = set()
+    if config is not None:
+        current_dir = project_path / config["path"]
+        if current_dir.is_dir():
+            for f in current_dir.rglob("*"):
+                if f.is_file():
+                    for seg in f.relative_to(project_path).parts:
+                        if seg.startswith("minispec-"):
+                            on_disk_stems.add(seg)
+
+    applied_parts = [rel.split("/") for rel in sorted(applied_rel_paths)]
+
+    for legacy_dir in AGENT_LEGACY_COMMAND_DIRS.get(agent, ()):
+        d = project_path / legacy_dir
+        if not d.is_dir():
+            continue
+        for child in sorted(d.iterdir()):
+            if not child.is_file():
+                continue
+            rel = child.relative_to(project_path).as_posix()
+            stem = _legacy_stem(child.name)
+            if stem is None:
+                rows.append((rel, "kept (not MiniSpec)"))
+                continue
+            has_replacement = any(
+                _has_replacement_component(rel_parts, stem) for rel_parts in applied_parts
+            ) or any(
+                seg == f"minispec-{stem}" or seg.startswith(f"minispec-{stem}.")
+                for seg in on_disk_stems
+            )
+            if has_replacement:
+                child.unlink()
+                rows.append((rel, "migrated"))
+            else:
+                rows.append((rel, "kept (no replacement)"))
+        # Remove the legacy dir when nothing remains in it
+        if d.is_dir() and not any(d.iterdir()):
+            d.rmdir()
+            folder = AGENT_CONFIG.get(agent, {}).get("folder")
+            if folder:
+                parent = d.parent
+                if parent.is_dir() and parent.name == folder.rstrip("/") and not any(parent.iterdir()):
+                    parent.rmdir()
+
+    return rows
 
 def _diff_files(existing: Path, new: Path) -> str | None:
     """Generate a unified diff between existing and new file.
@@ -1551,6 +1674,10 @@ def upgrade(
                 console.print()
                 results = _apply_upgrade(project_path, template_root, force=force)
 
+                # Replace legacy dot-named command files with the new layouts
+                applied = {rel for rel, _act in results if not rel.startswith("skipped")}
+                results += _migrate_legacy_commands(project_path, selected_ai, applied)
+
                 # Ensure scripts are executable
                 ensure_executable_scripts(project_path)
 
@@ -1578,6 +1705,9 @@ def upgrade(
         "skipped (unchanged)": "[dim]skipped (unchanged)[/dim]",
         "skipped (user content)": "[dim]skipped (user content)[/dim]",
         "skipped (user declined)": "[blue]skipped (user declined)[/blue]",
+        "migrated": "[green]migrated[/green]",
+        "kept (no replacement)": "[blue]kept (no replacement)[/blue]",
+        "kept (not MiniSpec)": "[dim]kept (not MiniSpec)[/dim]",
     }
 
     for rel_path, action in results:

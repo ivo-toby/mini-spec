@@ -11,6 +11,7 @@ from minispec_cli import (
     _classify_upgrade_file,
     _detect_project_config,
     _diff_files,
+    _migrate_legacy_commands,
 )
 
 
@@ -205,3 +206,62 @@ class TestApplyUpgrade:
         results = _apply_upgrade(project, template, force=True)
         assert (project / ".claude" / "skills" / "minispec-design" / "SKILL.md").read_text() == "new design prompt"
         assert any(r[1] == "overwritten (auto)" for r in results if "minispec-design" in r[0])
+
+
+class TestLegacyMigration:
+    def _apply_claude_zip(self, template_dir):
+        skill = template_dir / ".claude" / "skills" / "minispec-design"
+        skill.mkdir(parents=True)
+        (skill / "SKILL.md").write_text("---\nname: minispec-design\n---\nbody")
+
+    def test_deletes_legacy_file_with_replacement(self, tmp_path):
+        self._apply_claude_zip(tmp_path)
+        legacy = tmp_path / ".claude" / "commands"
+        legacy.mkdir(parents=True)
+        (legacy / "minispec.design.md").write_text("old")
+        _migrate_legacy_commands(tmp_path, "claude", set())
+        assert not (legacy / "minispec.design.md").exists()
+
+    def test_keeps_legacy_file_without_replacement(self, tmp_path):
+        legacy = tmp_path / ".claude" / "commands"
+        legacy.mkdir(parents=True)
+        (legacy / "minispec.obsolete.md").write_text("old")
+        rows = _migrate_legacy_commands(tmp_path, "claude", {f".claude/skills/minispec-{stem}/SKILL.md" for stem in ["design"]})
+        assert rows == [(".claude/commands/minispec.obsolete.md", "kept (no replacement)")]
+        assert (legacy / "minispec.obsolete.md").exists()
+
+    def test_replacement_detected_from_applied_paths(self, tmp_path):
+        # replacement exists in applied zip paths, not yet on disk
+        legacy = tmp_path / ".claude" / "commands"
+        legacy.mkdir(parents=True)
+        (legacy / "minispec.design.md").write_text("old")
+        rows = _migrate_legacy_commands(tmp_path, "claude", {".claude/skills/minispec-design/SKILL.md"})
+        assert rows[0][1] == "migrated"
+
+    def test_keeps_non_minispec_files_and_dir(self, tmp_path):
+        legacy = tmp_path / ".claude" / "commands"
+        legacy.mkdir(parents=True)
+        (legacy / "notes.md").write_text("user file")
+        _migrate_legacy_commands(tmp_path, "claude", set())
+        assert (legacy / "notes.md").exists()
+
+    def test_removes_empty_legacy_dir(self, tmp_path):
+        legacy = tmp_path / ".github" / "prompts"
+        legacy.mkdir(parents=True)
+        (legacy / "minispec.design.prompt.md").write_text("old")
+        _migrate_legacy_commands(tmp_path, "copilot", {".github/skills/minispec-design/SKILL.md"})
+        assert not legacy.exists()
+
+    def test_renames_in_place_for_command_agents(self, tmp_path):
+        legacy = tmp_path / ".roo" / "commands"
+        legacy.mkdir(parents=True)
+        (legacy / "minispec.design.md").write_text("old")
+        new = legacy / "minispec-design.md"
+        new.write_text("new")
+        rows = _migrate_legacy_commands(tmp_path, "roo", {".roo/commands/minispec-design.md"})
+        assert not (legacy / "minispec.design.md").exists()
+        assert [r for r in rows if r[1] == "migrated"] == [(".roo/commands/minispec.design.md", "migrated")]
+
+    def test_idempotent_rerun(self, tmp_path):
+        _migrate_legacy_commands(tmp_path, "claude", set())
+        # no legacy layout at all: no rows, no exception
