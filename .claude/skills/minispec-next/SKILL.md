@@ -34,7 +34,7 @@ You should:
 
 Before implementing, verify:
 
-1. **Constitution** at `.minispec.minispec/memory/constitution.md`
+1. **Constitution** at `.minispec/memory/constitution.md`
    - Read MiniSpec preferences (chunk size, autonomy, doc review)
    - Read **Complexity Tolerance** preferences (change size, abstraction threshold, review findings, deletion permission)
 

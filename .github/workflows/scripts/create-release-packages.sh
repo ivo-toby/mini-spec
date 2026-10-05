@@ -43,8 +43,10 @@ rewrite_paths() {
 
 template_description() {
   # Echo the description: value from a template's YAML frontmatter.
+  # awk reads the file itself: `tr -d '\r' < "$template" | awk ...; exit}`
+  # aborted under pipefail with SIGPIPE (141) when awk quit mid-pipe.
   local template=$1
-  tr -d '\r' < "$template" | awk '/^description:/ {sub(/^description:[[:space:]]*/, ""); print; exit}'
+  awk '{sub(/\r$/, "")} /^description:/ && !done {sub(/^description:[[:space:]]*/, ""); print; done=1}' "$template"
 }
 
 render_command_body() {
@@ -59,7 +61,8 @@ render_command_body() {
     file_content=$(tr -d '\r' < "$template")
     
     # Extract script command from YAML frontmatter
-    script_command=$(printf '%s\n' "$file_content" | awk -v sv="$script_variant" '/^[[:space:]]*'"$script_variant"':[[:space:]]*/ {sub(/^[[:space:]]*'"$script_variant"':[[:space:]]*/, ""); print; exit}')
+    # guard instead of exit: an early awk exit SIGPIPEs the writer under pipefail
+    script_command=$(printf '%s\n' "$file_content" | awk -v sv="$script_variant" '!done && $0 ~ "^[[:space:]]*" sv ":[[:space:]]*" {sub("^[[:space:]]*" sv ":[[:space:]]*", ""); print; done=1}')
     
     if [[ -z $script_command ]]; then
       echo "Warning: no script command found for $script_variant in $template" >&2
@@ -69,10 +72,10 @@ render_command_body() {
     # Extract agent_script command from YAML frontmatter if present
     agent_script_command=$(printf '%s\n' "$file_content" | awk '
       /^agent_scripts:$/ { in_agent_scripts=1; next }
-      in_agent_scripts && /^[[:space:]]*'"$script_variant"':[[:space:]]*/ {
+      in_agent_scripts && !done && /^[[:space:]]*'"$script_variant"':[[:space:]]*/ {
         sub(/^[[:space:]]*'"$script_variant"':[[:space:]]*/, "")
         print
-        exit
+        done=1
       }
       in_agent_scripts && /^[a-zA-Z]/ { in_agent_scripts=0 }
     ')

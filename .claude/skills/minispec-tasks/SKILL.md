@@ -28,7 +28,7 @@ Task breakdown is not just about creating a list—it's about:
 
 Before starting, verify:
 
-1. **Constitution exists** at `.minispec.minispec/memory/constitution.md`
+1. **Constitution exists** at `.minispec/memory/constitution.md`
    - Read the `Review Chunk Size` preference (small/medium/large/adaptive)
    - This determines target lines per task
 
@@ -59,7 +59,7 @@ Based on constitution preference:
 
 Run this command:
 ```
-.minispec/scripts/powershell/setup-plan.ps1 -Json
+.minispec/scripts/bash/setup-plan.sh --json
 ```
 
 This will:

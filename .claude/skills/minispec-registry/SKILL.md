@@ -82,7 +82,7 @@ Commands are markdown templates that users invoke via `/command-name` in their A
 
 **Location**: Commands live in the agent's skills/commands directory (e.g., `.claude/skills/`, `.cursor/skills/`, `.gemini/commands/`).
 
-**Format**: Markdown with YAML frontmatter for agents that support it (Claude, Cursor, Copilot). TOML format for Gemini and Qwen.
+**Format**: Markdown with YAML frontmatter for agents that support it (Claude, Cursor, Copilot). TOML format for Gemini.
 
 ````markdown
 ---
