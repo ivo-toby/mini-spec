@@ -50,7 +50,7 @@ Hooks are event-driven automations that run in response to AI agent lifecycle ev
 - Any other non-zero — Error (logged but doesn't block)
 
 **Hook types**:
-- `command` — Runs a shell command. Receives JSON on stdin with tool name and input. Example: `bash .minispec/hooks.minispec/scripts/protect-main.sh "$TOOL_INPUT"`
+- `command` — Runs a shell command. Receives JSON on stdin with tool name and input. Example: `bash .minispec/hooks/scripts/protect-main.sh "$TOOL_INPUT"`
 - `prompt` — Sends output to the AI model as additional context (no blocking capability)
 
 **Matcher syntax**: The `matcher` field filters which tool invocations trigger the hook. Use tool names like `Bash`, `Write`, `Edit`, `Read`, or a regex pattern.
@@ -65,7 +65,7 @@ Hooks are event-driven automations that run in response to AI agent lifecycle ev
         "hooks": [
           {
             "type": "command",
-            "command": "bash .minispec/hooks.minispec/scripts/my-hook.sh \"$TOOL_INPUT\""
+            "command": "bash .minispec/hooks/scripts/my-hook.sh \"$TOOL_INPUT\""
           }
         ]
       }
@@ -74,13 +74,13 @@ Hooks are event-driven automations that run in response to AI agent lifecycle ev
 }
 ```
 
-For other agents, hooks are installed as shell scripts in `.minispec/hooks.minispec/scripts/` and wired up through each agent's configuration mechanism.
+For other agents, hooks are installed as shell scripts in `.minispec/hooks/scripts/` and wired up through each agent's configuration mechanism.
 
 ### Commands (Slash Commands)
 
 Commands are markdown templates that users invoke via `/command-name` in their AI agent. They provide structured instructions that guide the agent through a specific workflow.
 
-**Location**: Commands live in the agent's commands directory (e.g., `.claude/commands/`, `.cursor/commands/`).
+**Location**: Commands live in the agent's skills/commands directory (e.g., `.claude/skills/`, `.cursor/skills/`, `.gemini/commands/`).
 
 **Format**: Markdown with YAML frontmatter for agents that support it (Claude, Cursor, Copilot). TOML format for Gemini and Qwen.
 
@@ -202,16 +202,16 @@ Based on the package type and target agents, generate the `files:` section of `p
 
 **Agent folder conventions:**
 
-| Agent | Commands/Skills Path | Hooks Path | Config Path | Format |
+| Agent | Skills/Commands Path | Hooks Path | Config Path | Format |
 |-------|---------------------|------------|-------------|--------|
-| claude | `.claude/commands/` | `.minispec/hooks/` | `.claude/settings.json` | Markdown |
-| cursor | `.cursor/commands/` | `.minispec/hooks/` | `.cursor/rules/` | Markdown |
-| copilot | `.github/agents/` | `.minispec/hooks/` | `.github/copilot-instructions.md` | Markdown |
+| claude | `.claude/skills/` | `.minispec/hooks/` | `.claude/settings.json` | SKILL.md |
+| cursor | `.cursor/skills/` | `.minispec/hooks/` | `.cursor/rules/` | SKILL.md |
+| copilot | `.github/skills/` | `.minispec/hooks/` | `.github/copilot-instructions.md` | SKILL.md |
 | gemini | `.gemini/commands/` | `.minispec/hooks/` | `.gemini/settings.json` | TOML |
-| qwen | `.qwen/commands/` | `.minispec/hooks/` | `.qwen/settings.json` | TOML |
+| qwen | `.qwen/commands/` | `.minispec/hooks/` | `.qwen/settings.json` | Markdown |
 | opencode | `.opencode/command/` | `.minispec/hooks/` | `.opencode/` | Markdown |
 | windsurf | `.windsurf/workflows/` | `.minispec/hooks/` | `.windsurf/rules/` | Markdown |
-| codex | `.codex/prompts/` | `.minispec/hooks/` | `.codex/` | Markdown |
+| codex | `.agents/skills/` | `.minispec/hooks/` | `.agents/` | SKILL.md |
 | roo | `.roo/commands/` | `.minispec/hooks/` | `.roo/` | Markdown |
 | q | `.amazonq/prompts/` | `.minispec/hooks/` | `.amazonq/` | Markdown |
 
@@ -220,17 +220,17 @@ For each target agent, create appropriate file mappings:
 **For command packages:**
 ```yaml
 files:
-  - source: command.md
-    target: .claude/commands/package-name.md
-  - source: command.md
-    target: .cursor/commands/package-name.md
+  - source: SKILL.md
+    target: .claude/skills/package-name/SKILL.md
+  - source: SKILL.md
+    target: .cursor/skills/package-name/SKILL.md
 ```
 
 **For hook packages:**
 ```yaml
 files:
   - source: hook.sh
-    target: .minispec/hooks.minispec/scripts/package-name.sh
+    target: .minispec/hooks/scripts/package-name.sh
   - source: settings.json
     target: .claude/settings.json
     merge: true
@@ -330,7 +330,7 @@ Example Claude hooks config:
         "hooks": [
           {
             "type": "command",
-            "command": "bash .minispec/hooks.minispec/scripts/package-name.sh \"$TOOL_INPUT\""
+            "command": "bash .minispec/hooks/scripts/package-name.sh \"$TOOL_INPUT\""
           }
         ]
       }

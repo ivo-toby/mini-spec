@@ -390,6 +390,21 @@ class TestUpgradeCommandExplicitAgent:
         assert not (tmp_path / ".claude" / "commands" / "minispec.design.md").exists()
         assert (tmp_path / ".minispec" / "memory" / "constitution.md").read_text() == "constitution"
 
+    def test_requires_minispec_dir_even_with_both_flags(self, tmp_path, monkeypatch):
+        # regression: with --ai and --script both given, detection never ran
+        # and upgrade happily wrote into a non-MiniSpec directory
+        monkeypatch.chdir(tmp_path)
+        zip_path = self._make_template_zip(tmp_path)
+
+        def _boom(*a, **k):
+            raise AssertionError("download must not run before the .minispec check")
+
+        monkeypatch.setattr("minispec_cli.download_template_from_github", _boom)
+        runner = CliRunner()
+        result = runner.invoke(app, ["upgrade", "--ai", "claude", "--script", "sh", "--force"])
+        assert result.exit_code == 1
+        assert "No .minispec directory found" in result.output
+
     def test_explicit_ai_with_detected_script(self, tmp_path, monkeypatch):
         # --ai alone: script must be detected, agent detection skipped
         monkeypatch.chdir(tmp_path)

@@ -31,10 +31,14 @@ mkdir -p "$GENRELEASES_DIR"
 rm -rf "$GENRELEASES_DIR"/* || true
 
 rewrite_paths() {
+  # Expand bare .minispec-relative dir names, but only where they are not
+  # already prefixed: an earlier form of these rules turned `.minispec/memory/`
+  # into `.minispec.minispec/memory/` and `.minispec/hooks/scripts/` into
+  # `.minispec/hooks.minispec/scripts/`.
   sed -E \
-    -e 's@(/?)memory/@.minispec/memory/@g' \
-    -e 's@(/?)scripts/@.minispec/scripts/@g' \
-    -e 's@(/?)templates/@.minispec/templates/@g'
+    -e 's@([^/]|^)memory/@\1.minispec/memory/@g' \
+    -e 's@([^/]|^)scripts/@\1.minispec/scripts/@g' \
+    -e 's@([^/]|^)templates/@\1.minispec/templates/@g'
 }
 
 template_description() {

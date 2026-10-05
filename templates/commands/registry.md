@@ -74,7 +74,7 @@ For other agents, hooks are installed as shell scripts in `.minispec/hooks/scrip
 
 Commands are markdown templates that users invoke via `/command-name` in their AI agent. They provide structured instructions that guide the agent through a specific workflow.
 
-**Location**: Commands live in the agent's commands directory (e.g., `.claude/commands/`, `.cursor/commands/`).
+**Location**: Commands live in the agent's skills/commands directory (e.g., `.claude/skills/`, `.cursor/skills/`, `.gemini/commands/`).
 
 **Format**: Markdown with YAML frontmatter for agents that support it (Claude, Cursor, Copilot). TOML format for Gemini and Qwen.
 
@@ -196,16 +196,16 @@ Based on the package type and target agents, generate the `files:` section of `p
 
 **Agent folder conventions:**
 
-| Agent | Commands/Skills Path | Hooks Path | Config Path | Format |
+| Agent | Skills/Commands Path | Hooks Path | Config Path | Format |
 |-------|---------------------|------------|-------------|--------|
-| claude | `.claude/commands/` | `.minispec/hooks/` | `.claude/settings.json` | Markdown |
-| cursor | `.cursor/commands/` | `.minispec/hooks/` | `.cursor/rules/` | Markdown |
-| copilot | `.github/agents/` | `.minispec/hooks/` | `.github/copilot-instructions.md` | Markdown |
+| claude | `.claude/skills/` | `.minispec/hooks/` | `.claude/settings.json` | SKILL.md |
+| cursor | `.cursor/skills/` | `.minispec/hooks/` | `.cursor/rules/` | SKILL.md |
+| copilot | `.github/skills/` | `.minispec/hooks/` | `.github/copilot-instructions.md` | SKILL.md |
 | gemini | `.gemini/commands/` | `.minispec/hooks/` | `.gemini/settings.json` | TOML |
-| qwen | `.qwen/commands/` | `.minispec/hooks/` | `.qwen/settings.json` | TOML |
+| qwen | `.qwen/commands/` | `.minispec/hooks/` | `.qwen/settings.json` | Markdown |
 | opencode | `.opencode/command/` | `.minispec/hooks/` | `.opencode/` | Markdown |
 | windsurf | `.windsurf/workflows/` | `.minispec/hooks/` | `.windsurf/rules/` | Markdown |
-| codex | `.codex/prompts/` | `.minispec/hooks/` | `.codex/` | Markdown |
+| codex | `.agents/skills/` | `.minispec/hooks/` | `.agents/` | SKILL.md |
 | roo | `.roo/commands/` | `.minispec/hooks/` | `.roo/` | Markdown |
 | q | `.amazonq/prompts/` | `.minispec/hooks/` | `.amazonq/` | Markdown |
 
@@ -214,10 +214,10 @@ For each target agent, create appropriate file mappings:
 **For command packages:**
 ```yaml
 files:
-  - source: command.md
-    target: .claude/commands/package-name.md
-  - source: command.md
-    target: .cursor/commands/package-name.md
+  - source: SKILL.md
+    target: .claude/skills/package-name/SKILL.md
+  - source: SKILL.md
+    target: .cursor/skills/package-name/SKILL.md
 ```
 
 **For hook packages:**

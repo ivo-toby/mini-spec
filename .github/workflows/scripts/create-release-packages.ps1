@@ -61,9 +61,9 @@ New-Item -ItemType Directory -Path $GenReleasesDir -Force | Out-Null
 function Rewrite-Paths {
     param([string]$Content)
 
-    $Content = $Content -replace '(/?)\bmemory/', '.minispec/memory/'
-    $Content = $Content -replace '(/?)\bscripts/', '.minispec/scripts/'
-    $Content = $Content -replace '(/?)\btemplates/', '.minispec/templates/'
+    $Content = $Content -replace '([^/]|^)memory/', '$1.minispec/memory/'
+    $Content = $Content -replace '([^/]|^)scripts/', '$1.minispec/scripts/'
+    $Content = $Content -replace '([^/]|^)templates/', '$1.minispec/templates/'
     return $Content
 }
 

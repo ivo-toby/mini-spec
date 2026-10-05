@@ -31,7 +31,6 @@ import sys
 import zipfile
 import tempfile
 import shutil
-import shlex
 import json
 from pathlib import Path
 from typing import Optional, Tuple
@@ -1574,18 +1573,9 @@ def init(
         steps_lines.append("1. You're already in the project directory!")
         step_num = 2
 
-    # Add Codex-specific setup step if needed
-    if selected_ai == "codex":
-        codex_path = project_path / AGENT_CONFIG["codex"]["folder"].rstrip("/")
-        quoted_path = shlex.quote(str(codex_path))
-        if os.name == "nt":  # Windows
-            cmd = f"setx CODEX_HOME {quoted_path}"
-        else:  # Unix-like systems
-            cmd = f"export CODEX_HOME={quoted_path}"
-        
-        steps_lines.append(f"{step_num}. Set [cyan]CODEX_HOME[/cyan] environment variable before running Codex: [cyan]{cmd}[/cyan]")
-        step_num += 1
-
+    # Codex needs no setup step: Codex discovers .agents/skills/ in the repo,
+    # and pointing CODEX_HOME at the project would mix its auth/config state
+    # into the skills folder.
     steps_lines.append(f"{step_num}. Start using slash commands with your AI agent:")
 
     steps_lines.append("   2.1 [cyan]/minispec-constitution[/] - Set up project principles + preferences")
@@ -1632,6 +1622,10 @@ def upgrade(
     project_path = Path.cwd()
 
     show_banner()
+
+    if not (project_path / ".minispec").is_dir():
+        console.print("[red]Error:[/red] No .minispec directory found. Is this a MiniSpec project?")
+        raise typer.Exit(1)
 
     # Get current version
     current_version = _get_version()
@@ -2270,12 +2264,12 @@ def _format_skill_for_agent(description: str, body: str, agent: str, name: str |
     """Format a skill template for the target agent's expected format."""
     config = AGENT_COMMAND_CONFIG.get(agent)
     if config and config["kind"] == "skill":
-        # SKILL.md frontmatter needs name for skill agents (gemini, qwen use TOML below)
+        # SKILL.md frontmatter needs name for skill agents (TOML agents fall through below)
         head_name = f"name: {name}\n" if name else ""
         return f"---\n{head_name}description: {description}\n---\n\n{body}"
     if not config or config["fmt"] == "md":
         return f"---\ndescription: {description}\n---\n\n{body}"
-    # TOML format (gemini, qwen)
+    # TOML format (gemini)
     escaped_body = body.replace("\\", "\\\\")
     return f'description = "{description}"\n\nprompt = """\n{escaped_body}\n"""'
 
