@@ -4,7 +4,7 @@ A Claude Code skill that generates changelogs from git history.
 
 ## Usage
 
-```
+```text
 /changelog-writer              # Generates changelog from last tag to HEAD
 /changelog-writer v1.0.0       # From a specific tag to HEAD
 /changelog-writer v1.0.0..v2.0.0  # Specific range
@@ -27,9 +27,9 @@ This is a **skill** (not a command), which means:
 
 ## Installed files
 
-| File | Purpose |
-|------|---------|
-| `.claude/skills/changelog-writer/SKILL.md` | The skill definition |
+| File                                          | Purpose                   |
+| --------------------------------------------- | ------------------------- |
+| `.claude/skills/changelog-writer/SKILL.md`    | The skill definition      |
 | `.claude/skills/changelog-writer/template.md` | Changelog format template |
 
 ## Customization

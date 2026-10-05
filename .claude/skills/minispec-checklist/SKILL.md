@@ -19,11 +19,13 @@ $ARGUMENTS
 **CRITICAL CONCEPT**: Checklists are **UNIT TESTS FOR REQUIREMENTS WRITING** - they validate the quality, clarity, and completeness of requirements in a given domain.
 
 **NOT for verification/testing**:
+
 - ❌ NOT "Verify the button clicks correctly"
 - ❌ NOT "Test error handling works"
 - ❌ NOT "Confirm the API returns 200"
 
 **FOR requirements quality validation**:
+
 - ✅ "Are visual hierarchy requirements defined for all card types?" (completeness)
 - ✅ "Is 'prominent display' quantified with specific sizing/positioning?" (clarity)
 - ✅ "Are hover state requirements consistent across all interactive elements?" (consistency)
@@ -62,10 +64,12 @@ If no design exists:
 ### Phase 2: Load Design Context
 
 Read from `specs/[feature-name]/`:
+
 - `design.md`: Components, data model, API, user stories
 - `tasks.md`: Implementation breakdown (if exists)
 
 Read from `.minispec/knowledge/`:
+
 - `decisions/`: Documented decisions
 - `conventions.md`: Established patterns
 
@@ -76,6 +80,7 @@ Read from `.minispec/knowledge/`:
 Create checklist at `specs/[feature-name]/checklists/[domain].md`
 
 **Structure**:
+
 ```markdown
 ---
 type: checklist
@@ -125,6 +130,7 @@ status: [draft|active|completed]
 ### Item Writing Rules
 
 **✅ CORRECT patterns** (test requirements quality):
+
 - "Are [requirement type] defined/specified/documented for [scenario]?"
 - "Is [vague term] quantified/clarified with specific criteria?"
 - "Are requirements consistent between [section A] and [section B]?"
@@ -133,6 +139,7 @@ status: [draft|active|completed]
 - "Does the design define [missing aspect]?"
 
 **❌ PROHIBITED patterns** (test implementation):
+
 - Starting with "Verify", "Test", "Confirm", "Check" + behavior
 - References to code execution, user actions, system behavior
 - "Displays correctly", "works properly", "functions as expected"
@@ -143,7 +150,7 @@ status: [draft|active|completed]
 Group items by what they validate:
 
 | Dimension | What It Checks |
-|-----------|----------------|
+| ----------- | ---------------- |
 | Completeness | Are all necessary requirements present? |
 | Clarity | Are requirements unambiguous and specific? |
 | Consistency | Do requirements align without conflicts? |
@@ -153,6 +160,7 @@ Group items by what they validate:
 ### Domain-Specific Focus
 
 **UX Checklist** (`ux.md`):
+
 - Visual hierarchy specifications
 - Interaction state definitions
 - Accessibility requirements
@@ -160,6 +168,7 @@ Group items by what they validate:
 - Error/empty/loading states
 
 **API Checklist** (`api.md`):
+
 - Contract completeness
 - Error response specifications
 - Authentication requirements
@@ -167,6 +176,7 @@ Group items by what they validate:
 - Versioning strategy
 
 **Security Checklist** (`security.md`):
+
 - Authentication requirements
 - Authorization definitions
 - Data protection specifications
@@ -174,6 +184,7 @@ Group items by what they validate:
 - Compliance alignment
 
 **Performance Checklist** (`performance.md`):
+
 - Latency requirements
 - Scale specifications
 - Resource constraints
@@ -187,14 +198,17 @@ Show the generated checklist:
 > "Generated **[Domain] Requirements Quality Checklist** with [N] items.
 >
 > **Focus areas:**
+>
 > - [Area 1]: [N] items
 > - [Area 2]: [N] items
 >
 > **Potential gaps I noticed:**
+>
 > - [Gap 1]
 > - [Gap 2]
 >
 > Review the checklist above. Want me to:
+>
 > - Add items for specific concerns?
 > - Adjust the focus areas?
 > - Save it and move on?"
@@ -202,6 +216,7 @@ Show the generated checklist:
 ### Phase 5: Save
 
 Once approved:
+
 1. Create `specs/[feature]/checklists/` directory if needed
 2. Save checklist file
 3. Confirm location
@@ -222,13 +237,15 @@ Once approved:
 ## Examples
 
 **❌ WRONG** (tests implementation):
-```
+
+```text
 - [ ] CHK001 - Verify landing page displays 3 cards
 - [ ] CHK002 - Test hover states work on desktop
 ```
 
 **✅ CORRECT** (tests requirements):
-```
+
+```text
 - [ ] CHK001 - Is the number of featured cards explicitly specified? [Completeness]
 - [ ] CHK002 - Are hover state requirements defined for all interactive elements? [Coverage]
 ```
@@ -236,6 +253,7 @@ Once approved:
 ## Output Artifacts
 
 Creates:
+
 1. `specs/[feature]/checklists/[domain].md` - The checklist file
 
 Multiple checklists can coexist (ux.md, api.md, security.md, etc.)

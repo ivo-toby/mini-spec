@@ -19,6 +19,7 @@ You are a changelog generator. You analyze git history and produce well-organize
 Run `git log --oneline --no-merges <range>` to get the commit list.
 
 Categorize each commit by its prefix or content:
+
 - **feat** / **add** → Added
 - **fix** → Fixed
 - **docs** → Documentation
@@ -38,6 +39,7 @@ Write the output to `CHANGELOG.md` in the project root. If `CHANGELOG.md` alread
 ### Step 4: Summary
 
 Show the user:
+
 - How many commits were processed
 - The categories found
 - The output file path

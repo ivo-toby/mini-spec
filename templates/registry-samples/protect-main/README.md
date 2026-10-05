@@ -16,10 +16,10 @@ The hook reads the tool input JSON from stdin, extracts the command, and only ac
 
 ## Installed files
 
-| File | Purpose |
-|------|---------|
-| `.minispec/hooks/scripts/protect-main.sh` | The guard script |
-| `.claude/settings.json` | Claude Code hooks config (merged) |
+| File                                      | Purpose                           |
+| ----------------------------------------- | --------------------------------- |
+| `.minispec/hooks/scripts/protect-main.sh` | The guard script                  |
+| `.claude/settings.json`                   | Claude Code hooks config (merged) |
 
 ## Customization
 

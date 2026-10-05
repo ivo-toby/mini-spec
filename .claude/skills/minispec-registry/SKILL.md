@@ -19,6 +19,7 @@ You are an interactive **registry builder** — a pair programming partner for c
 ## Philosophy
 
 Building a registry is iterative. You guide registry authors through:
+
 - Creating well-structured packages with correct metadata
 - Writing actual package content (hooks, commands, skills)
 - Validating registry integrity
@@ -37,7 +38,7 @@ Hooks are event-driven automations that run in response to AI agent lifecycle ev
 **Event model**: Hooks fire on specific events during the agent's operation. For Claude Code, the available hook events are:
 
 | Event | When it fires |
-|-------|---------------|
+| ------- | --------------- |
 | `PreToolUse` | Before a tool executes (e.g., before running a Bash command) |
 | `PostToolUse` | After a tool executes (e.g., after a file is written) |
 | `Notification` | When the agent sends a notification |
@@ -45,17 +46,20 @@ Hooks are event-driven automations that run in response to AI agent lifecycle ev
 | `SubagentStop` | When a subagent (Task tool) completes |
 
 **Exit code conventions**:
+
 - `0` — Allow (no output means allow too)
 - `2` — Block the action (stderr is shown to the user as the reason)
 - Any other non-zero — Error (logged but doesn't block)
 
 **Hook types**:
+
 - `command` — Runs a shell command. Receives JSON on stdin with tool name and input. Example: `bash .minispec/hooks/scripts/protect-main.sh "$TOOL_INPUT"`
 - `prompt` — Sends output to the AI model as additional context (no blocking capability)
 
 **Matcher syntax**: The `matcher` field filters which tool invocations trigger the hook. Use tool names like `Bash`, `Write`, `Edit`, `Read`, or a regex pattern.
 
 **Configuration** (Claude Code `settings.json`):
+
 ```json
 {
   "hooks": {
@@ -99,6 +103,7 @@ $ARGUMENTS
 ````
 
 **Key features**:
+
 - `$ARGUMENTS` is replaced with whatever the user types after the command name
 - Phase-based structure (Philosophy → Execution Flow → Output Artifacts) is the MiniSpec convention
 - Commands are stateless — each invocation starts fresh
@@ -125,6 +130,7 @@ disable-model-invocation: false
 ````
 
 **Frontmatter options**:
+
 - `description` — Shown in skill picker; also used for auto-invocation (if the user's request matches, Claude may suggest the skill)
 - `context: fork` — Runs the skill in an isolated subagent context (protects main conversation)
 - `allowed-tools` — Restricts which tools the skill can use
@@ -143,7 +149,7 @@ When creating a **skill package**, the `package.yaml` should map files to `.clau
 Registries created with `minispec init-registry` include three reference packages in `packages/`. Use these as examples when helping authors create new packages:
 
 | Package | Type | Demonstrates |
-|---------|------|-------------|
+| --------- | ------ | ------------- |
 | `protect-main` | hook | PreToolUse event guard, exit code 2 blocking, `settings.json` merge config |
 | `quick-review` | command | Multi-agent file mappings (Claude, Cursor, Copilot), `$ARGUMENTS` usage, phase-based structure |
 | `changelog-writer` | skill | `.claude/skills/` path, `context: fork` frontmatter, supporting files (`template.md`) |
@@ -203,7 +209,7 @@ Based on the package type and target agents, generate the `files:` section of `p
 **Agent folder conventions:**
 
 | Agent | Skills/Commands Path | Hooks Path | Config Path | Format |
-|-------|---------------------|------------|-------------|--------|
+| ------- | --------------------- | ------------ | ------------- | -------- |
 | claude | `.claude/skills/` | `.minispec/hooks/` | `.claude/settings.json` | SKILL.md |
 | cursor | `.cursor/skills/` | `.minispec/hooks/` | `.cursor/rules/` | SKILL.md |
 | copilot | `.github/skills/` | `.minispec/hooks/` | `.github/copilot-instructions.md` | SKILL.md |
@@ -218,6 +224,7 @@ Based on the package type and target agents, generate the `files:` section of `p
 For each target agent, create appropriate file mappings:
 
 **For command packages:**
+
 ```yaml
 files:
   - source: SKILL.md
@@ -227,6 +234,7 @@ files:
 ```
 
 **For hook packages:**
+
 ```yaml
 files:
   - source: hook.sh
@@ -237,6 +245,7 @@ files:
 ```
 
 **For skill packages:**
+
 ```yaml
 files:
   - source: SKILL.md
@@ -314,6 +323,7 @@ set -euo pipefail
 ```
 
 Common hook patterns:
+
 - **Pre-commit guard**: Check branch name, file contents, or staged changes
 - **File watcher**: React to file changes (lint, format, validate)
 - **Environment check**: Verify tools, configs, or permissions
@@ -321,6 +331,7 @@ Common hook patterns:
 If the hook needs agent configuration (e.g., Claude Code hooks config), also create a `settings.json` with `merge: true` in the file mapping.
 
 Example Claude hooks config:
+
 ```json
 {
   "hooks": {
@@ -352,6 +363,7 @@ After creating all files:
 > "Package created! Here's what I generated:
 >
 > `packages/[name]/`
+>
 > - `package.yaml` — metadata and file mappings
 > - `[source files]` — package content
 > - `README.md` — package documentation
@@ -365,6 +377,7 @@ Run through three tiers of validation checks:
 ### Tier 1: Schema (Critical)
 
 Check and report:
+
 - [ ] `registry.yaml` exists at repo root
 - [ ] `registry.yaml` has required fields: `name`, `description`
 - [ ] Every `packages/*/package.yaml` exists and parses as valid YAML
@@ -377,6 +390,7 @@ For each issue found, show the problem and offer to fix it.
 ### Tier 2: Quality (Recommended)
 
 Check and suggest improvements:
+
 - [ ] Every package has a `description`
 - [ ] Every package declares `agents` compatibility
 - [ ] Every package has `review` metadata
@@ -386,6 +400,7 @@ Check and suggest improvements:
 ### Tier 3: Cross-Agent (If Multi-Agent)
 
 For packages that declare multiple agents:
+
 - [ ] File mappings exist for each declared agent
 - [ ] Target paths match the expected conventions per agent
 - [ ] Markdown commands don't need TOML wrapping for Gemini/Qwen (flag if they do)
@@ -407,6 +422,7 @@ Present results:
 ## Mode 3: Update Metadata
 
 Help edit `registry.yaml` fields:
+
 - `name` — registry display name
 - `description` — what this registry provides
 - `maintainers` — list of contact emails or team names

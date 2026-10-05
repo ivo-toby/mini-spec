@@ -19,6 +19,7 @@ You are performing a **documentation health check** to ensure the knowledge base
 ## Philosophy
 
 Documentation should:
+
 - Reflect the current state of the code
 - Be trustworthy for both humans and AI
 - Stay current without manual effort
@@ -32,16 +33,19 @@ This command catches drift between code and docs, then helps fix it.
 For each decision file:
 
 **Frontmatter validity:**
+
 - Required fields present (type, id, date, status, impacts)
 - Status is valid (proposed/accepted/deprecated/superseded)
 - If superseded, `superseded_by` points to existing decision
 
 **Content accuracy:**
+
 - Code references still exist
 - Referenced file paths are valid
 - Impacts list matches actual file locations
 
 **Relevance:**
+
 - Decision hasn't been reversed without documentation
 - Status reflects reality (is it still active?)
 
@@ -50,15 +54,18 @@ For each decision file:
 For each pattern file:
 
 **Frontmatter validity:**
+
 - Required fields present (type, id, name, category, status)
 - Status reflects current usage
 
 **Content accuracy:**
+
 - Code examples match actual patterns in codebase
 - "Examples in This Codebase" locations exist
 - Referenced files use the pattern as described
 
 **Relevance:**
+
 - Pattern is actually used (not deprecated in practice)
 - No newer pattern has replaced it
 
@@ -67,21 +74,25 @@ For each pattern file:
 For each module file:
 
 **Frontmatter validity:**
+
 - Required fields present (type, id, name, path, status)
 - Path points to existing directory
 
 **Content accuracy:**
+
 - Public API matches actual exports
 - Listed files exist
 - Dependencies are accurate
 
 **Relevance:**
+
 - Module still exists
 - Architecture description matches reality
 
 ### 4. Architecture Overview (`.minispec/knowledge/architecture.md`)
 
 **Structural accuracy:**
+
 - Described components exist
 - Relationships are accurate
 - Tech stack is current
@@ -89,12 +100,14 @@ For each module file:
 ### 5. Conventions (`.minispec/knowledge/conventions.md`)
 
 **Accuracy:**
+
 - Conventions are actually followed in code
 - No contradicting patterns in recent code
 
 ### 6. Glossary (`.minispec/knowledge/glossary.md`)
 
 **Completeness:**
+
 - Key terms from code are defined
 - Definitions match usage
 
@@ -109,6 +122,7 @@ For each module file:
 ### Phase 2: Cross-Reference with Code
 
 For each reference:
+
 1. Check if the referenced path exists
 2. If it references specific code, verify it's still there
 3. Track broken references
@@ -118,15 +132,18 @@ For each reference:
 Look for signals of outdated docs:
 
 **Broken references:**
+
 - File paths that don't exist
 - Function names not found
 - Module paths invalid
 
 **Timestamp drift:**
+
 - Last updated date vs. file modification times
 - Decisions older than code changes in impacted areas
 
 **Contradiction:**
+
 - Doc says X, code does Y
 - Pattern doc shows approach A, code uses approach B
 
@@ -136,6 +153,7 @@ Look for signals of outdated docs:
 > "✅ Documentation check complete. Everything looks current!
 >
 > **Checked:**
+>
 > - [N] decisions - all valid
 > - [N] patterns - all accurate
 > - [N] modules - all current
@@ -146,6 +164,7 @@ Look for signals of outdated docs:
 > "Documentation check found [N] items needing attention:
 >
 > **Stale (code changed, docs didn't):**
+>
 > 1. `decisions/20260327-1130-auth.md`
 >    - References `src/auth/jwt.ts` which no longer exists
 >    - Last updated: [date], file deleted: [date]
@@ -155,9 +174,11 @@ Look for signals of outdated docs:
 >    - Current code uses different structure
 >
 > **Broken references:**
+>
 > 1. `modules/payments.md` → `src/payments/` (directory missing)
 >
 > **Potentially outdated:**
+>
 > 1. `architecture.md` - Not updated in 30+ days, code has changed
 >
 > Want me to help fix these?"
@@ -168,6 +189,7 @@ For each issue, offer specific resolution:
 
 **For broken references:**
 > "The file `src/auth/jwt.ts` no longer exists. It looks like:
+>
 > - It was renamed to `src/auth/tokens.ts`, OR
 > - The functionality moved to `src/auth/index.ts`, OR
 > - The feature was removed entirely
@@ -176,11 +198,13 @@ For each issue, offer specific resolution:
 
 **For stale content:**
 > "The `api-response` pattern doc shows:
+>
 > ```typescript
 > { data: T, error: null }
 > ```
 >
 > But current code uses:
+>
 > ```typescript
 > { success: true, data: T }
 > ```
@@ -191,6 +215,7 @@ For each issue, offer specific resolution:
 > "Several files in `src/payments/` changed recently but `modules/payments.md` wasn't updated.
 >
 > Changes detected:
+>
 > - New file: `refunds.ts`
 > - Modified: `checkout.ts`
 >
@@ -220,11 +245,13 @@ After fixes:
 > "Documentation updated:
 >
 > **Fixed:**
+>
 > - `decisions/20260327-1130-auth.md` - Updated file references
 > - `patterns/api-response.md` - Synced with current code
 > - `modules/payments.md` - Added new components
 >
 > **Marked as superseded:**
+>
 > - `decisions/20260327-1006-old-approach.md`
 >
 > Knowledge base is now current with the codebase."
@@ -242,7 +269,7 @@ After fixes:
 ### Severity Levels
 
 | Level | Meaning | Action |
-|-------|---------|--------|
+| ------- | --------- | -------- |
 | **Critical** | Broken reference, doc is actively misleading | Must fix |
 | **Warning** | Likely stale, needs human verification | Should fix |
 | **Info** | Minor drift, still mostly accurate | Optional fix |
@@ -250,6 +277,7 @@ After fixes:
 ## Running Automatically
 
 This command can be run:
+
 - Manually with `/minispec-validate-docs`
 - Before `/minispec-walkthrough` (auto-check to warn about stale docs)
 - Periodically as maintenance

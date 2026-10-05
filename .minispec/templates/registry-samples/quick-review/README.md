@@ -4,7 +4,7 @@ A slash command for quick, structured code reviews.
 
 ## Usage
 
-```
+```text
 /quick-review src/auth/login.ts
 /quick-review                     # Reviews staged or unstaged changes
 /quick-review src/api/            # Reviews all files in a directory
@@ -23,7 +23,7 @@ Output is structured into "must fix" issues, suggestions, and positive notes.
 ## Installed files
 
 | File | Agent |
-|------|-------|
+| ------ | ------- |
 | `.claude/commands/quick-review.md` | Claude Code |
 | `.cursor/commands/quick-review.md` | Cursor |
 | `.github/agents/quick-review.agent.md` | GitHub Copilot |

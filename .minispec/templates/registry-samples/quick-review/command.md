@@ -27,16 +27,19 @@ Good code review catches bugs early, improves code quality, and spreads knowledg
 For each file or change, evaluate against these criteria:
 
 **Correctness**
+
 - Logic errors, off-by-one, null/undefined handling
 - Missing error handling for failure cases
 - Race conditions or concurrency issues
 
 **Security**
+
 - Input validation gaps (user input, API responses)
 - Injection risks (SQL, command, XSS)
 - Secrets or credentials in code
 
 **Design**
+
 - Functions doing too many things
 - Unclear naming or confusing control flow
 - Missing or misleading comments on tricky logic
@@ -48,12 +51,15 @@ Present findings in this format:
 > **Review: [file or scope]**
 >
 > **Issues** (must fix):
+>
 > - [file:line] Description of the problem and suggested fix
 >
 > **Suggestions** (consider):
+>
 > - [file:line] Description and rationale
 >
 > **Looks good**:
+>
 > - Brief note on well-written sections
 
 If no issues found, say so clearly — don't invent problems.
