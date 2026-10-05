@@ -163,7 +163,7 @@ AGENT_CONFIG = {
     },
     "codex": {
         "name": "Codex CLI",
-        "folder": ".codex/",
+        "folder": ".agents/",
         "install_url": "https://github.com/openai/codex",
         "requires_cli": True,
     },
@@ -175,7 +175,7 @@ AGENT_CONFIG = {
     },
     "kilocode": {
         "name": "Kilo Code",
-        "folder": ".kilocode/",
+        "folder": ".kilo/",
         "install_url": None,  # IDE-based
         "requires_cli": False,
     },
@@ -298,16 +298,15 @@ BANNER = """
 TAGLINE = "Pair programming with AI that actually works"
 
 
-def _detect_project_config(project_path: Path) -> tuple[str, str]:
-    """Detect which agent and script type are installed in a MiniSpec project.
+def _detect_project_agent(project_path: Path) -> str:
+    """Detect which AI agent is installed in a MiniSpec project.
 
-    Returns (agent_key, script_type) or exits with error if ambiguous/missing.
+    Returns the agent key or exits with error if ambiguous/missing.
     """
     if not (project_path / ".minispec").is_dir():
         console.print("[red]Error:[/red] No .minispec directory found. Is this a MiniSpec project?")
         raise typer.Exit(1)
 
-    # Detect agent by checking AGENT_COMMAND_CONFIG paths
     detected_agents = []
     for agent_key, cmd_config in AGENT_COMMAND_CONFIG.items():
         cmd_path = project_path / cmd_config["path"]
@@ -318,7 +317,7 @@ def _detect_project_config(project_path: Path) -> tuple[str, str]:
         legacy_found = []
         for agent_key, legacy_dirs in AGENT_LEGACY_COMMAND_DIRS.items():
             for legacy_dir in legacy_dirs:
-                if legacy_dir not in AGENT_COMMAND_CONFIG[agent_key]["path"] and (project_path / legacy_dir).is_dir():
+                if legacy_dir != AGENT_COMMAND_CONFIG[agent_key]["path"] and (project_path / legacy_dir).is_dir():
                     legacy_found.append(legacy_dir)
         if legacy_found:
             console.print(
@@ -334,19 +333,31 @@ def _detect_project_config(project_path: Path) -> tuple[str, str]:
         console.print(f"[red]Error:[/red] Multiple agents detected ({agents_str}). Use --ai to specify which one.")
         raise typer.Exit(1)
 
-    # Detect script type
-    scripts_dir = project_path / ".minispec" / "scripts"
-    detected_script = None
-    if (scripts_dir / "bash").is_dir():
-        detected_script = "sh"
-    elif (scripts_dir / "powershell").is_dir():
-        detected_script = "ps"
+    return detected_agents[0]
 
-    if not detected_script:
-        console.print("[red]Error:[/red] Could not detect script type. Use --script to specify.")
+
+def _detect_project_script(project_path: Path) -> str:
+    """Detect the script type (sh or ps) installed in a MiniSpec project."""
+    if not (project_path / ".minispec").is_dir():
+        console.print("[red]Error:[/red] No .minispec directory found. Is this a MiniSpec project?")
         raise typer.Exit(1)
 
-    return detected_agents[0], detected_script
+    scripts_dir = project_path / ".minispec" / "scripts"
+    if (scripts_dir / "bash").is_dir():
+        return "sh"
+    if (scripts_dir / "powershell").is_dir():
+        return "ps"
+
+    console.print("[red]Error:[/red] Could not detect script type. Use --script to specify.")
+    raise typer.Exit(1)
+
+
+def _detect_project_config(project_path: Path) -> tuple[str, str]:
+    """Detect which agent and script type are installed in a MiniSpec project.
+
+    Returns (agent_key, script_type) or exits with error if ambiguous/missing.
+    """
+    return _detect_project_agent(project_path), _detect_project_script(project_path)
 
 
 def _classify_upgrade_file(rel_path: str) -> str:
@@ -419,10 +430,10 @@ def _migrate_legacy_commands(project_path: Path, agent: str, applied_rel_paths: 
     A legacy file minispec.<stem>.<ext> is deleted only when its same-stem
     replacement exists — either already applied by this upgrade (applied_rel_paths)
     or present in the agent's current command/skills dir on disk. Non-MiniSpec
-    files are kept and the dir survives while non-empty.
+    files are kept silently and keep the dir alive; new-layout files in dirs the
+    agent still uses are left alone so reruns stay quiet.
 
-    Returns (relative_path, action) rows; actions: migrated, kept (no replacement),
-    kept (not MiniSpec).
+    Returns (relative_path, action) rows; actions: migrated, kept (no replacement).
     """
     rows: list[tuple[str, str]] = []
 
@@ -449,7 +460,8 @@ def _migrate_legacy_commands(project_path: Path, agent: str, applied_rel_paths: 
             rel = child.relative_to(project_path).as_posix()
             stem = _legacy_stem(child.name)
             if stem is None:
-                rows.append((rel, "kept (not MiniSpec)"))
+                # Not a MiniSpec file (user content or a new-layout file):
+                # keep silently so repeat upgrades don't re-report it
                 continue
             has_replacement = any(
                 _has_replacement_component(rel_parts, stem) for rel_parts in applied_parts
@@ -465,11 +477,17 @@ def _migrate_legacy_commands(project_path: Path, agent: str, applied_rel_paths: 
         # Remove the legacy dir when nothing remains in it
         if d.is_dir() and not any(d.iterdir()):
             d.rmdir()
-            folder = AGENT_CONFIG.get(agent, {}).get("folder")
-            if folder:
-                parent = d.parent
-                if parent.is_dir() and parent.name == folder.rstrip("/") and not any(parent.iterdir()):
-                    parent.rmdir()
+            # Remove now-empty dot-folders walking up, so stale agent roots
+            # (.codex, .kilocode) and emptied wrappers (.github) don't linger
+            parent = d.parent
+            while (
+                parent != project_path
+                and parent.name.startswith(".")
+                and parent.is_dir()
+                and not any(parent.iterdir())
+            ):
+                parent.rmdir()
+                parent = parent.parent
 
     return rows
 
@@ -1558,7 +1576,7 @@ def init(
 
     # Add Codex-specific setup step if needed
     if selected_ai == "codex":
-        codex_path = project_path / ".codex"
+        codex_path = project_path / AGENT_CONFIG["codex"]["folder"].rstrip("/")
         quoted_path = shlex.quote(str(codex_path))
         if os.name == "nt":  # Windows
             cmd = f"setx CODEX_HOME {quoted_path}"
@@ -1628,10 +1646,10 @@ def upgrade(
         console.print(f"[red]Error:[/red] Invalid script type '{script_type}'. Choose from: {', '.join(SCRIPT_TYPE_CHOICES.keys())}")
         raise typer.Exit(1)
 
-    detected_ai, detected_script = _detect_project_config(project_path)
-
-    selected_ai = ai_assistant or detected_ai
-    selected_script = script_type or detected_script
+    # Explicit flags skip their counterpart's detection entirely, so a
+    # legacy-layout project can always be migrated with --ai + --script.
+    selected_ai = ai_assistant or _detect_project_agent(project_path)
+    selected_script = script_type or _detect_project_script(project_path)
 
     console.print(f"[cyan]Agent:[/cyan]  {AGENT_CONFIG[selected_ai]['name']}" + (" [dim](detected)[/dim]" if not ai_assistant else ""))
     console.print(f"[cyan]Script:[/cyan] {SCRIPT_TYPE_CHOICES[selected_script]}" + (" [dim](detected)[/dim]" if not script_type else ""))
@@ -1675,7 +1693,7 @@ def upgrade(
                 results = _apply_upgrade(project_path, template_root, force=force)
 
                 # Replace legacy dot-named command files with the new layouts
-                applied = {rel for rel, _act in results if not rel.startswith("skipped")}
+                applied = {rel for rel, act in results if not act.startswith("skipped")}
                 results += _migrate_legacy_commands(project_path, selected_ai, applied)
 
                 # Ensure scripts are executable
@@ -2248,9 +2266,13 @@ def update(
         console.print("\n[dim]Everything is up to date.[/dim]")
 
 
-def _format_skill_for_agent(description: str, body: str, agent: str) -> str:
+def _format_skill_for_agent(description: str, body: str, agent: str, name: str | None = None) -> str:
     """Format a skill template for the target agent's expected format."""
     config = AGENT_COMMAND_CONFIG.get(agent)
+    if config and config["kind"] == "skill":
+        # SKILL.md frontmatter needs name for skill agents (gemini, qwen use TOML below)
+        head_name = f"name: {name}\n" if name else ""
+        return f"---\n{head_name}description: {description}\n---\n\n{body}"
     if not config or config["fmt"] == "md":
         return f"---\ndescription: {description}\n---\n\n{body}"
     # TOML format (gemini, qwen)
@@ -2264,7 +2286,11 @@ def _read_registry_skill(agent: str) -> tuple[str, str]:
     Returns (filename, content) tuple.
     """
     config = AGENT_COMMAND_CONFIG[agent]
-    filename = f"minispec-registry.{config['ext']}"
+    if config["kind"] == "skill":
+        # Skill agents only discover dirs/ minispec-registry/SKILL.md, not a flat file
+        filename = "minispec-registry/SKILL.md"
+    else:
+        filename = f"minispec-registry.{config['ext']}"
 
     # Read template from source tree
     template_path = Path(__file__).parent.parent.parent / "templates" / "commands" / "registry.md"
@@ -2284,7 +2310,7 @@ def _read_registry_skill(agent: str) -> tuple[str, str]:
                 if line.startswith("description:"):
                     description = line.split(":", 1)[1].strip()
                     break
-            content = _format_skill_for_agent(description, body, agent)
+            content = _format_skill_for_agent(description, body, agent, name="minispec-registry")
             return filename, content
 
     # Fallback: use raw content
@@ -2440,8 +2466,8 @@ def init_registry(
         tracker.start("skill")
         cmd_config = AGENT_COMMAND_CONFIG[selected_ai]
         skill_dir = target / cmd_config["path"]
-        skill_dir.mkdir(parents=True, exist_ok=True)
-        skill_path = skill_dir / skill_filename
+        skill_path = skill_dir / skill_filename  # may include minispec-registry/ subdir
+        skill_path.parent.mkdir(parents=True, exist_ok=True)
         skill_path.write_text(skill_content, encoding="utf-8")
         tracker.complete("skill", f"{cmd_config['path']}/{skill_filename}")
 

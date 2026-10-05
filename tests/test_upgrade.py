@@ -4,14 +4,18 @@ import json
 from pathlib import Path
 
 import pytest
-from click.exceptions import Exit
+import typer
+from typer.testing import CliRunner
 
 from minispec_cli import (
     _apply_upgrade,
     _classify_upgrade_file,
+    _detect_project_agent,
     _detect_project_config,
+    _detect_project_script,
     _diff_files,
     _migrate_legacy_commands,
+    app,
 )
 
 
@@ -42,18 +46,18 @@ class TestDetectProjectConfig:
 
     def test_no_agent_found(self, tmp_path):
         (tmp_path / ".minispec" / "scripts" / "bash").mkdir(parents=True)
-        with pytest.raises(Exit):
+        with pytest.raises(typer.Exit):
             _detect_project_config(tmp_path)
 
     def test_no_script_found(self, tmp_path):
         (tmp_path / ".claude" / "skills" / "minispec-design").mkdir(parents=True)
         (tmp_path / ".claude" / "skills" / "minispec-design" / "SKILL.md").write_text("---\nname: minispec-design\n---\nbody")
         (tmp_path / ".minispec").mkdir(parents=True)
-        with pytest.raises(Exit):
+        with pytest.raises(typer.Exit):
             _detect_project_config(tmp_path)
 
     def test_no_minispec_dir(self, tmp_path):
-        with pytest.raises(Exit):
+        with pytest.raises(typer.Exit):
             _detect_project_config(tmp_path)
 
 
@@ -265,3 +269,136 @@ class TestLegacyMigration:
     def test_idempotent_rerun(self, tmp_path):
         _migrate_legacy_commands(tmp_path, "claude", set())
         # no legacy layout at all: no rows, no exception
+
+    def test_no_rows_for_non_minispec_files(self, tmp_path):
+        legacy = tmp_path / ".claude" / "commands"
+        legacy.mkdir(parents=True)
+        (legacy / "notes.md").write_text("user file")
+        rows = _migrate_legacy_commands(tmp_path, "claude", set())
+        assert rows == []
+        assert (legacy / "notes.md").exists()
+
+    def test_new_layout_files_in_persisting_dir_gain_no_rows(self, tmp_path):
+        # gemini keeps .gemini/commands: new-layout files must not be reported
+        legacy = tmp_path / ".gemini" / "commands"
+        legacy.mkdir(parents=True)
+        (legacy / "minispec-design.toml").write_text("new file")
+        (legacy / "minispec.design.toml").write_text("old file")
+        rows = _migrate_legacy_commands(tmp_path, "gemini", {".gemini/commands/minispec-design.toml"})
+        assert rows == [(".gemini/commands/minispec.design.toml", "migrated")]
+
+    def test_removes_stale_agent_root(self, tmp_path):
+        # codex: legacy .codex/prompts emptied -> .codex removed even though
+        # the new install lands in .agents/skills
+        (tmp_path / ".codex" / "prompts").mkdir(parents=True)
+        (tmp_path / ".codex" / "prompts" / "minispec.design.md").write_text("old")
+        rows = _migrate_legacy_commands(tmp_path, "codex", {".agents/skills/minispec-design/SKILL.md"})
+        assert rows == [(".codex/prompts/minispec.design.md", "migrated")]
+        assert not (tmp_path / ".codex").exists()
+
+    def test_removes_stale_agent_root_kilocode(self, tmp_path):
+        (tmp_path / ".kilocode" / "workflows").mkdir(parents=True)
+        (tmp_path / ".kilocode" / "workflows" / "minispec.design.md").write_text("old")
+        kilo = tmp_path / ".kilo" / "commands"
+        kilo.mkdir(parents=True)
+        (kilo / "minispec-design.md").write_text("new (installed this run)")
+        _migrate_legacy_commands(tmp_path, "kilocode", {".kilo/commands/minispec-design.md"})
+        assert not (tmp_path / ".kilocode").exists()
+        assert (kilo / "minispec-design.md").exists()
+
+    def test_keeps_nonempty_dot_parent(self, tmp_path):
+        # copilot: .github survives while other content lives in it
+        (tmp_path / ".github" / "prompts").mkdir(parents=True)
+        (tmp_path / ".github" / "prompts" / "minispec.design.prompt.md").write_text("old")
+        (tmp_path / ".github" / "workflows").mkdir(parents=True)
+        (tmp_path / ".github" / "workflows" / "ci.yml").write_text("jobs: []")
+        _migrate_legacy_commands(tmp_path, "copilot", {".github/skills/minispec-design/SKILL.md"})
+        assert not (tmp_path / ".github" / "prompts").exists()
+        assert (tmp_path / ".github" / "workflows" / "ci.yml").exists()
+
+    def test_removes_empty_dot_parent(self, tmp_path):
+        # .github becomes fully empty -> removed too
+        (tmp_path / ".github" / "prompts").mkdir(parents=True)
+        (tmp_path / ".github" / "prompts" / "minispec.design.prompt.md").write_text("old")
+        _migrate_legacy_commands(tmp_path, "copilot", {".github/skills/minispec-design/SKILL.md"})
+        assert not (tmp_path / ".github").exists()
+
+
+class TestDetectHelpers:
+    def test_agent_from_new_layout(self, tmp_path):
+        (tmp_path / ".minispec").mkdir()
+        (tmp_path / ".claude" / "skills" / "minispec-design").mkdir(parents=True)
+        (tmp_path / ".claude" / "skills" / "minispec-design" / "SKILL.md").write_text("---\nname: minispec-design\n---\nbody")
+        assert _detect_project_agent(tmp_path) == "claude"
+
+    def test_agent_old_layout_hint_exits(self, tmp_path):
+        (tmp_path / ".minispec").mkdir()
+        (tmp_path / ".claude" / "commands").mkdir(parents=True)
+        (tmp_path / ".claude" / "commands" / "minispec.design.md").write_text("old")
+        with pytest.raises(typer.Exit):
+            _detect_project_agent(tmp_path)
+
+    def test_script_from_bash_dir(self, tmp_path):
+        (tmp_path / ".minispec" / "scripts" / "bash").mkdir(parents=True)
+        assert _detect_project_script(tmp_path) == "sh"
+
+    def test_script_missing_exits(self, tmp_path):
+        (tmp_path / ".minispec").mkdir()
+        with pytest.raises(typer.Exit):
+            _detect_project_script(tmp_path)
+
+
+class TestUpgradeCommandExplicitAgent:
+    # upgrade --ai/--script must drive the run on old-layout projects
+    # without hitting the could-not-detect exit (spec: explicit flags win).
+
+    def _make_template_zip(self, tmp_path):
+        import zipfile
+        root = tmp_path / "tplroot"
+        root.mkdir()
+        skill = root / ".claude" / "skills" / "minispec-design"
+        skill.mkdir(parents=True)
+        (skill / "SKILL.md").write_text("---\nname: minispec-design\ndescription: d\n---\nnew body")
+        bash = root / ".minispec" / "scripts" / "bash"
+        bash.mkdir(parents=True)
+        (bash / "common.sh").write_text("#!/usr/bin/env bash\n")
+        zip_path = tmp_path / "release.zip"
+        with zipfile.ZipFile(zip_path, "w") as zf:
+            for f in root.rglob("*"):
+                if f.is_file():
+                    zf.write(f, f.relative_to(root))
+        return zip_path
+
+    def _fake_download(self, monkeypatch, zip_path):
+        monkeypatch.setattr(
+            "minispec_cli.download_template_from_github",
+            lambda *a, **k: (zip_path, {"release": "v0.0.0-test"}),
+        )
+
+    def test_old_layout_project_upgrades_with_explicit_flags(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / ".claude" / "commands").mkdir(parents=True)
+        (tmp_path / ".claude" / "commands" / "minispec.design.md").write_text("old")
+        (tmp_path / ".minispec" / "memory").mkdir(parents=True)
+        (tmp_path / ".minispec" / "memory" / "constitution.md").write_text("constitution")
+        zip_path = self._make_template_zip(tmp_path)
+        self._fake_download(monkeypatch, zip_path)
+        runner = CliRunner()
+        result = runner.invoke(app, ["upgrade", "--ai", "claude", "--script", "sh", "--force"])
+        assert result.exit_code == 0, result.output
+        assert (tmp_path / ".claude" / "skills" / "minispec-design" / "SKILL.md").exists()
+        assert not (tmp_path / ".claude" / "commands" / "minispec.design.md").exists()
+        assert (tmp_path / ".minispec" / "memory" / "constitution.md").read_text() == "constitution"
+
+    def test_explicit_ai_with_detected_script(self, tmp_path, monkeypatch):
+        # --ai alone: script must be detected, agent detection skipped
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / ".claude" / "commands").mkdir(parents=True)
+        (tmp_path / ".claude" / "commands" / "minispec.design.md").write_text("old")
+        (tmp_path / ".minispec" / "scripts" / "bash").mkdir(parents=True)
+        zip_path = self._make_template_zip(tmp_path)
+        self._fake_download(monkeypatch, zip_path)
+        runner = CliRunner()
+        result = runner.invoke(app, ["upgrade", "--ai", "claude", "--force"])
+        assert result.exit_code == 0, result.output
+        assert (tmp_path / ".claude" / "skills" / "minispec-design" / "SKILL.md").exists()

@@ -41,18 +41,18 @@ specs/
 
 ## Slash Commands
 
-| Command                  | Purpose                                      |
-| ------------------------ | -------------------------------------------- |
-| `/minispec.constitution` | Set up project principles + preferences      |
-| `/minispec.walkthrough`  | Guided codebase tour                         |
-| `/minispec.import`       | Import SpecKit/OpenSpec specs into workflow  |
-| `/minispec.design`       | Interactive design conversation              |
-| `/minispec.tasks`        | Break design into reviewable chunks          |
-| `/minispec.analyze`      | Validate design ↔ tasks alignment            |
-| `/minispec.next`         | Implement next chunk (pair programming loop) |
-| `/minispec.checklist`    | Generate quality checklists                  |
-| `/minispec.validate-docs`| Check documentation freshness                |
-| `/minispec.status`       | Show progress dashboard                      |
+| Command                   | Purpose                                      |
+| ------------------------- | -------------------------------------------- |
+| `/minispec-constitution`  | Set up project principles + preferences      |
+| `/minispec-walkthrough`   | Guided codebase tour                         |
+| `/minispec-import`        | Import SpecKit/OpenSpec specs into workflow  |
+| `/minispec-design`        | Interactive design conversation              |
+| `/minispec-tasks`         | Break design into reviewable chunks          |
+| `/minispec-analyze`       | Validate design ↔ tasks alignment            |
+| `/minispec-next`          | Implement next chunk (pair programming loop) |
+| `/minispec-checklist`     | Generate quality checklists                  |
+| `/minispec-validate-docs` | Check documentation freshness                |
+| `/minispec-status`        | Show progress dashboard                      |
 
 ## Development Commands
 
@@ -88,7 +88,7 @@ minispec upgrade --force      # accept all command changes
 
 ## Key Files Changed from SpecKit
 
-- `templates/commands/*.md` - All commands now use `/minispec.*` prefix
+- `templates/commands/*.md` - All commands now use `/minispec-*` prefix
 - `scripts/` - Use `.minispec/` paths, `MINISPEC_FEATURE` env var
 - `memory/constitution.md` - Added MiniSpec preferences section
 - Old commands removed: `specify.md`, `plan.md`, `implement.md`, `clarify.md`

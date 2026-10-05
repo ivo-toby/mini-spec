@@ -106,7 +106,6 @@ generate_commands() {
     name=$(basename "$template" .md)
     body=$(render_command_body "$template" "$script_variant" "$agent" "$arg_format")
     description=$(template_description "$template")
-    description=$(template_description "$template")
     
     case $ext in
       toml)

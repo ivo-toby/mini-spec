@@ -1,11 +1,4 @@
 {
-    "chat.promptFilesRecommendations": {
-        "minispec.constitution": true,
-        "minispec.design": true,
-        "minispec.tasks": true,
-        "minispec.next": true,
-        "minispec.analyze": true
-    },
     "chat.tools.terminal.autoApprove": {
         ".minispec/scripts/bash/": true,
         ".minispec/scripts/powershell/": true
