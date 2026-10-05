@@ -197,8 +197,8 @@ End with a clear summary:
 > The knowledge base is ready at `.minispec/knowledge/`.
 >
 > **Next steps:**
-> - `/minispec.walkthrough` - If you want a tour of the existing codebase
-> - `/minispec.design` - To start designing a feature
+> - `/minispec-walkthrough` - If you want a tour of the existing codebase
+> - `/minispec-design` - To start designing a feature
 >
 > Ready when you are."
 

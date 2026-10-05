@@ -207,7 +207,7 @@ End with actionable summary:
 > - Look at similar features in [location]
 >
 > **Next steps:**
-> - `/minispec.design` to start designing your feature
+> - `/minispec-design` to start designing your feature
 > - Ask me anything about the codebase anytime
 >
 > What questions do you have?"
@@ -228,7 +228,7 @@ If codebase is mostly empty:
 >
 > As we build, I'll document patterns in `.minispec/knowledge/`.
 >
-> Ready to `/minispec.design` your first feature?"
+> Ready to `/minispec-design` your first feature?"
 
 ### Large/Complex Codebase
 

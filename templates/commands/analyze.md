@@ -31,8 +31,8 @@ If `$ARGUMENTS` specifies a feature, use that. Otherwise, detect the current fea
 If any required artifact is missing:
 > "I can't run a full analysis yet. Missing:
 > - [x] Constitution ✓
-> - [ ] Design - Run `/minispec.design` first
-> - [ ] Tasks - Run `/minispec.tasks` first
+> - [ ] Design - Run `/minispec-design` first
+> - [ ] Tasks - Run `/minispec-tasks` first
 >
 > Want me to help with the missing piece?"
 
@@ -148,7 +148,7 @@ Perform each analysis area. Track findings by severity:
 > - Tasks sized appropriately for your [size] preference
 > - No constitution violations
 >
-> Ready to implement. Run `/minispec.next` when you're ready."
+> Ready to implement. Run `/minispec-next` when you're ready."
 
 **If issues found:**
 > "Analysis found [N] items to review before implementing:
@@ -241,7 +241,7 @@ If the engineer wants a formal report, generate:
 
 - [ ] Resolve critical issues
 - [ ] Review warnings
-- [ ] Run `/minispec.next` to begin implementation
+- [ ] Run `/minispec-next` to begin implementation
 ```
 
 ## Important Guidelines

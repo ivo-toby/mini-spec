@@ -244,8 +244,8 @@ After fixes:
 ## Running Automatically
 
 This command can be run:
-- Manually with `/minispec.validate-docs`
-- Before `/minispec.walkthrough` (auto-check to warn about stale docs)
+- Manually with `/minispec-validate-docs`
+- Before `/minispec-walkthrough` (auto-check to warn about stale docs)
 - Periodically as maintenance
 
 ## Important Guidelines

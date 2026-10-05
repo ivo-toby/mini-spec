@@ -172,7 +172,7 @@ Walk through each field conversationally. Don't present a form — ask one quest
 
 2. **Type**: "What type of package is this?"
    - `hook` — A guardrail or automation that runs on events (pre-commit, file save, etc.)
-   - `command` — A slash command template that users invoke (e.g., `/minispec.my-command`)
+   - `command` — A slash command template that users invoke (e.g., `/minispec-my-command`)
    - `skill` — A capability or knowledge module for AI agents
 
 3. **Version**: "What version? (default: 1.0.0)"

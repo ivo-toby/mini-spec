@@ -27,7 +27,7 @@ The engineer should feel like they designed this, because they did—you just he
 
 Before starting, verify:
 1. Constitution exists at `.minispec/memory/constitution.md`
-   - If not: "I notice we haven't set up a constitution yet. Want to run `/minispec.constitution` first, or proceed with defaults?"
+   - If not: "I notice we haven't set up a constitution yet. Want to run `/minispec-constitution` first, or proceed with defaults?"
 2. Knowledge base exists at `.minispec/knowledge/`
    - If not: Create the directory structure
 
@@ -261,7 +261,7 @@ End with clear next steps:
 > - `.minispec/knowledge/decisions/[YYYYMMDD-HHmm]-[decision].md` - [N] decision records
 >
 > **Next steps:**
-> - `/minispec.tasks` - Break this into implementable chunks
+> - `/minispec-tasks` - Break this into implementable chunks
 > - Or if you want to refine: just tell me what to adjust
 >
 > Ready when you are."

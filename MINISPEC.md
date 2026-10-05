@@ -57,16 +57,16 @@ Engineers can tune how much AI asks for confirmation vs. proceeds independently,
 
 | Command                   | Purpose                                            | When to Use                                    |
 | ------------------------- | -------------------------------------------------- | ---------------------------------------------- |
-| `/minispec.constitution`  | Set up project principles + MiniSpec preferences   | Project setup                                  |
-| `/minispec.walkthrough`   | Guided tour of codebase for context-building       | Before starting work, onboarding new engineers |
-| `/minispec.import`        | Import SpecKit/OpenSpec specs into MiniSpec        | When you have existing heavy specs             |
-| `/minispec.design`        | Interactive design conversation                    | Starting a new feature                         |
-| `/minispec.tasks`         | Break design into reviewable chunks (interactive)  | After design is complete                       |
-| `/minispec.analyze`       | Validate design-to-tasks coherence                 | Before starting implementation                 |
-| `/minispec.next`          | Implement next chunk in pair programming style     | During implementation (loop)                   |
-| `/minispec.checklist`     | Generate quality checklists for requirements       | Before or during implementation                |
-| `/minispec.validate-docs` | Check documentation freshness against code         | Ongoing maintenance                            |
-| `/minispec.status`        | Show current progress, what's next, what's changed | Anytime                                        |
+| `/minispec-constitution`  | Set up project principles + MiniSpec preferences   | Project setup                                  |
+| `/minispec-walkthrough`   | Guided tour of codebase for context-building       | Before starting work, onboarding new engineers |
+| `/minispec-import`        | Import SpecKit/OpenSpec specs into MiniSpec        | When you have existing heavy specs             |
+| `/minispec-design`        | Interactive design conversation                    | Starting a new feature                         |
+| `/minispec-tasks`         | Break design into reviewable chunks (interactive)  | After design is complete                       |
+| `/minispec-analyze`       | Validate design-to-tasks coherence                 | Before starting implementation                 |
+| `/minispec-next`          | Implement next chunk in pair programming style     | During implementation (loop)                   |
+| `/minispec-checklist`     | Generate quality checklists for requirements       | Before or during implementation                |
+| `/minispec-validate-docs` | Check documentation freshness against code         | Ongoing maintenance                            |
+| `/minispec-status`        | Show current progress, what's next, what's changed | Anytime                                        |
 
 ---
 
@@ -76,7 +76,7 @@ Engineers can tune how much AI asks for confirmation vs. proceeds independently,
 ┌─────────────────────────────────────────────────────────────────┐
 │                        PROJECT SETUP                            │
 ├─────────────────────────────────────────────────────────────────┤
-│  /minispec.constitution                                         │
+│  /minispec-constitution                                         │
 │  Set up project principles and MiniSpec preferences             │
 │  (review chunk size, doc review policy, autonomy triggers)      │
 └─────────────────────────────────────────────────────────────────┘
@@ -85,7 +85,7 @@ Engineers can tune how much AI asks for confirmation vs. proceeds independently,
 ┌─────────────────────────────────────────────────────────────────┐
 │                     CONTEXT BUILDING                            │
 ├─────────────────────────────────────────────────────────────────┤
-│  /minispec.walkthrough                                          │
+│  /minispec-walkthrough                                          │
 │  Understand existing codebase, architecture, patterns           │
 │  (Skip for greenfield projects)                                 │
 └─────────────────────────────────────────────────────────────────┘
@@ -94,7 +94,7 @@ Engineers can tune how much AI asks for confirmation vs. proceeds independently,
 ┌─────────────────────────────────────────────────────────────────┐
 │                         DESIGN                                  │
 ├─────────────────────────────────────────────────────────────────┤
-│  /minispec.design "feature description"                         │
+│  /minispec-design "feature description"                         │
 │  Interactive conversation:                                      │
 │  - AI asks clarifying questions                                 │
 │  - Presents options with trade-offs                             │
@@ -106,7 +106,7 @@ Engineers can tune how much AI asks for confirmation vs. proceeds independently,
 ┌─────────────────────────────────────────────────────────────────┐
 │                      TASK BREAKDOWN                             │
 ├─────────────────────────────────────────────────────────────────┤
-│  /minispec.tasks                                                │
+│  /minispec-tasks                                                │
 │  Interactive breakdown:                                         │
 │  - AI proposes task groupings based on chunk size preference    │
 │  - Engineer adjusts groupings, priorities, dependencies         │
@@ -117,7 +117,7 @@ Engineers can tune how much AI asks for confirmation vs. proceeds independently,
 ┌─────────────────────────────────────────────────────────────────┐
 │                       VALIDATION                                │
 ├─────────────────────────────────────────────────────────────────┤
-│  /minispec.analyze                                              │
+│  /minispec-analyze                                              │
 │  Pre-implementation checks:                                     │
 │  - All design decisions have corresponding tasks                │
 │  - Task dependencies are satisfiable                            │
@@ -128,7 +128,7 @@ Engineers can tune how much AI asks for confirmation vs. proceeds independently,
 ┌─────────────────────────────────────────────────────────────────┐
 │                    IMPLEMENTATION                               │
 ├─────────────────────────────────────────────────────────────────┤
-│  /minispec.next  (repeat until done)                            │
+│  /minispec-next  (repeat until done)                            │
 │                                                                 │
 │  For each chunk:                                                │
 │  1. AI explains what will be implemented and why                │
@@ -148,7 +148,7 @@ Engineers can tune how much AI asks for confirmation vs. proceeds independently,
 ┌─────────────────────────────────────────────────────────────────┐
 │                      MAINTENANCE                                │
 ├─────────────────────────────────────────────────────────────────┤
-│  /minispec.validate-docs                                        │
+│  /minispec-validate-docs                                        │
 │  Ongoing freshness checks:                                      │
 │  - Cross-reference docs with code                               │
 │  - Flag stale or contradictory documentation                    │
@@ -235,10 +235,10 @@ We use JWT tokens with:
 
 | Command                   | Documentation Created                         |
 | ------------------------- | --------------------------------------------- |
-| `/minispec.design`        | `decisions/` files as choices are made        |
-| `/minispec.next`          | `patterns/` and `modules/` as code is written |
-| `/minispec.validate-docs` | Updates or marks docs as superseded           |
-| `/minispec.walkthrough`   | Reads from `knowledge/` to explain codebase   |
+| `/minispec-design`        | `decisions/` files as choices are made        |
+| `/minispec-next`          | `patterns/` and `modules/` as code is written |
+| `/minispec-validate-docs` | Updates or marks docs as superseded           |
+| `/minispec-walkthrough`   | Reads from `knowledge/` to explain codebase   |
 
 ### Documentation Principles
 
@@ -250,7 +250,7 @@ We use JWT tokens with:
 
 ## Constitution Additions
 
-The constitution setup (`/minispec.constitution`) should capture these MiniSpec-specific preferences:
+The constitution setup (`/minispec-constitution`) should capture these MiniSpec-specific preferences:
 
 ```markdown
 ## MiniSpec Preferences
@@ -311,7 +311,7 @@ When implementation reveals design issues, AI should:
 ## Example Session
 
 ```text
-Engineer: /minispec.design "add user authentication"
+Engineer: /minispec-design "add user authentication"
 
 AI: "Let's design authentication together. First question:
     What's your expected user scale? This affects our session strategy."
@@ -349,7 +349,7 @@ AI: "Design complete. I've documented 4 decisions:
 
     Ready to break this into tasks?"
 
-Engineer: "/minispec.tasks"
+Engineer: "/minispec-tasks"
 
 AI: "Based on your 'medium chunk' preference (40-80 lines),
     I propose 8 tasks:
@@ -362,9 +362,9 @@ AI: "Based on your 'medium chunk' preference (40-80 lines),
 
 Engineer: "Looks good"
 
-AI: "Tasks saved. Run /minispec.analyze to validate before implementing."
+AI: "Tasks saved. Run /minispec-analyze to validate before implementing."
 
-Engineer: /minispec.analyze
+Engineer: /minispec-analyze
 
 AI: "Analyzing design ↔ tasks alignment...
 
@@ -378,9 +378,9 @@ Engineer: "Add a task"
 AI: "Added Task 9: Rate limiting middleware.
 
     ✅ All checks pass. Ready to implement.
-    Run /minispec.next to start."
+    Run /minispec-next to start."
 
-Engineer: /minispec.next
+Engineer: /minispec-next
 
 AI: "Task 1/9: User model + migration
 
@@ -414,7 +414,7 @@ AI: "Committed: 'Add User model and migration'
 
     Updated modules/auth.md with User model documentation.
 
-    8 tasks remaining. /minispec.next when ready."
+    8 tasks remaining. /minispec-next when ready."
 ```
 
 ---
@@ -461,23 +461,23 @@ When a project is initialized, it gets:
     ├── architecture.md          # System overview (grows over time)
     ├── conventions.md           # Code conventions (grows over time)
     ├── glossary.md              # Domain terms (grows over time)
-    ├── decisions/               # ADRs created during /minispec.design
-    ├── patterns/                # Patterns documented during /minispec.next
+    ├── decisions/               # ADRs created during /minispec-design
+    ├── patterns/                # Patterns documented during /minispec-next
     └── modules/                 # Module docs created as features complete
 ```
 
 ### Still Needed
 
-1. **State tracking** - Track current task, progress, chunk history for `/minispec.next`
+1. **State tracking** - Track current task, progress, chunk history for `/minispec-next`
 2. **Conversation context** - Design decisions need to flow into task creation and implementation
-3. **Remaining commands** - `/minispec.design`, `/minispec.tasks`, `/minispec.next`, etc.
+3. **Remaining commands** - `/minispec-design`, `/minispec-tasks`, `/minispec-next`, etc.
 
 ### Migration Path from SpecKit
 
 Projects can adopt MiniSpec incrementally:
 
-- Start with `/minispec.walkthrough` on existing SpecKit projects
-- Use `/minispec.next` for implementation instead of `/speckit.implement`
+- Start with `/minispec-walkthrough` on existing SpecKit projects
+- Use `/minispec-next` for implementation instead of `/speckit.implement`
 - Gradually add documentation structure
 
 ---

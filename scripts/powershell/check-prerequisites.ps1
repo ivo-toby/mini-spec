@@ -88,21 +88,21 @@ if ($PathsOnly) {
 # Validate required directories and files
 if (-not (Test-Path $paths.FEATURE_DIR -PathType Container)) {
     Write-Output "ERROR: Feature directory not found: $($paths.FEATURE_DIR)"
-    Write-Output "Run /minispec.design first to create the feature structure."
+    Write-Output "Run /minispec-design first to create the feature structure."
     exit 1
 }
 
 # Check for design.md if required
 if ($RequireDesign -and -not (Test-Path $paths.DESIGN -PathType Leaf)) {
     Write-Output "ERROR: design.md not found in $($paths.FEATURE_DIR)"
-    Write-Output "Run /minispec.design first to create the feature design."
+    Write-Output "Run /minispec-design first to create the feature design."
     exit 1
 }
 
 # Check for tasks.md if required
 if ($RequireTasks -and -not (Test-Path $paths.TASKS -PathType Leaf)) {
     Write-Output "ERROR: tasks.md not found in $($paths.FEATURE_DIR)"
-    Write-Output "Run /minispec.tasks first to create the task list."
+    Write-Output "Run /minispec-tasks first to create the task list."
     exit 1
 }
 

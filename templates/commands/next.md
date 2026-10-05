@@ -43,7 +43,7 @@ Before implementing, verify:
    - Relevant decisions, patterns, conventions
 
 If no tasks exist:
-> "No tasks found. Run `/minispec.tasks` first to break down the implementation."
+> "No tasks found. Run `/minispec-tasks` first to break down the implementation."
 
 ## Execution Flow
 
@@ -225,7 +225,7 @@ After task completion:
 > **Next task:** [Task N+1 name]
 > [Brief preview]
 >
-> `/minispec.next` when ready, or ask me anything about what we just built."
+> `/minispec-next` when ready, or ask me anything about what we just built."
 
 ## Handling Special Situations
 
@@ -344,7 +344,7 @@ Respect the configured autonomy:
 
 ## Output Artifacts
 
-Each `/minispec.next` invocation may create/update:
+Each `/minispec-next` invocation may create/update:
 
 1. **Source files** - The actual implementation
 2. **Test files** - If tests are part of the task

@@ -35,7 +35,7 @@ Before starting, verify:
    - If not, check for recent designs or ask which feature
 
 If no design exists:
-> "I don't see a design for this feature yet. Want to run `/minispec.design` first, or give me a quick overview of what we're building?"
+> "I don't see a design for this feature yet. Want to run `/minispec-design` first, or give me a quick overview of what we're building?"
 
 ## Chunk Size Guidelines
 
@@ -300,8 +300,8 @@ estimated_lines: [N]
 > - [N] parallel opportunities
 >
 > **Next steps:**
-> - `/minispec.analyze` - Validate design-task alignment
-> - `/minispec.next` - Start implementing
+> - `/minispec-analyze` - Validate design-task alignment
+> - `/minispec-next` - Start implementing
 >
 > Ready when you are."
 
