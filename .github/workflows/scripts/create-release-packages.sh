@@ -92,11 +92,11 @@ generate_commands() {
     case $ext in
       toml)
         body=$(printf '%s\n' "$body" | sed 's/\\/\\\\/g')
-        { echo "description = \"$description\""; echo; echo "prompt = \"\"\""; echo "$body"; echo "\"\"\""; } > "$output_dir/minispec.$name.$ext" ;;
+        { echo "description = \"$description\""; echo; echo "prompt = \"\"\""; echo "$body"; echo "\"\"\""; } > "$output_dir/minispec-$name.$ext" ;;
       md)
-        echo "$body" > "$output_dir/minispec.$name.$ext" ;;
+        echo "$body" > "$output_dir/minispec-$name.$ext" ;;
       agent.md)
-        echo "$body" > "$output_dir/minispec.$name.$ext" ;;
+        echo "$body" > "$output_dir/minispec-$name.$ext" ;;
     esac
   done
 }
@@ -106,7 +106,7 @@ generate_copilot_prompts() {
   mkdir -p "$prompts_dir"
 
   # Generate a .prompt.md file for each .agent.md file
-  for agent_file in "$agents_dir"/minispec.*.agent.md; do
+  for agent_file in "$agents_dir"/minispec-*.agent.md; do
     [[ -f "$agent_file" ]] || continue
 
     local basename=$(basename "$agent_file" .agent.md)
@@ -214,6 +214,9 @@ build_variant() {
     shai)
       mkdir -p "$base_dir/.shai/commands"
       generate_commands shai md "\$ARGUMENTS" "$base_dir/.shai/commands" "$script" ;;
+    pi)
+      mkdir -p "$base_dir/.pi/prompts"
+      generate_commands pi md "\$ARGUMENTS" "$base_dir/.pi/prompts" "$script" ;;
     q)
       mkdir -p "$base_dir/.amazonq/prompts"
       generate_commands q md "\$ARGUMENTS" "$base_dir/.amazonq/prompts" "$script" ;;
@@ -226,7 +229,7 @@ build_variant() {
 }
 
 # Determine agent list
-ALL_AGENTS=(claude gemini copilot cursor-agent qwen opencode windsurf codex kilocode auggie roo codebuddy amp shai q bob qoder)
+ALL_AGENTS=(claude gemini copilot cursor-agent qwen opencode windsurf codex kilocode auggie roo codebuddy amp shai q bob qoder pi)
 ALL_SCRIPTS=(sh ps)
 
 norm_list() {

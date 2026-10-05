@@ -50,5 +50,7 @@ gh release create "$VERSION" \
   .genreleases/minispec-template-q-ps.zip \
   .genreleases/minispec-template-bob-sh.zip \
   .genreleases/minispec-template-bob-ps.zip \
+  .genreleases/minispec-template-pi-sh.zip \
+  .genreleases/minispec-template-pi-ps.zip \
   --title "MiniSpec Templates - $VERSION_NO_V" \
   --notes-file release_notes.md
