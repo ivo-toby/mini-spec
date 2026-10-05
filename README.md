@@ -124,7 +124,7 @@ Use `/minispec-validate-docs` to check documentation freshness against code chan
 | `minispec list`           | List installed packages                      |
 | `minispec uninstall`      | Uninstall a package                          |
 | `minispec update`         | Update packages to latest versions           |
-| `minispec upgrade`        | Upgrade scaffolding to latest release         |
+| `minispec upgrade`        | Upgrade scaffolding to latest release        |
 
 ## How It's Different
 
@@ -305,13 +305,13 @@ This downloads the latest release package and applies it to your project. The up
 
 #### What gets updated — and how
 
-| File type | What happens |
-|-----------|-------------|
-| `specs/**`, `.minispec/memory/**`, `.minispec/knowledge/**` | **Never touched.** Your content, always. |
-| `.claude/settings.json`, `.vscode/settings.json` | Deep-merged — your custom keys are preserved. |
-| Legacy `minispec.*.md` command files | **Migrated.** Deleted when the new hyphenated or skills replacement exists; kept otherwise. Each action appears in the summary. |
-| `.minispec/templates/**` | **Diff shown, you decide.** Accept or decline each change. |
-| Scripts, hooks | Silently overwritten — these are infrastructure, not user content. |
+| File type                                                   | What happens                                                                                                                    |
+| -----------                                                 | -------------                                                                                                                   |
+| `specs/**`, `.minispec/memory/**`, `.minispec/knowledge/**` | **Never touched.** Your content, always.                                                                                        |
+| `.claude/settings.json`, `.vscode/settings.json`            | Deep-merged — your custom keys are preserved.                                                                                   |
+| Legacy `minispec.*.md` command files                        | **Migrated.** Deleted when the new hyphenated or skills replacement exists; kept otherwise. Each action appears in the summary. |
+| `.minispec/templates/**`                                    | **Diff shown, you decide.** Accept or decline each change.                                                                      |
+| Scripts, hooks                                              | Silently overwritten — these are infrastructure, not user content.                                                              |
 
 #### Reviewing changes with git
 

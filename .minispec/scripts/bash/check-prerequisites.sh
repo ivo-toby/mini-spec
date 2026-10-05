@@ -102,21 +102,21 @@ fi
 # Validate required directories and files
 if [[ ! -d "$FEATURE_DIR" ]]; then
     echo "ERROR: Feature directory not found: $FEATURE_DIR" >&2
-    echo "Run /minispec.design first to create the feature structure." >&2
+    echo "Run /minispec-design first to create the feature structure." >&2
     exit 1
 fi
 
 # Check for design.md if required
 if $REQUIRE_DESIGN && [[ ! -f "$DESIGN" ]]; then
     echo "ERROR: design.md not found in $FEATURE_DIR" >&2
-    echo "Run /minispec.design first to create the feature design." >&2
+    echo "Run /minispec-design first to create the feature design." >&2
     exit 1
 fi
 
 # Check for tasks.md if required
 if $REQUIRE_TASKS && [[ ! -f "$TASKS" ]]; then
     echo "ERROR: tasks.md not found in $FEATURE_DIR" >&2
-    echo "Run /minispec.tasks first to create the task list." >&2
+    echo "Run /minispec-tasks first to create the task list." >&2
     exit 1
 fi
 

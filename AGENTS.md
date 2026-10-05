@@ -29,25 +29,32 @@ MiniSpec supports multiple AI agents by generating agent-specific command files 
 
 ### Current Supported Agents
 
-| Agent                      | Directory              | Format   | CLI Tool        | Description                 |
-| -------------------------- | ---------------------- | -------- | --------------- | --------------------------- |
-| **Claude Code**            | `.claude/commands/`    | Markdown | `claude`        | Anthropic's Claude Code CLI |
-| **Gemini CLI**             | `.gemini/commands/`    | TOML     | `gemini`        | Google's Gemini CLI         |
-| **GitHub Copilot**         | `.github/agents/`      | Markdown | N/A (IDE-based) | GitHub Copilot in VS Code   |
-| **Cursor**                 | `.cursor/commands/`    | Markdown | `cursor-agent`  | Cursor CLI                  |
-| **Qwen Code**              | `.qwen/commands/`      | TOML     | `qwen`          | Alibaba's Qwen Code CLI     |
-| **opencode**               | `.opencode/command/`   | Markdown | `opencode`      | opencode CLI                |
-| **Codex CLI**              | `.codex/commands/`     | Markdown | `codex`         | Codex CLI                   |
-| **Windsurf**               | `.windsurf/workflows/` | Markdown | N/A (IDE-based) | Windsurf IDE workflows      |
-| **Kilo Code**              | `.kilocode/rules/`     | Markdown | N/A (IDE-based) | Kilo Code IDE               |
-| **Auggie CLI**             | `.augment/rules/`      | Markdown | `auggie`        | Auggie CLI                  |
-| **Roo Code**               | `.roo/rules/`          | Markdown | N/A (IDE-based) | Roo Code IDE                |
-| **CodeBuddy CLI**          | `.codebuddy/commands/` | Markdown | `codebuddy`     | CodeBuddy CLI               |
-| **Qoder CLI**              | `.qoder/commands/`     | Markdown | `qoder`         | Qoder CLI                   |
-| **Amazon Q Developer CLI** | `.amazonq/prompts/`    | Markdown | `q`             | Amazon Q Developer CLI      |
-| **Amp**                    | `.agents/commands/`    | Markdown | `amp`           | Amp CLI                     |
-| **SHAI**                   | `.shai/commands/`      | Markdown | `shai`          | SHAI CLI                    |
-| **IBM Bob**                | `.bob/commands/`       | Markdown | N/A (IDE-based) | IBM Bob IDE                 |
+| Agent                      | Directory              | Format              | CLI Tool        | Description                 |
+| -------------------------- | ---------------------- | ------------------- | --------------- | --------------------------- |
+| **Claude Code**            | `.claude/skills/`      | Markdown (SKILL.md) | `claude`        | Anthropic's Claude Code CLI |
+| **Gemini CLI**             | `.gemini/commands/`    | TOML                | `gemini`        | Google's Gemini CLI         |
+| **GitHub Copilot**         | `.github/skills/`      | Markdown (SKILL.md) | N/A (IDE-based) | GitHub Copilot in VS Code   |
+| **Cursor**                 | `.cursor/skills/`      | Markdown (SKILL.md) | `cursor-agent`  | Cursor CLI                  |
+| **Qwen Code**              | `.qwen/commands/`      | Markdown            | `qwen`          | Alibaba's Qwen Code CLI     |
+| **opencode**               | `.opencode/command/`   | Markdown            | `opencode`      | opencode CLI                |
+| **Codex CLI**              | `.agents/skills/`      | Markdown (SKILL.md) | `codex`         | Codex CLI                   |
+| **Windsurf**               | `.windsurf/workflows/` | Markdown            | N/A (IDE-based) | Windsurf IDE workflows      |
+| **Kilo Code**              | `.kilo/commands/`      | Markdown            | N/A (IDE-based) | Kilo Code IDE               |
+| **Auggie CLI**             | `.augment/commands/`   | Markdown            | `auggie`        | Auggie CLI                  |
+| **Roo Code**               | `.roo/commands/`       | Markdown            | N/A (IDE-based) | Roo Code IDE                |
+| **CodeBuddy CLI**          | `.codebuddy/commands/` | Markdown            | `codebuddy`     | CodeBuddy CLI               |
+| **Qoder CLI**              | `.qoder/skills/`       | Markdown (SKILL.md) | `qoder`         | Qoder CLI                   |
+| **Amazon Q Developer CLI** | `.amazonq/prompts/`    | Markdown            | `q`             | Amazon Q Developer CLI      |
+| **Amp**                    | `.agents/commands/`    | Markdown            | `amp`           | Amp CLI                     |
+| **SHAI**                   | `.shai/commands/`      | Markdown            | `shai`          | SHAI CLI                    |
+| **IBM Bob**                | `.bob/commands/`       | Markdown            | N/A (IDE-based) | IBM Bob IDE                 |
+| **Pi Coding Agent**        | `.pi/prompts/`         | Markdown            | `pi`            | Pi coding agent (pi.dev)    |
+
+**Skills agents** (Claude Code, GitHub Copilot, Cursor, Codex, Qoder) install
+`SKILL.md` files named after the command (e.g. `minispec-design/SKILL.md`) via
+`AGENT_COMMAND_CONFIG` with `"kind": "skill"`. All other agents install flat
+command files named `minispec-<command>.<ext>`. Never use dots in generated
+file or directory names — the legacy `minispec.*.md` naming is migrated away.
 
 ### Step-by-Step Integration Guide
 
@@ -84,6 +91,27 @@ This eliminates the need for special-case mappings throughout the codebase.
 - `folder`: Directory where agent-specific files are stored (relative to project root)
 - `install_url`: Installation documentation URL (set to `None` for IDE-based agents)
 - `requires_cli`: Whether the agent requires a CLI tool check during initialization
+
+Then add the agent to the `AGENT_COMMAND_CONFIG` dictionary (directly below
+`AGENT_CONFIG`), which controls where commands/skills are installed and how
+they are generated. Every generated file and skill directory is named after
+the command, without dots:
+
+```python
+AGENT_COMMAND_CONFIG = {
+    # ... existing agents ...
+    "new-agent-cli": {
+        "path": ".newagent/skills",   # install directory (relative to project root)
+        "ext": "md",                  # generated file extension (md, toml, ...)
+        "fmt": "md",                  # body format: "md" (markdown + frontmatter) or "toml"
+        "kind": "skill",              # "skill" → SKILL.md layout; "command" → flat minispec-<name>.<ext>
+    },
+}
+```
+
+Set `"kind": "skill"` only for agents that discover `SKILL.md` skills; use
+`"kind": "command"` otherwise. TOML agents (`"fmt": "toml"`) get the command
+body with escaped backslashes and `{{args}}` placeholders kept verbatim.
 
 #### 2. Update CLI Help Text
 
@@ -316,6 +344,7 @@ Require a command-line tool to be installed:
 - **Qoder CLI**: `qoder` CLI
 - **Amp**: `amp` CLI
 - **SHAI**: `shai` CLI
+- **Pi Coding Agent**: `pi` CLI
 
 ### IDE-Based Agents
 
@@ -327,26 +356,24 @@ Work within integrated development environments:
 
 ## Command File Formats
 
+### Skills Format (SKILL.md)
+
+Used by: Claude, Copilot, Cursor, Codex, Qoder
+
+Generated as one directory per command containing a single `SKILL.md` whose
+frontmatter carries `name: minispec-<command>` plus the template's
+`description`, and whose body is the command markdown minus frontmatter.
+
 ### Markdown Format
 
-Used by: Claude, Cursor, opencode, Windsurf, Amazon Q Developer, Amp, SHAI, IBM Bob
+Used by: Gemini (via TOML), Qwen, opencode, Windsurf, Kilo Code, Auggie, Roo,
+CodeBuddy, Amazon Q Developer, Amp, SHAI, IBM Bob, Pi
 
 **Standard format:**
 
 ```markdown
 ---
 description: "Command description"
----
-
-Command content with {SCRIPT} and $ARGUMENTS placeholders.
-```
-
-**GitHub Copilot Chat Mode format:**
-
-```markdown
----
-description: "Command description"
-mode: minispec.command-name
 ---
 
 Command content with {SCRIPT} and $ARGUMENTS placeholders.

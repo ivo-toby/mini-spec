@@ -1,6 +1,12 @@
 ---
+name: minispec-analyze
 description: Validate design-task alignment and cross-artifact consistency before implementation begins.
+compatibility: Requires MiniSpec project structure with .minispec/ directory
+metadata:
+  author: ivo-toby/minispec
+  source: templates/commands/analyze.md
 ---
+
 
 ## User Input
 
@@ -21,7 +27,7 @@ If yes, confirm and move on. If no, explain what needs attention and help fix it
 
 Verify these artifacts exist:
 
-1. **Constitution** at `.minispec/memory/constitution.md`
+1. **Constitution** at `.minispec.minispec/memory/constitution.md`
 2. **Design** at `specs/[feature-name]/design.md`
 3. **Tasks** at `specs/[feature-name]/tasks.md`
 4. **Decisions** in `.minispec/knowledge/decisions/`
@@ -30,10 +36,9 @@ If `$ARGUMENTS` specifies a feature, use that. Otherwise, detect the current fea
 
 If any required artifact is missing:
 > "I can't run a full analysis yet. Missing:
->
 > - [x] Constitution ✓
-> - [ ] Design - Run `/minispec.design` first
-> - [ ] Tasks - Run `/minispec.tasks` first
+> - [ ] Design - Run `/minispec-design` first
+> - [ ] Tasks - Run `/minispec-tasks` first
 >
 > Want me to help with the missing piece?"
 
@@ -44,22 +49,18 @@ If any required artifact is missing:
 Check that every design element has corresponding tasks:
 
 **Components:**
-
 - Each component in design.md should have implementation tasks
 - Flag components with no associated tasks
 
 **Decisions:**
-
 - Each decision in `.minispec/knowledge/decisions/` should be reflected in tasks
 - Flag decisions that imply work but have no tasks
 
 **Data Model:**
-
 - Each entity should have model/migration tasks
 - Flag entities missing from task list
 
 **API/Interface:**
-
 - Each endpoint/function should have implementation tasks
 - Flag APIs without coverage
 
@@ -68,20 +69,17 @@ Check that every design element has corresponding tasks:
 Check that tasks are well-formed:
 
 **Required elements:**
-
 - Estimate (lines)
 - Files affected
 - Description
 - Acceptance criteria
 
 **Dependency validity:**
-
 - No circular dependencies
 - Dependencies reference existing tasks
 - Order makes sense (can't integrate before building)
 
 **Size appropriateness:**
-
 - Compare estimates against constitution chunk size preference
 - Flag tasks significantly over/under target size
 
@@ -90,12 +88,10 @@ Check that tasks are well-formed:
 Check alignment with project principles:
 
 **Core principles:**
-
 - Do design decisions respect stated principles?
 - Are there tasks that would violate principles?
 
 **MiniSpec preferences:**
-
 - Are tasks sized appropriately for review chunk preference?
 - Is documentation approach consistent with doc review policy?
 
@@ -104,13 +100,11 @@ Check alignment with project principles:
 Check documentation coherence:
 
 **Decisions:**
-
 - All decisions have required frontmatter
 - No contradictory decisions
 - Referenced code paths exist or will be created by tasks
 
 **Cross-references:**
-
 - Design references correct decision IDs
 - Tasks reference correct design components
 
@@ -119,17 +113,14 @@ Check documentation coherence:
 Look for missing pieces:
 
 **Coverage gaps:**
-
 - Requirements without tasks
 - Tasks without clear requirements
 
 **Edge cases:**
-
 - Error handling mentioned but no tasks
 - Edge cases in design but not covered
 
 **Non-functional:**
-
 - Performance requirements without tasks
 - Security requirements without tasks
 
@@ -158,31 +149,27 @@ Perform each analysis area. Track findings by severity:
 > "✅ Analysis complete. Everything looks good!
 >
 > **Summary:**
->
 > - [N] design components → [N] tasks covering them
 > - [N] decisions documented
 > - Tasks sized appropriately for your [size] preference
 > - No constitution violations
 >
-> Ready to implement. Run `/minispec.next` when you're ready."
+> Ready to implement. Run `/minispec-next` when you're ready."
 
 **If issues found:**
 > "Analysis found [N] items to review before implementing:
 >
 > **Critical (must fix):**
->
 > 1. [Issue description]
 >    - Location: [file:section]
 >    - Problem: [what's wrong]
 >    - Suggestion: [how to fix]
 >
 > **Warnings (should fix):**
->
 > 1. [Issue description]
 >    ...
 >
 > **Info (optional):**
->
 > 1. [Suggestion]
 >    ...
 >
@@ -260,7 +247,7 @@ If the engineer wants a formal report, generate:
 
 - [ ] Resolve critical issues
 - [ ] Review warnings
-- [ ] Run `/minispec.next` to begin implementation
+- [ ] Run `/minispec-next` to begin implementation
 ```
 
 ## Important Guidelines
@@ -274,7 +261,6 @@ If the engineer wants a formal report, generate:
 ## Constitution Authority
 
 The constitution is non-negotiable. If something violates a constitution principle:
-
 - It's automatically CRITICAL
 - The fix is to change the design/tasks, not the constitution
 - If the principle itself needs to change, that's a separate conversation

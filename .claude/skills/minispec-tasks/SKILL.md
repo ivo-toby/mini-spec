@@ -1,6 +1,12 @@
 ---
+name: minispec-tasks
 description: Interactively break down a design into reviewable implementation chunks sized for pair programming.
+compatibility: Requires MiniSpec project structure with .minispec/ directory
+metadata:
+  author: ivo-toby/minispec
+  source: templates/commands/tasks.md
 ---
+
 
 ## User Input
 
@@ -13,7 +19,6 @@ You are helping break down a design into **implementable tasks** through convers
 ## Philosophy
 
 Task breakdown is not just about creating a list—it's about:
-
 - Understanding the implementation sequence
 - Identifying dependencies and parallelization opportunities
 - Sizing chunks for comfortable review
@@ -23,7 +28,7 @@ Task breakdown is not just about creating a list—it's about:
 
 Before starting, verify:
 
-1. **Constitution exists** at `.minispec/memory/constitution.md`
+1. **Constitution exists** at `.minispec.minispec/memory/constitution.md`
    - Read the `Review Chunk Size` preference (small/medium/large/adaptive)
    - This determines target lines per task
 
@@ -33,20 +38,36 @@ Before starting, verify:
    - If not, check for recent designs or ask which feature
 
 If no design exists:
-> "I don't see a design for this feature yet. Want to run `/minispec.design` first, or give me a quick overview of what we're building?"
+> "I don't see a design for this feature yet. Want to run `/minispec-design` first, or give me a quick overview of what we're building?"
 
 ## Chunk Size Guidelines
 
 Based on constitution preference:
 
 | Preference | Target Lines | Typical Scope |
-| --- | --- | --- |
+|------------|--------------|---------------|
 | Small | 20-40 lines | Single function, one test |
 | Medium | 40-80 lines | Related functions, model + migration |
 | Large | 80-150 lines | Full component, endpoint + tests |
 | Adaptive | Varies | AI suggests based on complexity |
 
 ## Execution Flow
+
+### Phase 0: Set Up Tasks File
+
+**IMPORTANT: Before doing anything else, run the setup script to prepare the tasks file.**
+
+Run this command:
+```
+.minispec/scripts/powershell/setup-plan.ps1 -Json
+```
+
+This will:
+- Ensure the feature spec directory exists
+- Copy the tasks template to `tasks.md`
+- Output paths for `DESIGN`, `TASKS`, `FEATURE_DIR`, and `BRANCH`
+
+Parse the JSON output to locate the design and tasks files. If the script fails or you are on a non-numbered branch, determine the feature directory yourself: use the current branch name (sanitize `/` to `-`), create `specs/[sanitized-branch-name]/` and proceed.
 
 ### Phase 1: Load Context
 
@@ -74,7 +95,7 @@ Based on constitution preference:
 
 Present an initial breakdown organized by implementation phase:
 
-```text
+```
 ## Proposed Task Breakdown
 
 ### Foundation (do first)
@@ -127,7 +148,6 @@ Invite feedback and adjust:
 
 **If they want to split tasks:**
 > "Good idea. I'll split [Task] into:
->
 > - [Task A]: [scope] (~[N] lines)
 > - [Task B]: [scope] (~[N] lines)"
 
@@ -139,7 +159,6 @@ Invite feedback and adjust:
 
 **If a task seems too vague:**
 > "Let me be more specific about [Task]. It would involve:
->
 > 1. [Step 1]
 > 2. [Step 2]
 > 3. [Step 3]
@@ -153,23 +172,40 @@ Make dependencies explicit:
 > "Looking at the tasks:
 >
 > **Parallel groups:**
->
 > - Tasks 3, 4 can run simultaneously (no shared dependencies)
 > - Tasks 6, 7 can run simultaneously
 >
 > **Sequential requirements:**
->
 > - Task 5 needs Tasks 3, 4 complete first
 > - Task 8 needs everything else done
 >
 > This means you could batch 'next 2' for the parallel groups if you're comfortable. Make sense?"
 
-### Phase 5: Testing Strategy
+### Phase 5: Complexity Check
+
+Before finalizing, check the constitution's **Complexity Tolerance** preferences and review the task list against them:
+
+1. **Count new files vs modified files**:
+   > "This breakdown creates [N] new files and modifies [M] existing files. Does that ratio feel right for the scope of this feature?"
+
+2. **Flag potential overengineering**:
+   For any task that creates a new module, helper, utility, or abstraction:
+   > "Task [N] extracts [X] into its own module. What breaks if we inline that instead? If the answer is 'nothing breaks, it's just cleaner' — consider skipping the extraction."
+
+3. **Check for unnecessary symmetry**:
+   If tasks mirror an existing feature's structure without clear need:
+   > "Tasks [N-M] mirror how [existing feature] is structured. Does this feature actually need the same layering?"
+
+4. **Evidence requirements**:
+   For each task, define what evidence proves it's done. Keep it concrete:
+   - Good: "unit tests pass", "API returns expected response", "build succeeds"
+   - Bad: "code is clean", "implementation is complete", "works as expected"
+
+### Phase 6: Testing Strategy
 
 Discuss how testing fits in:
 
 > "For testing, I suggest:
->
 > - Tasks 1-2 (foundation): Include unit tests in the same task
 > - Tasks 3-5 (core): Tests bundled with implementation
 > - Task 6: Dedicated integration test task
@@ -178,7 +214,9 @@ Discuss how testing fits in:
 
 Adjust based on their preference.
 
-### Phase 6: Finalize and Save
+### Phase 7: Finalize and Save
+
+**CRITICAL: You MUST write the tasks file to disk. The whole point of this command is to produce a persistent tasks file. Do not end the conversation without writing it.**
 
 Once agreed:
 
@@ -191,7 +229,7 @@ Once agreed:
    >
    > [N] tasks total. Ready to save?"
 
-2. **Write tasks to file** at `specs/[feature-name]/tasks.md`:
+2. **Write tasks to file** at `specs/[feature-name]/tasks.md`. If the setup script did not run or failed, create the directory and file yourself now. The feature-name should match the current branch name (sanitize `/` to `-` for directory names):
 
 ```markdown
 ---
@@ -218,6 +256,7 @@ estimated_lines: [N]
 - **Description:** [What this task accomplishes]
 - **Depends on:** None
 - **Acceptance:** [How to verify it's done]
+- **Evidence:** [What proves this works — e.g., "tests pass", "build succeeds"]
 
 #### Task 2: [Task Name]
 - **Estimate:** ~[N] lines
@@ -225,6 +264,7 @@ estimated_lines: [N]
 - **Description:** [What this task accomplishes]
 - **Depends on:** Task 1
 - **Acceptance:** [How to verify it's done]
+- **Evidence:** [What proves this works — e.g., "tests pass", "endpoint returns 200", "build succeeds"]
 
 ### Core Implementation
 
@@ -235,6 +275,7 @@ estimated_lines: [N]
 - **Description:** [What this task accomplishes]
 - **Depends on:** Task 2
 - **Acceptance:** [How to verify it's done]
+- **Evidence:** [What proves this works]
 
 [... continue for all tasks ...]
 
@@ -249,23 +290,21 @@ estimated_lines: [N]
 [... checklist for tracking ...]
 ```
 
-1. **Update design status**:
+3. **Update design status**:
    - Change design.md status from `designed` to `planned`
 
-### Phase 7: Handoff
+### Phase 8: Handoff
 
 > "Tasks saved to `specs/[feature-name]/tasks.md`
 >
 > **Summary:**
->
 > - [N] tasks total
 > - ~[N] estimated lines
 > - [N] parallel opportunities
 >
 > **Next steps:**
->
-> - `/minispec.analyze` - Validate design-task alignment
-> - `/minispec.next` - Start implementing
+> - `/minispec-analyze` - Validate design-task alignment
+> - `/minispec-next` - Start implementing
 >
 > Ready when you are."
 
@@ -288,7 +327,6 @@ estimated_lines: [N]
 
 **Feature is too large:**
 > "This feature might be [N]+ tasks. Consider splitting into phases:
->
 > - Phase 1: [Core functionality]
 > - Phase 2: [Enhanced features]
 > - Phase 3: [Polish and edge cases]

@@ -1,6 +1,12 @@
 ---
+name: minispec-status
 description: Show current progress, what's next, and overall project state.
+compatibility: Requires MiniSpec project structure with .minispec/ directory
+metadata:
+  author: ivo-toby/minispec
+  source: templates/commands/status.md
 ---
+
 
 ## User Input
 
@@ -13,7 +19,6 @@ You are providing a **quick status update** on where things stand. This is the "
 ## Philosophy
 
 Engineers should be able to:
-
 - Quickly understand where they are in the process
 - See what's done and what's remaining
 - Know the next action to take
@@ -27,7 +32,7 @@ Keep it concise but complete.
 
 Read current state from:
 
-1. **Constitution** (`.minispec/memory/constitution.md`)
+1. **Constitution** (`.minispec.minispec/memory/constitution.md`)
    - Project name
    - MiniSpec preferences
 
@@ -67,7 +72,7 @@ Figure out what to show based on state:
 
 #### Compact Status (Default)
 
-```text
+```
 📍 MiniSpec Status
 
 Project: [Project Name]
@@ -78,14 +83,14 @@ Progress: [N]/[M] tasks ([%]%)
 ████████░░░░
 
 Next: [Description of next action]
-     Run: /minispec.[command]
+     Run: /minispec-[command]
 
 Last activity: [Time ago] - [What was done]
 ```
 
 #### Detailed Status (if requested or complex state)
 
-```text
+```
 📍 MiniSpec Status: [Project Name]
 
 ═══════════════════════════════════════════
@@ -124,7 +129,7 @@ KNOWLEDGE BASE
 └─ Last validated: [Date]
 
 NEXT ACTION
-→ Continue implementation: /minispec.next
+→ Continue implementation: /minispec-next
   Task 4: Auth middleware (~50 lines)
 
 ═══════════════════════════════════════════
@@ -135,28 +140,28 @@ NEXT ACTION
 Based on state, suggest next action:
 
 **If no constitution:**
-> "Project not set up yet. Run `/minispec.constitution` to get started."
+> "Project not set up yet. Run `/minispec-constitution` to get started."
 
 **If constitution but no features:**
-> "Ready to start! Run `/minispec.design [feature]` to design your first feature."
+> "Ready to start! Run `/minispec-design [feature]` to design your first feature."
 
 **If feature designed, no tasks:**
-> "Design complete. Run `/minispec.tasks` to break it into implementable chunks."
+> "Design complete. Run `/minispec-tasks` to break it into implementable chunks."
 
 **If tasks created, not validated:**
-> "Tasks ready. Run `/minispec.analyze` to validate before implementing."
+> "Tasks ready. Run `/minispec-analyze` to validate before implementing."
 
 **If ready to implement:**
-> "Ready to implement. Run `/minispec.next` to start Task [N]."
+> "Ready to implement. Run `/minispec-next` to start Task [N]."
 
 **If mid-implementation:**
-> "Continue with `/minispec.next` for Task [N]: [Name]"
+> "Continue with `/minispec-next` for Task [N]: [Name]"
 
 **If feature complete:**
-> "Feature complete! Start a new feature with `/minispec.design`."
+> "Feature complete! Start a new feature with `/minispec-design`."
 
 **If docs might be stale:**
-> "It's been a while since docs were validated. Consider `/minispec.validate-docs`."
+> "It's been a while since docs were validated. Consider `/minispec-validate-docs`."
 
 ## Additional Status Views
 
@@ -177,7 +182,7 @@ If `$ARGUMENTS` contains a feature name:
 
 If `$ARGUMENTS` is "all" or "features":
 
-```text
+```
 All Features
 
 | Feature | Status | Progress | Last Activity |
@@ -191,13 +196,13 @@ All Features
 
 If `$ARGUMENTS` is "docs" or "knowledge":
 
-```text
+```
 Knowledge Base Status
 
 Decisions: 8 total
 ├─ Active: 6
 ├─ Superseded: 2
-└─ Last added: 20260327-1006-jwt-auth (2d ago)
+└─ Last added: 20260327-1006-jwt-auth
 
 Patterns: 4 documented
 └─ Last updated: api-response (1d ago)
@@ -225,9 +230,8 @@ If working on multiple features:
 > 2. **notifications** - Designed, not started
 >
 > Which would you like to focus on?
->
-> - `/minispec.next` continues with auth
-> - `/minispec.status notifications` shows notification details"
+> - `/minispec-next` continues with auth
+> - `/minispec-status notifications` shows notification details"
 
 ### Stale/Abandoned Work
 
@@ -238,9 +242,8 @@ If a feature has been inactive:
 > Status: [X]/[Y] tasks complete
 >
 > Options:
->
-> - Continue: `/minispec.next`
-> - Review state: `/minispec.walkthrough [feature]`
+> - Continue: `/minispec-next`
+> - Review state: `/minispec-walkthrough [feature]`
 > - Archive: Mark as paused and start something new"
 
 ### Git State
