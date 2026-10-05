@@ -36,10 +36,12 @@
 ### Task 1: Release scripts — hyphenate generated filenames, add pi agent (bash)
 
 **Files:**
+
 - Modify: `.github/workflows/scripts/create-release-packages.sh` (`generate_commands` output names; `ALL_AGENTS` array; `build_variant` case statement)
 - Modify: `.github/workflows/scripts/create-github-release.sh` (asset list)
 
 **Interfaces:**
+
 - Produces: generated files named `minispec-$name.$ext` → `minispec-$name` prefix change lands here; Tasks 2/3 build on this function. Zip asset `minispec-template-pi-{sh,ps}.zip`.
 
 - [ ] **Step 1: Change the generated filename prefix in `generate_commands` in `create-release-packages.sh`**
@@ -78,9 +80,11 @@ git commit -m "chore(release): hyphenate generated command files, add pi agent"
 ### Task 2: Release scripts — skills generation + layout realignment (bash)
 
 **Files:**
+
 - Modify: `.github/workflows/scripts/create-release-packages.sh`
 
 **Interfaces:**
+
 - Consumes: `generate_commands`' file-naming convention from Task 1.
 - Produces: `render_command_body <file> <script> <agent_script> <args_placeholder> <agent>` (bash helper, emits processed body to stdout — the shared pipeline extracted from `generate_commands`; `generate_commands` refactored to call it), `generate_skills <agent> <output_dir> <script>` writing `<output_dir>/minispec-<stem>/SKILL.md`.
 
@@ -92,7 +96,7 @@ git commit -m "chore(release): hyphenate generated command files, add pi agent"
 
 For each `templates/commands/*.md`: `stem=$(basename file .md)`; sanitize with `tr '.' '-'`; validity guard (fails the build) if `minispec-$stem` doesn't match `^minispec-[a-z0-9-]+$`; emit:
 
-```
+```markdown
 ---
 name: minispec-$stem
 description: $description
@@ -139,9 +143,11 @@ git commit -m "feat(release): generate agentskills for 5 agents, align layouts"
 ### Task 3: PowerShell release script mirror of Tasks 1–2
 
 **Files:**
+
 - Modify: `.github/workflows/scripts/create-release-packages.ps1`
 
 **Interfaces:**
+
 - Consumes: the bash design from Tasks 1–2 as the behavioral spec; mirrors its own existing function names (`Generate-Commands` style — match the actual names in the file).
 - Produces: function `Generate-Skills` equivalent; same output layouts as Task 2 Step 3.
 
@@ -165,10 +171,12 @@ git commit -m "feat(release): mirror skills generation in PowerShell build"
 ### Task 4: CLI — config restructure, pi, hyphenated output, classification
 
 **Files:**
+
 - Modify: `src/minispec_cli/__init__.py` (`AGENT_CONFIG` ~line 127, `AGENT_COMMAND_CONFIG` ~line 254, `init` help/docstring ~line 1163, panels lines 1437–1452, `_read_registry_skill` ~line 2124, registry messages ~2162/2280/2348, `_classify_upgrade_file` ~line 309)
 - Modify: `tests/test_upgrade.py`, `tests/test_init_registry.py` (fixtures/dirs pointing at old layouts)
 
 **Interfaces:**
+
 - Consumes: nothing new.
 - Produces: `AGENT_COMMAND_CONFIG` entries with new per-agent layout and a new `"kind"` field per entry: `"skill"` (claude, cursor-agent, copilot, codex, qoder) or `"command"` (the rest); `"path"` pointing at the leaf dir (e.g. claude → `".claude/skills"`, codex → `".agents/skills"`, kilocode → `".kilo/commands"`, qwen → `".qwen/commands"` with `ext: "md"`, copilot → `".github/skills"`); `AgentCommandConfig` consumers unchanged otherwise. `_classify_upgrade_file(rel_path) -> str` — same signature; new hyphen-named files under a config dir classify `"prompt"`.
 
@@ -247,10 +255,12 @@ git commit -m "feat(cli): skills-aware config, pi agent, hyphenated commands"
 ### Task 5: CLI — legacy migration sweep in upgrade
 
 **Files:**
+
 - Modify: `src/minispec_cli/__init__.py` (new `AGENT_LEGACY_COMMAND_DIRS` near `AGENT_COMMAND_CONFIG`; new `_migrate_legacy_commands()`; wiring at `upgrade` command after `_apply_upgrade` call at line 1539; detection error hint in `_detect_project_config` ~line 288)
 - Modify: `tests/test_upgrade.py` (new `TestLegacyMigration` class)
 
 **Interfaces:**
+
 - Consumes: `_apply_upgrade(project_path, template_path, force=False) -> list[tuple[str, str]]` — existing; results' rel_paths are the applied zip paths.
 - Produces: `AGENT_LEGACY_COMMAND_DIRS: dict[str, tuple[str, ...]]` — per agent, ordered old dirs, e.g. claude → `(".claude/commands",)`, copilot → `(".github/agents", ".github/prompts")`, codex → `(".codex/prompts",)`, qoder → `(".qoder/commands",)`, kilocode → `(".kilocode/workflows",)`, qwen → `(".qwen/commands",)`; command-file agents whose dir persists (gemini, opencode, windsurf, auggie, roo, codebuddy, amp, shai, q, bob, pi) map to their current dir (only dot-named files there are candidates). `_migrate_legacy_commands(project_path: Path, agent: str, applied_rel_paths: set[str]) -> list[tuple[str, str]]` — returns `(path, action)` rows: `"migrated"` (deleted, replacement existed), `"kept (no replacement)"`, `"kept (not MiniSpec)"`; removes a directory when it becomes empty after its MiniSpec files are migrated; prints nothing (the upgrade command renders the table).
 
@@ -346,6 +356,7 @@ git commit -m "feat(cli): migrate legacy command files to skills on upgrade"
 ### Task 6: Content sweep — templates, scripts, docs invocations
 
 **Files:**
+
 - Modify: `templates/commands/*.md` (cross-references, incl. `registry.md`'s `minispec.my-command` example)
 - Modify: `scripts/bash/check-prerequisites.sh`, `scripts/powershell/check-prerequisites.ps1` (the three "Run /minispec.design first…" messages and their `/minispec.tasks` sibling)
 - Modify: `hooks/scripts/claude-doc-update-prompt.sh` (message `/minispec.validate-docs` → `/minispec-validate-docs`; hook IDs in `hooks/hooks.yaml` untouched)
@@ -376,6 +387,7 @@ git commit -m "docs: rename command invocations to hyphenated form"
 ### Task 7: Version, changelog, agent guide, dogfood refresh, full verification
 
 **Files:**
+
 - Modify: `pyproject.toml` (version → 0.6.0)
 - Modify: `CHANGELOG.md` (0.6.0 entry)
 - Modify: `AGENTS.md` (Adding-New-Agent guide: skills note, pi row in the table, `AGENT_CONFIG`/`AGENT_COMMAND_CONFIG` field docs)
