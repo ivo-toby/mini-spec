@@ -29,25 +29,25 @@ class TestFormatSkillForAgent:
         assert "body content" in result
 
     def test_toml_escapes_backslashes(self):
-        result = _format_skill_for_agent("desc", "path\\to\\file", "qwen")
+        result = _format_skill_for_agent("desc", "path\\to\\file", "gemini")
         assert "path\\\\to\\\\file" in result
 
 
 class TestReadRegistrySkill:
     def test_claude_returns_md(self):
         filename, content = _read_registry_skill("claude")
-        assert filename == "minispec.registry.md"
+        assert filename == "minispec-registry.md"
         assert content.startswith("---\n")
         assert "description:" in content
 
     def test_gemini_returns_toml(self):
         filename, content = _read_registry_skill("gemini")
-        assert filename == "minispec.registry.toml"
+        assert filename == "minispec-registry.toml"
         assert content.startswith('description = "')
 
-    def test_copilot_returns_agent_md(self):
+    def test_copilot_returns_md(self):
         filename, content = _read_registry_skill("copilot")
-        assert filename == "minispec.registry.agent.md"
+        assert filename == "minispec-registry.md"
 
     def test_content_includes_registry_knowledge(self):
         _, content = _read_registry_skill("claude")
@@ -66,6 +66,8 @@ class TestAgentCommandConfig:
 
     def test_config_has_required_keys(self):
         for agent, config in AGENT_COMMAND_CONFIG.items():
+            assert "kind" in config, f"{agent} missing 'kind'"
+            assert config["kind"] in ("skill", "command"), f"{agent} invalid kind"
             assert "path" in config, f"{agent} missing 'path'"
             assert "ext" in config, f"{agent} missing 'ext'"
             assert "fmt" in config, f"{agent} missing 'fmt'"
@@ -106,7 +108,7 @@ class TestInitRegistryScaffold:
         assert (registry_dir / "registry.yaml").exists()
         assert (registry_dir / "packages" / ".gitkeep").exists()
         assert (registry_dir / "README.md").exists()
-        assert (skill_dir / "minispec.registry.md").exists()
+        assert (skill_dir / "minispec-registry.md").exists()
 
     def test_registry_yaml_content(self, tmp_path):
         registry_yaml = tmp_path / "registry.yaml"
@@ -124,7 +126,7 @@ class TestInitRegistryScaffold:
         for agent in test_agents:
             config = AGENT_COMMAND_CONFIG[agent]
             filename, content = _read_registry_skill(agent)
-            assert filename == f"minispec.registry.{config['ext']}"
+            assert filename == f"minispec-registry.{config['ext']}"
             assert len(content) > 100, f"Content too short for {agent}"
 
     def test_does_not_overwrite_existing_registry_yaml(self, tmp_path):

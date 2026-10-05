@@ -227,6 +227,12 @@ AGENT_CONFIG = {
         "install_url": None,  # IDE-based
         "requires_cli": False,
     },
+    "pi": {
+        "name": "Pi Coding Agent",
+        "folder": ".pi/",
+        "install_url": "https://pi.dev",
+        "requires_cli": True,
+    },
 }
 
 SCRIPT_TYPE_CHOICES = {"sh": "POSIX Shell (bash/zsh)", "ps": "PowerShell"}
@@ -234,23 +240,24 @@ SCRIPT_TYPE_CHOICES = {"sh": "POSIX Shell (bash/zsh)", "ps": "PowerShell"}
 # Agent command installation paths (where slash commands go per agent)
 # Differs from AGENT_CONFIG["folder"] for some agents (e.g., copilot, windsurf)
 AGENT_COMMAND_CONFIG = {
-    "claude":       {"path": ".claude/commands",     "ext": "md",       "fmt": "md"},
-    "gemini":       {"path": ".gemini/commands",     "ext": "toml",     "fmt": "toml"},
-    "copilot":      {"path": ".github/agents",       "ext": "agent.md", "fmt": "md"},
-    "cursor-agent": {"path": ".cursor/commands",     "ext": "md",       "fmt": "md"},
-    "qwen":         {"path": ".qwen/commands",       "ext": "toml",     "fmt": "toml"},
-    "opencode":     {"path": ".opencode/command",    "ext": "md",       "fmt": "md"},
-    "windsurf":     {"path": ".windsurf/workflows",  "ext": "md",       "fmt": "md"},
-    "codex":        {"path": ".codex/prompts",       "ext": "md",       "fmt": "md"},
-    "kilocode":     {"path": ".kilocode/workflows",  "ext": "md",       "fmt": "md"},
-    "auggie":       {"path": ".augment/commands",    "ext": "md",       "fmt": "md"},
-    "roo":          {"path": ".roo/commands",        "ext": "md",       "fmt": "md"},
-    "codebuddy":    {"path": ".codebuddy/commands",  "ext": "md",       "fmt": "md"},
-    "qoder":        {"path": ".qoder/commands",      "ext": "md",       "fmt": "md"},
-    "amp":          {"path": ".agents/commands",     "ext": "md",       "fmt": "md"},
-    "shai":         {"path": ".shai/commands",       "ext": "md",       "fmt": "md"},
-    "q":            {"path": ".amazonq/prompts",     "ext": "md",       "fmt": "md"},
-    "bob":          {"path": ".bob/commands",        "ext": "md",       "fmt": "md"},
+    "claude":       {"path": ".claude/skills",      "ext": "md",       "fmt": "md",   "kind": "skill"},
+    "gemini":       {"path": ".gemini/commands",    "ext": "toml",     "fmt": "toml", "kind": "command"},
+    "copilot":      {"path": ".github/skills",      "ext": "md",       "fmt": "md",   "kind": "skill"},
+    "cursor-agent": {"path": ".cursor/skills",      "ext": "md",       "fmt": "md",   "kind": "skill"},
+    "qwen":         {"path": ".qwen/commands",      "ext": "md",       "fmt": "md",   "kind": "command"},
+    "opencode":     {"path": ".opencode/command",   "ext": "md",       "fmt": "md",   "kind": "command"},
+    "windsurf":     {"path": ".windsurf/workflows", "ext": "md",       "fmt": "md",   "kind": "command"},
+    "codex":        {"path": ".agents/skills",      "ext": "md",       "fmt": "md",   "kind": "skill"},
+    "kilocode":     {"path": ".kilo/commands",      "ext": "md",       "fmt": "md",   "kind": "command"},
+    "auggie":       {"path": ".augment/commands",   "ext": "md",       "fmt": "md",   "kind": "command"},
+    "roo":          {"path": ".roo/commands",       "ext": "md",       "fmt": "md",   "kind": "command"},
+    "codebuddy":    {"path": ".codebuddy/commands", "ext": "md",       "fmt": "md",   "kind": "command"},
+    "qoder":        {"path": ".qoder/skills",       "ext": "md",       "fmt": "md",   "kind": "skill"},
+    "amp":          {"path": ".agents/commands",    "ext": "md",       "fmt": "md",   "kind": "command"},
+    "shai":         {"path": ".shai/commands",      "ext": "md",       "fmt": "md",   "kind": "command"},
+    "q":            {"path": ".amazonq/prompts",    "ext": "md",       "fmt": "md",   "kind": "command"},
+    "bob":          {"path": ".bob/commands",       "ext": "md",       "fmt": "md",   "kind": "command"},
+    "pi":           {"path": ".pi/prompts",         "ext": "md",       "fmt": "md",   "kind": "command"},
 }
 
 CLAUDE_LOCAL_PATH = Path.home() / ".claude" / "local" / "claude"
@@ -323,10 +330,16 @@ def _classify_upgrade_file(rel_path: str) -> str:
     if rel_path.endswith("settings.json") and parts[0] in (".claude", ".vscode"):
         return "merge"
 
-    # Prompt for agent command files (minispec.* pattern)
+    # Prompt for agent-installed files (new layout): command files named
+    # minispec-<name>.<ext> and skill dirs minispec-<name>/ under a config dir.
+    # Legacy dot-named files (minispec.<name>.*) fall through — the migration
+    # sweep owns moving them.
     for agent_key, cmd_config in AGENT_COMMAND_CONFIG.items():
-        cmd_prefix = cmd_config["path"]
-        if rel_path.startswith(cmd_prefix + "/") and "minispec." in rel_path:
+        prefix_parts = Path(cmd_config["path"]).parts
+        if parts[:len(prefix_parts)] != prefix_parts:
+            continue
+        remainder = parts[len(prefix_parts):]
+        if any(seg.startswith("minispec-") for seg in remainder):
             return "prompt"
 
     # Prompt for document templates — users may have customised these
@@ -1160,7 +1173,7 @@ def ensure_executable_scripts(project_path: Path, tracker: StepTracker | None = 
 @app.command()
 def init(
     project_name: str = typer.Argument(None, help="Name for your new project directory (optional if using --here, or use '.' for current directory)"),
-    ai_assistant: str = typer.Option(None, "--ai", help="AI assistant to use: claude, gemini, copilot, cursor-agent, qwen, opencode, codex, windsurf, kilocode, auggie, codebuddy, amp, shai, q, bob, or qoder "),
+    ai_assistant: str = typer.Option(None, "--ai", help="AI assistant to use: claude, gemini, copilot, cursor-agent, qwen, opencode, codex, windsurf, kilocode, auggie, codebuddy, amp, shai, q, bob, qoder, or pi"),
     script_type: str = typer.Option(None, "--script", help="Script type to use: sh or ps"),
     ignore_agent_tools: bool = typer.Option(False, "--ignore-agent-tools", help="Skip checks for AI agent tools like Claude Code"),
     no_git: bool = typer.Option(False, "--no-git", help="Skip git repository initialization"),
@@ -1189,7 +1202,7 @@ def init(
         minispec init . --ai claude         # Initialize in current directory
         minispec init .                     # Initialize in current directory (interactive AI selection)
         minispec init --here --ai claude    # Alternative syntax for current directory
-        minispec init --here --ai codex
+        minispec init --here --ai pi
         minispec init --here --ai codebuddy
         minispec init --here
         minispec init --here --force  # Skip confirmation when current directory not empty
@@ -1434,10 +1447,10 @@ def init(
 
     steps_lines.append(f"{step_num}. Start using slash commands with your AI agent:")
 
-    steps_lines.append("   2.1 [cyan]/minispec.constitution[/] - Set up project principles + preferences")
-    steps_lines.append("   2.2 [cyan]/minispec.design[/] - Interactive design conversation")
-    steps_lines.append("   2.3 [cyan]/minispec.tasks[/] - Break design into reviewable chunks")
-    steps_lines.append("   2.4 [cyan]/minispec.next[/] - Implement one chunk at a time (pair programming loop)")
+    steps_lines.append("   2.1 [cyan]/minispec-constitution[/] - Set up project principles + preferences")
+    steps_lines.append("   2.2 [cyan]/minispec-design[/] - Interactive design conversation")
+    steps_lines.append("   2.3 [cyan]/minispec-tasks[/] - Break design into reviewable chunks")
+    steps_lines.append("   2.4 [cyan]/minispec-next[/] - Implement one chunk at a time (pair programming loop)")
 
     steps_panel = Panel("\n".join(steps_lines), title="Next Steps", border_style="cyan", padding=(1,2))
     console.print()
@@ -1446,10 +1459,10 @@ def init(
     enhancement_lines = [
         "Optional commands [bright_black](improve quality & confidence)[/bright_black]",
         "",
-        f"○ [cyan]/minispec.walkthrough[/] [bright_black](optional)[/bright_black] - Guided codebase tour (skip for greenfield projects)",
-        f"○ [cyan]/minispec.analyze[/] [bright_black](optional)[/bright_black] - Validate design ↔ tasks alignment before implementing",
-        f"○ [cyan]/minispec.checklist[/] [bright_black](optional)[/bright_black] - Generate quality checklists for requirements",
-        f"○ [cyan]/minispec.status[/] [bright_black](optional)[/bright_black] - Show progress dashboard"
+        f"○ [cyan]/minispec-walkthrough[/] [bright_black](optional)[/bright_black] - Guided codebase tour (skip for greenfield projects)",
+        f"○ [cyan]/minispec-analyze[/] [bright_black](optional)[/bright_black] - Validate design ↔ tasks alignment before implementing",
+        f"○ [cyan]/minispec-checklist[/] [bright_black](optional)[/bright_black] - Generate quality checklists for requirements",
+        f"○ [cyan]/minispec-status[/] [bright_black](optional)[/bright_black] - Show progress dashboard"
     ]
     enhancements_panel = Panel("\n".join(enhancement_lines), title="Additional Commands", border_style="cyan", padding=(1,2))
     console.print()
@@ -2121,7 +2134,7 @@ def _read_registry_skill(agent: str) -> tuple[str, str]:
     Returns (filename, content) tuple.
     """
     config = AGENT_COMMAND_CONFIG[agent]
-    filename = f"minispec.registry.{config['ext']}"
+    filename = f"minispec-registry.{config['ext']}"
 
     # Read template from source tree
     template_path = Path(__file__).parent.parent.parent / "templates" / "commands" / "registry.md"
@@ -2159,7 +2172,7 @@ def init_registry(
     """Scaffold a new MiniSpec package registry.
 
     Creates a registry repo structure with registry.yaml, packages/ directory,
-    README, and the /minispec.registry skill for your AI agent.
+    README, and the /minispec-registry skill for your AI agent.
 
     Examples:
         minispec init-registry my-registry --ai claude
@@ -2277,7 +2290,7 @@ def init_registry(
                 "```\n\n"
                 "## Getting Started\n\n"
                 "Use the registry builder skill to create packages:\n\n"
-                "```\n/minispec.registry\n```\n\n"
+                "```\n/minispec-registry\n```\n\n"
                 "This skill guides you through creating well-structured packages, "
                 "writing actual content, and validating registry integrity.\n\n"
                 "## Using This Registry\n\n"
@@ -2345,7 +2358,7 @@ def init_registry(
     agent_display = AGENT_CONFIG[selected_ai]["name"]
     steps = [
         f"1. {'Open' if here else f'cd {name} && open'} your AI agent ({agent_display})",
-        "2. Run [cyan]/minispec.registry[/cyan] to start creating packages",
+        "2. Run [cyan]/minispec-registry[/cyan] to start creating packages",
     ]
     console.print(Panel(
         "\n".join(steps),

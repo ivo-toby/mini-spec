@@ -16,24 +16,24 @@ from minispec_cli import (
 
 class TestDetectProjectConfig:
     def test_detects_claude_sh(self, tmp_path):
-        (tmp_path / ".claude" / "commands").mkdir(parents=True)
-        (tmp_path / ".claude" / "commands" / "minispec.design.md").write_text("cmd")
+        (tmp_path / ".claude" / "skills" / "minispec-design").mkdir(parents=True)
+        (tmp_path / ".claude" / "skills" / "minispec-design" / "SKILL.md").write_text("---\nname: minispec-design\n---\nbody")
         (tmp_path / ".minispec" / "scripts" / "bash").mkdir(parents=True)
         agent, script = _detect_project_config(tmp_path)
         assert agent == "claude"
         assert script == "sh"
 
     def test_detects_copilot_ps(self, tmp_path):
-        (tmp_path / ".github" / "agents").mkdir(parents=True)
-        (tmp_path / ".github" / "agents" / "minispec.design.agent.md").write_text("cmd")
+        (tmp_path / ".github" / "skills" / "minispec-design").mkdir(parents=True)
+        (tmp_path / ".github" / "skills" / "minispec-design" / "SKILL.md").write_text("---\nname: minispec-design\n---\nbody")
         (tmp_path / ".minispec" / "scripts" / "powershell").mkdir(parents=True)
         agent, script = _detect_project_config(tmp_path)
         assert agent == "copilot"
         assert script == "ps"
 
     def test_detects_cursor(self, tmp_path):
-        (tmp_path / ".cursor" / "commands").mkdir(parents=True)
-        (tmp_path / ".cursor" / "commands" / "minispec.design.md").write_text("cmd")
+        (tmp_path / ".cursor" / "skills" / "minispec-design").mkdir(parents=True)
+        (tmp_path / ".cursor" / "skills" / "minispec-design" / "SKILL.md").write_text("---\nname: minispec-design\n---\nbody")
         (tmp_path / ".minispec" / "scripts" / "bash").mkdir(parents=True)
         agent, script = _detect_project_config(tmp_path)
         assert agent == "cursor-agent"
@@ -45,8 +45,8 @@ class TestDetectProjectConfig:
             _detect_project_config(tmp_path)
 
     def test_no_script_found(self, tmp_path):
-        (tmp_path / ".claude" / "commands").mkdir(parents=True)
-        (tmp_path / ".claude" / "commands" / "minispec.design.md").write_text("cmd")
+        (tmp_path / ".claude" / "skills" / "minispec-design").mkdir(parents=True)
+        (tmp_path / ".claude" / "skills" / "minispec-design" / "SKILL.md").write_text("---\nname: minispec-design\n---\nbody")
         (tmp_path / ".minispec").mkdir(parents=True)
         with pytest.raises(Exit):
             _detect_project_config(tmp_path)
@@ -76,15 +76,49 @@ class TestClassifyUpgradeFile:
         assert _classify_upgrade_file(".vscode/settings.json") == "merge"
 
     def test_agent_commands_are_prompt(self):
-        assert _classify_upgrade_file(".claude/commands/minispec.design.md") == "prompt"
-        assert _classify_upgrade_file(".cursor/commands/minispec.tasks.md") == "prompt"
-        assert _classify_upgrade_file(".github/agents/minispec.next.agent.md") == "prompt"
+        assert _classify_upgrade_file(".qwen/commands/minispec-next.md") == "prompt"
+        assert _classify_upgrade_file(".claude/skills/minispec-design/SKILL.md") == "prompt"
+
+    def test_legacy_dot_named_commands_not_prompt(self):
+        # Old layout commands are migration-owned, not user prompts
+        assert _classify_upgrade_file(".qwen/commands/minispec.design.toml") != "prompt"
+        assert _classify_upgrade_file(".codex/prompts/minispec-import.md") != "prompt"
 
     def test_constitution_is_skip(self):
         assert _classify_upgrade_file(".minispec/memory/constitution.md") == "skip"
 
     def test_unknown_files_are_overwrite(self):
         assert _classify_upgrade_file("GEMINI.md") == "overwrite"
+
+
+class TestAgentCommandConfig:
+    def test_config_paths_unique(self):
+        from minispec_cli import AGENT_COMMAND_CONFIG
+        paths = [c["path"] for c in AGENT_COMMAND_CONFIG.values()]
+        assert len(paths) == len(set(paths))
+
+    def test_skills_agents_config(self):
+        from minispec_cli import AGENT_COMMAND_CONFIG
+        assert AGENT_COMMAND_CONFIG["claude"]["kind"] == "skill"
+        assert AGENT_COMMAND_CONFIG["claude"]["path"] == ".claude/skills"
+        assert AGENT_COMMAND_CONFIG["codex"]["path"] == ".agents/skills"
+        assert AGENT_COMMAND_CONFIG["qoder"]["path"] == ".qoder/skills"
+        assert AGENT_COMMAND_CONFIG["cursor-agent"]["path"] == ".cursor/skills"
+        assert AGENT_COMMAND_CONFIG["copilot"]["path"] == ".github/skills"
+
+    def test_qwen_is_markdown(self):
+        from minispec_cli import AGENT_COMMAND_CONFIG
+        assert AGENT_COMMAND_CONFIG["qwen"]["ext"] == "md"
+
+    def test_kilocode_new_dir(self):
+        from minispec_cli import AGENT_COMMAND_CONFIG
+        assert AGENT_COMMAND_CONFIG["kilocode"]["path"] == ".kilo/commands"
+
+    def test_pi_agent_config(self):
+        from minispec_cli import AGENT_COMMAND_CONFIG, AGENT_CONFIG
+        assert AGENT_COMMAND_CONFIG["pi"]["path"] == ".pi/prompts"
+        assert AGENT_COMMAND_CONFIG["pi"]["kind"] == "command"
+        assert AGENT_CONFIG["pi"]["folder"] == ".pi/"
 
 
 class TestDiffFiles:
@@ -123,8 +157,8 @@ class TestApplyUpgrade:
         (project / ".minispec" / "templates").mkdir(parents=True)
         (project / ".minispec" / "memory").mkdir(parents=True)
         (project / ".minispec" / "memory" / "constitution.md").write_text("my principles")
-        (project / ".claude" / "commands").mkdir(parents=True)
-        (project / ".claude" / "commands" / "minispec.design.md").write_text("old design prompt")
+        (project / ".claude" / "skills" / "minispec-design").mkdir(parents=True)
+        (project / ".claude" / "skills" / "minispec-design" / "SKILL.md").write_text("old design prompt")
         (project / ".claude" / "settings.json").write_text(json.dumps({"user_key": True}))
         return project
 
@@ -138,8 +172,8 @@ class TestApplyUpgrade:
         (template / ".minispec" / "templates" / "design-template.md").write_text("# new template")
         (template / ".minispec" / "memory").mkdir(parents=True)
         (template / ".minispec" / "memory" / "constitution.md").write_text("new constitution")
-        (template / ".claude" / "commands").mkdir(parents=True)
-        (template / ".claude" / "commands" / "minispec.design.md").write_text("new design prompt")
+        (template / ".claude" / "skills" / "minispec-design").mkdir(parents=True)
+        (template / ".claude" / "skills" / "minispec-design" / "SKILL.md").write_text("new design prompt")
         (template / ".claude" / "settings.json").write_text(json.dumps({"hooks": {"new": True}}))
         return template
 
@@ -169,5 +203,5 @@ class TestApplyUpgrade:
         project = self._setup_project(tmp_path)
         template = self._setup_template(tmp_path)
         results = _apply_upgrade(project, template, force=True)
-        assert (project / ".claude" / "commands" / "minispec.design.md").read_text() == "new design prompt"
-        assert any(r[1] == "overwritten (auto)" for r in results if "minispec.design.md" in r[0])
+        assert (project / ".claude" / "skills" / "minispec-design" / "SKILL.md").read_text() == "new design prompt"
+        assert any(r[1] == "overwritten (auto)" for r in results if "minispec-design" in r[0])
