@@ -31,7 +31,6 @@ import sys
 import zipfile
 import tempfile
 import shutil
-import shlex
 import json
 from pathlib import Path
 from typing import Optional, Tuple
@@ -163,7 +162,7 @@ AGENT_CONFIG = {
     },
     "codex": {
         "name": "Codex CLI",
-        "folder": ".codex/",
+        "folder": ".agents/",
         "install_url": "https://github.com/openai/codex",
         "requires_cli": True,
     },
@@ -175,7 +174,7 @@ AGENT_CONFIG = {
     },
     "kilocode": {
         "name": "Kilo Code",
-        "folder": ".kilocode/",
+        "folder": ".kilo/",
         "install_url": None,  # IDE-based
         "requires_cli": False,
     },
@@ -227,6 +226,12 @@ AGENT_CONFIG = {
         "install_url": None,  # IDE-based
         "requires_cli": False,
     },
+    "pi": {
+        "name": "Pi Coding Agent",
+        "folder": ".pi/",
+        "install_url": "https://pi.dev",
+        "requires_cli": True,
+    },
 }
 
 SCRIPT_TYPE_CHOICES = {"sh": "POSIX Shell (bash/zsh)", "ps": "PowerShell"}
@@ -234,23 +239,48 @@ SCRIPT_TYPE_CHOICES = {"sh": "POSIX Shell (bash/zsh)", "ps": "PowerShell"}
 # Agent command installation paths (where slash commands go per agent)
 # Differs from AGENT_CONFIG["folder"] for some agents (e.g., copilot, windsurf)
 AGENT_COMMAND_CONFIG = {
-    "claude":       {"path": ".claude/commands",     "ext": "md",       "fmt": "md"},
-    "gemini":       {"path": ".gemini/commands",     "ext": "toml",     "fmt": "toml"},
-    "copilot":      {"path": ".github/agents",       "ext": "agent.md", "fmt": "md"},
-    "cursor-agent": {"path": ".cursor/commands",     "ext": "md",       "fmt": "md"},
-    "qwen":         {"path": ".qwen/commands",       "ext": "toml",     "fmt": "toml"},
-    "opencode":     {"path": ".opencode/command",    "ext": "md",       "fmt": "md"},
-    "windsurf":     {"path": ".windsurf/workflows",  "ext": "md",       "fmt": "md"},
-    "codex":        {"path": ".codex/prompts",       "ext": "md",       "fmt": "md"},
-    "kilocode":     {"path": ".kilocode/workflows",  "ext": "md",       "fmt": "md"},
-    "auggie":       {"path": ".augment/commands",    "ext": "md",       "fmt": "md"},
-    "roo":          {"path": ".roo/commands",        "ext": "md",       "fmt": "md"},
-    "codebuddy":    {"path": ".codebuddy/commands",  "ext": "md",       "fmt": "md"},
-    "qoder":        {"path": ".qoder/commands",      "ext": "md",       "fmt": "md"},
-    "amp":          {"path": ".agents/commands",     "ext": "md",       "fmt": "md"},
-    "shai":         {"path": ".shai/commands",       "ext": "md",       "fmt": "md"},
-    "q":            {"path": ".amazonq/prompts",     "ext": "md",       "fmt": "md"},
-    "bob":          {"path": ".bob/commands",        "ext": "md",       "fmt": "md"},
+    "claude":       {"path": ".claude/skills",      "ext": "md",       "fmt": "md",   "kind": "skill"},
+    "gemini":       {"path": ".gemini/commands",    "ext": "toml",     "fmt": "toml", "kind": "command"},
+    "copilot":      {"path": ".github/skills",      "ext": "md",       "fmt": "md",   "kind": "skill"},
+    "cursor-agent": {"path": ".cursor/skills",      "ext": "md",       "fmt": "md",   "kind": "skill"},
+    "qwen":         {"path": ".qwen/commands",      "ext": "md",       "fmt": "md",   "kind": "command"},
+    "opencode":     {"path": ".opencode/command",   "ext": "md",       "fmt": "md",   "kind": "command"},
+    "windsurf":     {"path": ".windsurf/workflows", "ext": "md",       "fmt": "md",   "kind": "command"},
+    "codex":        {"path": ".agents/skills",      "ext": "md",       "fmt": "md",   "kind": "skill"},
+    "kilocode":     {"path": ".kilo/commands",      "ext": "md",       "fmt": "md",   "kind": "command"},
+    "auggie":       {"path": ".augment/commands",   "ext": "md",       "fmt": "md",   "kind": "command"},
+    "roo":          {"path": ".roo/commands",       "ext": "md",       "fmt": "md",   "kind": "command"},
+    "codebuddy":    {"path": ".codebuddy/commands", "ext": "md",       "fmt": "md",   "kind": "command"},
+    "qoder":        {"path": ".qoder/skills",       "ext": "md",       "fmt": "md",   "kind": "skill"},
+    "amp":          {"path": ".agents/commands",    "ext": "md",       "fmt": "md",   "kind": "command"},
+    "shai":         {"path": ".shai/commands",      "ext": "md",       "fmt": "md",   "kind": "command"},
+    "q":            {"path": ".amazonq/prompts",    "ext": "md",       "fmt": "md",   "kind": "command"},
+    "bob":          {"path": ".bob/commands",       "ext": "md",       "fmt": "md",   "kind": "command"},
+    "pi":           {"path": ".pi/prompts",         "ext": "md",       "fmt": "md",   "kind": "command"},
+}
+
+# Per-agent legacy command dirs from before the skills/hyphenated layouts.
+# Entries equal to the agent's current AGENT_COMMAND_CONFIG path mean the dir
+# persists but its dot-named files (minispec.*.md) are legacy.
+AGENT_LEGACY_COMMAND_DIRS = {
+    "claude":       (".claude/commands",),
+    "gemini":       (".gemini/commands",),
+    "copilot":      (".github/agents", ".github/prompts"),
+    "cursor-agent": (".cursor/commands",),
+    "qwen":         (".qwen/commands",),
+    "opencode":     (".opencode/command",),
+    "windsurf":     (".windsurf/workflows",),
+    "codex":        (".codex/prompts",),
+    "kilocode":     (".kilocode/workflows",),
+    "auggie":       (".augment/commands",),
+    "roo":          (".roo/commands",),
+    "codebuddy":    (".codebuddy/commands",),
+    "qoder":        (".qoder/commands",),
+    "amp":          (".agents/commands",),
+    "shai":         (".shai/commands",),
+    "q":            (".amazonq/prompts",),
+    "bob":          (".bob/commands",),
+    "pi":           (".pi/prompts",),
 }
 
 CLAUDE_LOCAL_PATH = Path.home() / ".claude" / "local" / "claude"
@@ -267,16 +297,15 @@ BANNER = """
 TAGLINE = "Pair programming with AI that actually works"
 
 
-def _detect_project_config(project_path: Path) -> tuple[str, str]:
-    """Detect which agent and script type are installed in a MiniSpec project.
+def _detect_project_agent(project_path: Path) -> str:
+    """Detect which AI agent is installed in a MiniSpec project.
 
-    Returns (agent_key, script_type) or exits with error if ambiguous/missing.
+    Returns the agent key or exits with error if ambiguous/missing.
     """
     if not (project_path / ".minispec").is_dir():
         console.print("[red]Error:[/red] No .minispec directory found. Is this a MiniSpec project?")
         raise typer.Exit(1)
 
-    # Detect agent by checking AGENT_COMMAND_CONFIG paths
     detected_agents = []
     for agent_key, cmd_config in AGENT_COMMAND_CONFIG.items():
         cmd_path = project_path / cmd_config["path"]
@@ -284,26 +313,50 @@ def _detect_project_config(project_path: Path) -> tuple[str, str]:
             detected_agents.append(agent_key)
 
     if not detected_agents:
-        console.print("[red]Error:[/red] Could not detect AI agent. Use --ai to specify.")
+        legacy_found = []
+        for agent_key, legacy_dirs in AGENT_LEGACY_COMMAND_DIRS.items():
+            for legacy_dir in legacy_dirs:
+                if legacy_dir != AGENT_COMMAND_CONFIG[agent_key]["path"] and (project_path / legacy_dir).is_dir():
+                    legacy_found.append(legacy_dir)
+        if legacy_found:
+            console.print(
+                "[red]Error:[/red] Could not detect AI agent: found an older MiniSpec layout "
+                f"({', '.join(sorted(legacy_found))}). "
+                "Run `minispec upgrade --ai <agent> --script <sh|ps>` to migrate to the new layout."
+            )
+        else:
+            console.print("[red]Error:[/red] Could not detect AI agent. Use --ai to specify.")
         raise typer.Exit(1)
     if len(detected_agents) > 1:
         agents_str = ", ".join(detected_agents)
         console.print(f"[red]Error:[/red] Multiple agents detected ({agents_str}). Use --ai to specify which one.")
         raise typer.Exit(1)
 
-    # Detect script type
-    scripts_dir = project_path / ".minispec" / "scripts"
-    detected_script = None
-    if (scripts_dir / "bash").is_dir():
-        detected_script = "sh"
-    elif (scripts_dir / "powershell").is_dir():
-        detected_script = "ps"
+    return detected_agents[0]
 
-    if not detected_script:
-        console.print("[red]Error:[/red] Could not detect script type. Use --script to specify.")
+
+def _detect_project_script(project_path: Path) -> str:
+    """Detect the script type (sh or ps) installed in a MiniSpec project."""
+    if not (project_path / ".minispec").is_dir():
+        console.print("[red]Error:[/red] No .minispec directory found. Is this a MiniSpec project?")
         raise typer.Exit(1)
 
-    return detected_agents[0], detected_script
+    scripts_dir = project_path / ".minispec" / "scripts"
+    if (scripts_dir / "bash").is_dir():
+        return "sh"
+    if (scripts_dir / "powershell").is_dir():
+        return "ps"
+
+    console.print("[red]Error:[/red] Could not detect script type. Use --script to specify.")
+    raise typer.Exit(1)
+
+
+def _detect_project_config(project_path: Path) -> tuple[str, str]:
+    """Detect which agent and script type are installed in a MiniSpec project.
+
+    Returns (agent_key, script_type) or exits with error if ambiguous/missing.
+    """
+    return _detect_project_agent(project_path), _detect_project_script(project_path)
 
 
 def _classify_upgrade_file(rel_path: str) -> str:
@@ -323,10 +376,16 @@ def _classify_upgrade_file(rel_path: str) -> str:
     if rel_path.endswith("settings.json") and parts[0] in (".claude", ".vscode"):
         return "merge"
 
-    # Prompt for agent command files (minispec.* pattern)
+    # Prompt for agent-installed files (new layout): command files named
+    # minispec-<name>.<ext> and skill dirs minispec-<name>/ under a config dir.
+    # Legacy dot-named files (minispec.<name>.*) fall through — the migration
+    # sweep owns moving them.
     for agent_key, cmd_config in AGENT_COMMAND_CONFIG.items():
-        cmd_prefix = cmd_config["path"]
-        if rel_path.startswith(cmd_prefix + "/") and "minispec." in rel_path:
+        prefix_parts = Path(cmd_config["path"]).parts
+        if parts[:len(prefix_parts)] != prefix_parts:
+            continue
+        remainder = parts[len(prefix_parts):]
+        if any(seg.startswith("minispec-") for seg in remainder):
             return "prompt"
 
     # Prompt for document templates — users may have customised these
@@ -336,6 +395,100 @@ def _classify_upgrade_file(rel_path: str) -> str:
     # Everything else: silent overwrite
     return "overwrite"
 
+
+def _legacy_stem(filename: str) -> str | None:
+    """Return the stem of a legacy dot-named MiniSpec command file.
+
+    Matches minispec.<stem>.<ext>, minispec.<stem>.prompt.md and
+    minispec.<stem>.agent.md. Returns None for anything else.
+    """
+    if not filename.startswith("minispec."):
+        return None
+    stem = filename[len("minispec."):]
+    for suffix in (".prompt.md", ".agent.md"):
+        if stem.endswith(suffix):
+            return stem[: -len(suffix)] or None
+    stem = stem.rpartition(".")[0] if "." in stem else stem
+    return stem or None
+
+
+def _has_replacement_component(path_parts, stem: str) -> bool:
+    """Check whether a new-layout path contains the minispec-<stem> component.
+
+    Matches the skill dir minispec-<stem>/ and command files
+    minispec-<stem>.<ext> (but not minispec-<stem>2.md).
+    """
+    prefix = f"minispec-{stem}"
+    last = path_parts[-1]
+    return prefix in path_parts[:-1] or last == prefix or last.startswith(prefix + ".")
+
+
+def _migrate_legacy_commands(project_path: Path, agent: str, applied_rel_paths: set[str]) -> list[tuple[str, str]]:
+    """Move or delete legacy dot-named MiniSpec command files on upgrade.
+
+    A legacy file minispec.<stem>.<ext> is deleted only when its same-stem
+    replacement exists — either already applied by this upgrade (applied_rel_paths)
+    or present in the agent's current command/skills dir on disk. Non-MiniSpec
+    files are kept silently and keep the dir alive; new-layout files in dirs the
+    agent still uses are left alone so reruns stay quiet.
+
+    Returns (relative_path, action) rows; actions: migrated, kept (no replacement).
+    """
+    rows: list[tuple[str, str]] = []
+
+    config = AGENT_COMMAND_CONFIG.get(agent)
+    on_disk_stems: set[str] = set()
+    if config is not None:
+        current_dir = project_path / config["path"]
+        if current_dir.is_dir():
+            for f in current_dir.rglob("*"):
+                if f.is_file():
+                    for seg in f.relative_to(project_path).parts:
+                        if seg.startswith("minispec-"):
+                            on_disk_stems.add(seg)
+
+    applied_parts = [rel.split("/") for rel in sorted(applied_rel_paths)]
+
+    for legacy_dir in AGENT_LEGACY_COMMAND_DIRS.get(agent, ()):
+        d = project_path / legacy_dir
+        if not d.is_dir():
+            continue
+        for child in sorted(d.iterdir()):
+            if not child.is_file():
+                continue
+            rel = child.relative_to(project_path).as_posix()
+            stem = _legacy_stem(child.name)
+            if stem is None:
+                # Not a MiniSpec file (user content or a new-layout file):
+                # keep silently so repeat upgrades don't re-report it
+                continue
+            has_replacement = any(
+                _has_replacement_component(rel_parts, stem) for rel_parts in applied_parts
+            ) or any(
+                seg == f"minispec-{stem}" or seg.startswith(f"minispec-{stem}.")
+                for seg in on_disk_stems
+            )
+            if has_replacement:
+                child.unlink()
+                rows.append((rel, "migrated"))
+            else:
+                rows.append((rel, "kept (no replacement)"))
+        # Remove the legacy dir when nothing remains in it
+        if d.is_dir() and not any(d.iterdir()):
+            d.rmdir()
+            # Remove now-empty dot-folders walking up, so stale agent roots
+            # (.codex, .kilocode) and emptied wrappers (.github) don't linger
+            parent = d.parent
+            while (
+                parent != project_path
+                and parent.name.startswith(".")
+                and parent.is_dir()
+                and not any(parent.iterdir())
+            ):
+                parent.rmdir()
+                parent = parent.parent
+
+    return rows
 
 def _diff_files(existing: Path, new: Path) -> str | None:
     """Generate a unified diff between existing and new file.
@@ -1160,7 +1313,7 @@ def ensure_executable_scripts(project_path: Path, tracker: StepTracker | None = 
 @app.command()
 def init(
     project_name: str = typer.Argument(None, help="Name for your new project directory (optional if using --here, or use '.' for current directory)"),
-    ai_assistant: str = typer.Option(None, "--ai", help="AI assistant to use: claude, gemini, copilot, cursor-agent, qwen, opencode, codex, windsurf, kilocode, auggie, codebuddy, amp, shai, q, bob, or qoder "),
+    ai_assistant: str = typer.Option(None, "--ai", help="AI assistant to use: claude, gemini, copilot, cursor-agent, qwen, opencode, codex, windsurf, kilocode, auggie, codebuddy, amp, shai, q, bob, qoder, or pi"),
     script_type: str = typer.Option(None, "--script", help="Script type to use: sh or ps"),
     ignore_agent_tools: bool = typer.Option(False, "--ignore-agent-tools", help="Skip checks for AI agent tools like Claude Code"),
     no_git: bool = typer.Option(False, "--no-git", help="Skip git repository initialization"),
@@ -1189,7 +1342,7 @@ def init(
         minispec init . --ai claude         # Initialize in current directory
         minispec init .                     # Initialize in current directory (interactive AI selection)
         minispec init --here --ai claude    # Alternative syntax for current directory
-        minispec init --here --ai codex
+        minispec init --here --ai pi
         minispec init --here --ai codebuddy
         minispec init --here
         minispec init --here --force  # Skip confirmation when current directory not empty
@@ -1420,24 +1573,15 @@ def init(
         steps_lines.append("1. You're already in the project directory!")
         step_num = 2
 
-    # Add Codex-specific setup step if needed
-    if selected_ai == "codex":
-        codex_path = project_path / ".codex"
-        quoted_path = shlex.quote(str(codex_path))
-        if os.name == "nt":  # Windows
-            cmd = f"setx CODEX_HOME {quoted_path}"
-        else:  # Unix-like systems
-            cmd = f"export CODEX_HOME={quoted_path}"
-        
-        steps_lines.append(f"{step_num}. Set [cyan]CODEX_HOME[/cyan] environment variable before running Codex: [cyan]{cmd}[/cyan]")
-        step_num += 1
-
+    # Codex needs no setup step: Codex discovers .agents/skills/ in the repo,
+    # and pointing CODEX_HOME at the project would mix its auth/config state
+    # into the skills folder.
     steps_lines.append(f"{step_num}. Start using slash commands with your AI agent:")
 
-    steps_lines.append("   2.1 [cyan]/minispec.constitution[/] - Set up project principles + preferences")
-    steps_lines.append("   2.2 [cyan]/minispec.design[/] - Interactive design conversation")
-    steps_lines.append("   2.3 [cyan]/minispec.tasks[/] - Break design into reviewable chunks")
-    steps_lines.append("   2.4 [cyan]/minispec.next[/] - Implement one chunk at a time (pair programming loop)")
+    steps_lines.append("   2.1 [cyan]/minispec-constitution[/] - Set up project principles + preferences")
+    steps_lines.append("   2.2 [cyan]/minispec-design[/] - Interactive design conversation")
+    steps_lines.append("   2.3 [cyan]/minispec-tasks[/] - Break design into reviewable chunks")
+    steps_lines.append("   2.4 [cyan]/minispec-next[/] - Implement one chunk at a time (pair programming loop)")
 
     steps_panel = Panel("\n".join(steps_lines), title="Next Steps", border_style="cyan", padding=(1,2))
     console.print()
@@ -1446,10 +1590,10 @@ def init(
     enhancement_lines = [
         "Optional commands [bright_black](improve quality & confidence)[/bright_black]",
         "",
-        f"○ [cyan]/minispec.walkthrough[/] [bright_black](optional)[/bright_black] - Guided codebase tour (skip for greenfield projects)",
-        f"○ [cyan]/minispec.analyze[/] [bright_black](optional)[/bright_black] - Validate design ↔ tasks alignment before implementing",
-        f"○ [cyan]/minispec.checklist[/] [bright_black](optional)[/bright_black] - Generate quality checklists for requirements",
-        f"○ [cyan]/minispec.status[/] [bright_black](optional)[/bright_black] - Show progress dashboard"
+        f"○ [cyan]/minispec-walkthrough[/] [bright_black](optional)[/bright_black] - Guided codebase tour (skip for greenfield projects)",
+        f"○ [cyan]/minispec-analyze[/] [bright_black](optional)[/bright_black] - Validate design ↔ tasks alignment before implementing",
+        f"○ [cyan]/minispec-checklist[/] [bright_black](optional)[/bright_black] - Generate quality checklists for requirements",
+        f"○ [cyan]/minispec-status[/] [bright_black](optional)[/bright_black] - Show progress dashboard"
     ]
     enhancements_panel = Panel("\n".join(enhancement_lines), title="Additional Commands", border_style="cyan", padding=(1,2))
     console.print()
@@ -1479,6 +1623,10 @@ def upgrade(
 
     show_banner()
 
+    if not (project_path / ".minispec").is_dir():
+        console.print("[red]Error:[/red] No .minispec directory found. Is this a MiniSpec project?")
+        raise typer.Exit(1)
+
     # Get current version
     current_version = _get_version()
     console.print(f"[dim]Current CLI version: {current_version}[/dim]")
@@ -1492,10 +1640,10 @@ def upgrade(
         console.print(f"[red]Error:[/red] Invalid script type '{script_type}'. Choose from: {', '.join(SCRIPT_TYPE_CHOICES.keys())}")
         raise typer.Exit(1)
 
-    detected_ai, detected_script = _detect_project_config(project_path)
-
-    selected_ai = ai_assistant or detected_ai
-    selected_script = script_type or detected_script
+    # Explicit flags skip their counterpart's detection entirely, so a
+    # legacy-layout project can always be migrated with --ai + --script.
+    selected_ai = ai_assistant or _detect_project_agent(project_path)
+    selected_script = script_type or _detect_project_script(project_path)
 
     console.print(f"[cyan]Agent:[/cyan]  {AGENT_CONFIG[selected_ai]['name']}" + (" [dim](detected)[/dim]" if not ai_assistant else ""))
     console.print(f"[cyan]Script:[/cyan] {SCRIPT_TYPE_CHOICES[selected_script]}" + (" [dim](detected)[/dim]" if not script_type else ""))
@@ -1538,6 +1686,10 @@ def upgrade(
                 console.print()
                 results = _apply_upgrade(project_path, template_root, force=force)
 
+                # Replace legacy dot-named command files with the new layouts
+                applied = {rel for rel, act in results if not act.startswith("skipped")}
+                results += _migrate_legacy_commands(project_path, selected_ai, applied)
+
                 # Ensure scripts are executable
                 ensure_executable_scripts(project_path)
 
@@ -1565,6 +1717,9 @@ def upgrade(
         "skipped (unchanged)": "[dim]skipped (unchanged)[/dim]",
         "skipped (user content)": "[dim]skipped (user content)[/dim]",
         "skipped (user declined)": "[blue]skipped (user declined)[/blue]",
+        "migrated": "[green]migrated[/green]",
+        "kept (no replacement)": "[blue]kept (no replacement)[/blue]",
+        "kept (not MiniSpec)": "[dim]kept (not MiniSpec)[/dim]",
     }
 
     for rel_path, action in results:
@@ -2105,12 +2260,16 @@ def update(
         console.print("\n[dim]Everything is up to date.[/dim]")
 
 
-def _format_skill_for_agent(description: str, body: str, agent: str) -> str:
+def _format_skill_for_agent(description: str, body: str, agent: str, name: str | None = None) -> str:
     """Format a skill template for the target agent's expected format."""
     config = AGENT_COMMAND_CONFIG.get(agent)
+    if config and config["kind"] == "skill":
+        # SKILL.md frontmatter needs name for skill agents (TOML agents fall through below)
+        head_name = f"name: {name}\n" if name else ""
+        return f"---\n{head_name}description: {description}\n---\n\n{body}"
     if not config or config["fmt"] == "md":
         return f"---\ndescription: {description}\n---\n\n{body}"
-    # TOML format (gemini, qwen)
+    # TOML format (gemini)
     escaped_body = body.replace("\\", "\\\\")
     return f'description = "{description}"\n\nprompt = """\n{escaped_body}\n"""'
 
@@ -2121,7 +2280,11 @@ def _read_registry_skill(agent: str) -> tuple[str, str]:
     Returns (filename, content) tuple.
     """
     config = AGENT_COMMAND_CONFIG[agent]
-    filename = f"minispec.registry.{config['ext']}"
+    if config["kind"] == "skill":
+        # Skill agents only discover dirs/ minispec-registry/SKILL.md, not a flat file
+        filename = "minispec-registry/SKILL.md"
+    else:
+        filename = f"minispec-registry.{config['ext']}"
 
     # Read template from source tree
     template_path = Path(__file__).parent.parent.parent / "templates" / "commands" / "registry.md"
@@ -2141,7 +2304,7 @@ def _read_registry_skill(agent: str) -> tuple[str, str]:
                 if line.startswith("description:"):
                     description = line.split(":", 1)[1].strip()
                     break
-            content = _format_skill_for_agent(description, body, agent)
+            content = _format_skill_for_agent(description, body, agent, name="minispec-registry")
             return filename, content
 
     # Fallback: use raw content
@@ -2159,7 +2322,7 @@ def init_registry(
     """Scaffold a new MiniSpec package registry.
 
     Creates a registry repo structure with registry.yaml, packages/ directory,
-    README, and the /minispec.registry skill for your AI agent.
+    README, and the /minispec-registry skill for your AI agent.
 
     Examples:
         minispec init-registry my-registry --ai claude
@@ -2277,7 +2440,7 @@ def init_registry(
                 "```\n\n"
                 "## Getting Started\n\n"
                 "Use the registry builder skill to create packages:\n\n"
-                "```\n/minispec.registry\n```\n\n"
+                "```\n/minispec-registry\n```\n\n"
                 "This skill guides you through creating well-structured packages, "
                 "writing actual content, and validating registry integrity.\n\n"
                 "## Using This Registry\n\n"
@@ -2297,8 +2460,8 @@ def init_registry(
         tracker.start("skill")
         cmd_config = AGENT_COMMAND_CONFIG[selected_ai]
         skill_dir = target / cmd_config["path"]
-        skill_dir.mkdir(parents=True, exist_ok=True)
-        skill_path = skill_dir / skill_filename
+        skill_path = skill_dir / skill_filename  # may include minispec-registry/ subdir
+        skill_path.parent.mkdir(parents=True, exist_ok=True)
         skill_path.write_text(skill_content, encoding="utf-8")
         tracker.complete("skill", f"{cmd_config['path']}/{skill_filename}")
 
@@ -2345,7 +2508,7 @@ def init_registry(
     agent_display = AGENT_CONFIG[selected_ai]["name"]
     steps = [
         f"1. {'Open' if here else f'cd {name} && open'} your AI agent ({agent_display})",
-        "2. Run [cyan]/minispec.registry[/cyan] to start creating packages",
+        "2. Run [cyan]/minispec-registry[/cyan] to start creating packages",
     ]
     console.print(Panel(
         "\n".join(steps),

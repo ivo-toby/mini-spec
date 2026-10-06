@@ -85,10 +85,10 @@ interface TypeName {
 
 ## Internal Components
 
-| Component | Purpose |
-| ----------------- | -------------- |
-| `ComponentA` | [What it does] |
-| `ComponentB` | [What it does] |
+| Component        | Purpose        |
+| ---------------- | -------------- |
+| `ComponentA`     | [What it does] |
+| `ComponentB`     | [What it does] |
 | `helperFunction` | [What it does] |
 
 ## Data Flow
@@ -103,19 +103,19 @@ interface TypeName {
 
 [How does this module handle errors? What errors can it throw?]
 
-| Error | When it occurs | How to handle |
+| Error        | When it occurs | How to handle       |
 | ------------ | -------------- | ------------------- |
-| `ErrorType1` | [Condition] | [Recovery strategy] |
-| `ErrorType2` | [Condition] | [Recovery strategy] |
+| `ErrorType1` | [Condition]    | [Recovery strategy] |
+| `ErrorType2` | [Condition]    | [Recovery strategy] |
 
 ## Configuration
 
 [If the module has configuration options, document them here]
 
-| Option | Type | Default | Description |
-| --------- | --------- | ----------- | ------------------- |
-| `optionA` | `string` | `"default"` | [What it controls] |
-| `optionB` | `boolean` | `true` | [What it controls] |
+| Option    | Type      | Default     | Description        |
+| --------- | --------- | ----------- | ------------------ |
+| `optionA` | `string`  | `"default"` | [What it controls] |
+| `optionB` | `boolean` | `true`      | [What it controls] |
 
 ## Testing
 
@@ -155,10 +155,10 @@ npm test -- src/module-path/__tests__/specific.test.ts
 
 ## Changelog
 
-| Date | Change | Decision |
-| ------------ | ------------------------ | --------------------------------- |
-| [YYYY-MM-DD] | [What changed] | [Link to decision if applicable] |
-| [YYYY-MM-DD] | Initial implementation | - |
+| Date         | Change                 | Decision                         |
+| ------------ | ---------------------- | -------------------------------- |
+| [YYYY-MM-DD] | [What changed]         | [Link to decision if applicable] |
+| [YYYY-MM-DD] | Initial implementation | -                                |
 
 ## Related Modules
 

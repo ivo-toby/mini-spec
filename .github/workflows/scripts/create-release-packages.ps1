@@ -14,7 +14,7 @@
 
 .PARAMETER Agents
     Comma or space separated subset of agents to build (default: all)
-    Valid agents: claude, gemini, copilot, cursor-agent, qwen, opencode, windsurf, codex, kilocode, auggie, roo, codebuddy, amp, q, bob, qoder
+    Valid agents: claude, gemini, copilot, cursor-agent, qwen, opencode, windsurf, codex, kilocode, auggie, roo, codebuddy, amp, shai, q, bob, qoder, pi
 
 .PARAMETER Scripts
     Comma or space separated subset of script types to build (default: both)
@@ -61,36 +61,36 @@ New-Item -ItemType Directory -Path $GenReleasesDir -Force | Out-Null
 function Rewrite-Paths {
     param([string]$Content)
 
-    $Content = $Content -replace '(/?)\bmemory/', '.minispec/memory/'
-    $Content = $Content -replace '(/?)\bscripts/', '.minispec/scripts/'
-    $Content = $Content -replace '(/?)\btemplates/', '.minispec/templates/'
+    $Content = $Content -replace '([^/]|^)memory/', '$1.minispec/memory/'
+    $Content = $Content -replace '([^/]|^)scripts/', '$1.minispec/scripts/'
+    $Content = $Content -replace '([^/]|^)templates/', '$1.minispec/templates/'
     return $Content
 }
 
-function Generate-Commands {
+function Get-TemplateDescription {
+    param([string]$TemplatePath)
+
+    $content = (Get-Content -Path $TemplatePath -Raw) -replace "`r`n", "`n"
+    $description = ""
+    if ($content -match '(?m)^description:\s*(.+)$') {
+        $description = $matches[1]
+    }
+    return $description
+}
+
+# Shared command/skill body pipeline. Mirrors bash render_command_body:
+# {SCRIPT}/{AGENT_SCRIPT} substitution, frontmatter scripts/agent_scripts
+# removal, {ARGS}/__AGENT__ substitution, Rewrite-Paths.
+function Get-CommandBody {
     param(
+        [object]$Template,
+        [string]$ScriptVariant,
         [string]$Agent,
-        [string]$Extension,
-        [string]$ArgFormat,
-        [string]$OutputDir,
-        [string]$ScriptVariant
+        [string]$ArgFormat
     )
     
-    New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
-    
-    $templates = Get-ChildItem -Path "templates/commands/*.md" -File -ErrorAction SilentlyContinue
-    
-    foreach ($template in $templates) {
-        $name = [System.IO.Path]::GetFileNameWithoutExtension($template.Name)
-        
-        # Read file content and normalize line endings
+    # Read file content and normalize line endings
         $fileContent = (Get-Content -Path $template.FullName -Raw) -replace "`r`n", "`n"
-        
-        # Extract description from YAML frontmatter
-        $description = ""
-        if ($fileContent -match '(?m)^description:\s*(.+)$') {
-            $description = $matches[1]
-        }
         
         # Extract script command from YAML frontmatter
         $scriptCommand = ""
@@ -159,8 +159,30 @@ function Generate-Commands {
         $body = $body -replace '__AGENT__', $Agent
         $body = Rewrite-Paths -Content $body
         
+        return $body
+    }
+}
+
+function Generate-Commands {
+    param(
+        [string]$Agent,
+        [string]$Extension,
+        [string]$ArgFormat,
+        [string]$OutputDir,
+        [string]$ScriptVariant
+    )
+    
+    New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
+    
+    $templates = Get-ChildItem -Path "templates/commands/*.md" -File -ErrorAction SilentlyContinue
+    
+    foreach ($template in $templates) {
+        $name = [System.IO.Path]::GetFileNameWithoutExtension($template.Name)
+        $body = Get-CommandBody -Template $template -ScriptVariant $ScriptVariant -Agent $Agent -ArgFormat $ArgFormat
+        $description = Get-TemplateDescription -TemplatePath $template.FullName
+        
         # Generate output file based on extension
-        $outputFile = Join-Path $OutputDir "minispec.$name.$Extension"
+        $outputFile = Join-Path $OutputDir "minispec-$name.$Extension"
         
         switch ($Extension) {
             'toml' {
@@ -178,26 +200,59 @@ function Generate-Commands {
     }
 }
 
-function Generate-CopilotPrompts {
+function Generate-Skills {
+    # Agentskills.io SKILL.md layout: <OutputDir>/minispec-<stem>/SKILL.md.
+    # Same body pipeline as Generate-Commands; SKILL.md frontmatter replaces
+    # the template's own description/scripts frontmatter.
     param(
-        [string]$AgentsDir,
-        [string]$PromptsDir
+        [string]$Agent,
+        [string]$OutputDir,
+        [string]$ScriptVariant
     )
     
-    New-Item -ItemType Directory -Path $PromptsDir -Force | Out-Null
+    New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
     
-    $agentFiles = Get-ChildItem -Path "$AgentsDir/minispec.*.agent.md" -File -ErrorAction SilentlyContinue
+    $templates = Get-ChildItem -Path "templates/commands/*.md" -File -ErrorAction SilentlyContinue
     
-    foreach ($agentFile in $agentFiles) {
-        $basename = $agentFile.Name -replace '\.agent\.md$', ''
-        $promptFile = Join-Path $PromptsDir "$basename.prompt.md"
+    foreach ($template in $templates) {
+        $name = [System.IO.Path]::GetFileNameWithoutExtension($template.Name)
+        $stem = $name -replace '\.', '-'
+        if ($stem -notmatch '^[a-z0-9-]+$') {
+            Write-Error "Invalid skill name 'minispec-$stem' from $($template.Name) (must match ^minispec-[a-z0-9-]+\$)"
+            exit 1
+        }
+        $body = Get-CommandBody -Template $template -ScriptVariant $ScriptVariant -Agent $Agent -ArgFormat '$ARGUMENTS'
         
+        # Strip the template's own frontmatter (first --- block)
+        $lines = $body -split "`n"
+        if ($lines.Count -gt 0 -and $lines[0] -eq '---') {
+            $closingIdx = -1
+            for ($i = 1; $i -lt $lines.Count; $i++) {
+                if ($lines[$i] -eq '---') { $closingIdx = $i; break }
+            }
+            if ($closingIdx -ge 0) {
+                $lines = $lines[($closingIdx + 1)..($lines.Count - 1)]
+            }
+        }
+        $body = $lines -join "`n"
+        
+        $description = Get-TemplateDescription -TemplatePath $template.FullName
+        
+        $skillDir = Join-Path $OutputDir "minispec-$stem"
+        New-Item -ItemType Directory -Path $skillDir -Force | Out-Null
         $content = @"
 ---
-agent: $basename
+name: minispec-$stem
+description: $description
+compatibility: Requires MiniSpec project structure with .minispec/ directory
+metadata:
+  author: ivo-toby/minispec
+  source: templates/commands/$($template.Name)
 ---
+
+$body
 "@
-        Set-Content -Path $promptFile -Value $content
+        Set-Content -Path (Join-Path $skillDir "SKILL.md") -Value $content
     }
 }
 
@@ -267,8 +322,7 @@ function Build-Variant {
     # Generate agent-specific command files
     switch ($Agent) {
         'claude' {
-            $cmdDir = Join-Path $baseDir ".claude/commands"
-            Generate-Commands -Agent 'claude' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Skills -Agent 'claude' -OutputDir (Join-Path $baseDir ".claude/skills") -ScriptVariant $Script
         }
         'gemini' {
             $cmdDir = Join-Path $baseDir ".gemini/commands"
@@ -278,12 +332,7 @@ function Build-Variant {
             }
         }
         'copilot' {
-            $agentsDir = Join-Path $baseDir ".github/agents"
-            Generate-Commands -Agent 'copilot' -Extension 'agent.md' -ArgFormat '$ARGUMENTS' -OutputDir $agentsDir -ScriptVariant $Script
-            
-            # Generate companion prompt files
-            $promptsDir = Join-Path $baseDir ".github/prompts"
-            Generate-CopilotPrompts -AgentsDir $agentsDir -PromptsDir $promptsDir
+            Generate-Skills -Agent 'copilot' -OutputDir (Join-Path $baseDir ".github/skills") -ScriptVariant $Script
             
             # Create VS Code workspace settings
             $vscodeDir = Join-Path $baseDir ".vscode"
@@ -293,12 +342,11 @@ function Build-Variant {
             }
         }
         'cursor-agent' {
-            $cmdDir = Join-Path $baseDir ".cursor/commands"
-            Generate-Commands -Agent 'cursor-agent' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Skills -Agent 'cursor-agent' -OutputDir (Join-Path $baseDir ".cursor/skills") -ScriptVariant $Script
         }
         'qwen' {
             $cmdDir = Join-Path $baseDir ".qwen/commands"
-            Generate-Commands -Agent 'qwen' -Extension 'toml' -ArgFormat '{{args}}' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'qwen' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
             if (Test-Path "agent_templates/qwen/QWEN.md") {
                 Copy-Item -Path "agent_templates/qwen/QWEN.md" -Destination (Join-Path $baseDir "QWEN.md")
             }
@@ -312,11 +360,10 @@ function Build-Variant {
             Generate-Commands -Agent 'windsurf' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
         }
         'codex' {
-            $cmdDir = Join-Path $baseDir ".codex/prompts"
-            Generate-Commands -Agent 'codex' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Skills -Agent 'codex' -OutputDir (Join-Path $baseDir ".agents/skills") -ScriptVariant $Script
         }
         'kilocode' {
-            $cmdDir = Join-Path $baseDir ".kilocode/workflows"
+            $cmdDir = Join-Path $baseDir ".kilo/commands"
             Generate-Commands -Agent 'kilocode' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
         }
         'auggie' {
@@ -335,6 +382,10 @@ function Build-Variant {
             $cmdDir = Join-Path $baseDir ".agents/commands"
             Generate-Commands -Agent 'amp' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
         }
+        'shai' {
+            $cmdDir = Join-Path $baseDir ".shai/commands"
+            Generate-Commands -Agent 'shai' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+        }
         'q' {
             $cmdDir = Join-Path $baseDir ".amazonq/prompts"
             Generate-Commands -Agent 'q' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
@@ -344,8 +395,11 @@ function Build-Variant {
             Generate-Commands -Agent 'bob' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
         }
         'qoder' {
-            $cmdDir = Join-Path $baseDir ".qoder/commands"
-            Generate-Commands -Agent 'qoder' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Skills -Agent 'qoder' -OutputDir (Join-Path $baseDir ".qoder/skills") -ScriptVariant $Script
+        }
+        'pi' {
+            $cmdDir = Join-Path $baseDir ".pi/prompts"
+            Generate-Commands -Agent 'pi' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
         }
     }
     
@@ -353,10 +407,29 @@ function Build-Variant {
     $zipFile = Join-Path $GenReleasesDir "minispec-template-${Agent}-${Script}.zip"
     Compress-Archive -Path "$baseDir/*" -DestinationPath $zipFile -Force
     Write-Host "Created $zipFile"
+
+    # Post-build assertions: skills agents get the skills layout, and no zip may
+    # contain dot-named command files.
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($zipFile)
+    $entryNames = @($archive.Entries | ForEach-Object { $_.FullName -replace '\\', '/' })
+    $archive.Dispose()
+    switch ($Agent) {
+        { @('claude', 'cursor-agent', 'copilot', 'codex', 'qoder') -contains $_ } {
+            if (-not ($entryNames | Where-Object { $_ -match 'skills/minispec-design/SKILL\.md$' })) {
+                Write-Error "Assertion failed: $zipFile is missing skills/minispec-design/SKILL.md"
+                exit 1
+            }
+        }
+    }
+    if ($entryNames | Where-Object { $_ -match 'minispec\.[a-z-]+\.(md|toml|agent\.md)$' }) {
+        Write-Error "Assertion failed: $zipFile contains dot-named command files"
+        exit 1
+    }
 }
 
 # Define all agents and scripts
-$AllAgents = @('claude', 'gemini', 'copilot', 'cursor-agent', 'qwen', 'opencode', 'windsurf', 'codex', 'kilocode', 'auggie', 'roo', 'codebuddy', 'amp', 'q', 'bob', 'qoder')
+$AllAgents = @('claude', 'gemini', 'copilot', 'cursor-agent', 'qwen', 'opencode', 'windsurf', 'codex', 'kilocode', 'auggie', 'roo', 'codebuddy', 'amp', 'shai', 'q', 'bob', 'qoder', 'pi')
 $AllScripts = @('sh', 'ps')
 
 function Normalize-List {

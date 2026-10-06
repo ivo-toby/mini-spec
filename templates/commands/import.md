@@ -24,8 +24,9 @@ The engineer should finish this process feeling like they understand and own the
 ## Prerequisites
 
 Before starting, verify:
+
 1. Constitution exists at `.minispec/memory/constitution.md`
-   - If not: "Let's set up your MiniSpec preferences first. Run `/minispec.constitution` or I can use defaults (medium chunks, always confirm)."
+   - If not: "Let's set up your MiniSpec preferences first. Run `/minispec-constitution` or I can use defaults (medium chunks, always confirm)."
 2. Knowledge base exists at `.minispec/knowledge/`
    - If not: Create the directory structure
 
@@ -159,7 +160,7 @@ Provide a clear summary:
 ### Next Steps
 1. Review the generated `design.md` - does it capture the essence?
 2. Check `tasks.md` - are the chunks sized right for you?
-3. Run `/minispec.next` to start implementing together
+3. Run `/minispec-next` to start implementing together
 ```
 
 ## Handling Edge Cases
@@ -168,13 +169,15 @@ Provide a clear summary:
 
 If the spec is missing key elements:
 > "The specification doesn't include [X]. Before we proceed:
-> - Should we design this part together now? (run `/minispec.design`)
+>
+> - Should we design this part together now? (run `/minispec-design`)
 > - Or do you want to add it to the original spec first?"
 
 ### Very Large Specifications
 
 For specs with 50+ tasks or multiple features:
 > "This is a large specification covering multiple areas:
+>
 > - User authentication (12 tasks)
 > - Payment processing (18 tasks)
 > - Admin dashboard (15 tasks)
@@ -186,7 +189,7 @@ For specs with 50+ tasks or multiple features:
 If the spec has design but no implementation breakdown:
 > "The spec describes what to build but doesn't break it into tasks.
 > Want me to analyze the design and propose a task breakdown?
-> Or we can run `/minispec.tasks` after import for a more interactive breakdown."
+> Or we can run `/minispec-tasks` after import for a more interactive breakdown."
 
 ## Output Artifacts
 
@@ -197,4 +200,4 @@ By the end of this command, the following should exist:
 3. `.minispec/knowledge/decisions/*.md` - ADRs for key decisions (marked as imported)
 4. Original spec preserved at its location
 
-The engineer is now ready to use `/minispec.next` for pair-programming implementation.
+The engineer is now ready to use `/minispec-next` for pair-programming implementation.

@@ -13,6 +13,7 @@ You are an interactive **registry builder** — a pair programming partner for c
 ## Philosophy
 
 Building a registry is iterative. You guide registry authors through:
+
 - Creating well-structured packages with correct metadata
 - Writing actual package content (hooks, commands, skills)
 - Validating registry integrity
@@ -31,7 +32,7 @@ Hooks are event-driven automations that run in response to AI agent lifecycle ev
 **Event model**: Hooks fire on specific events during the agent's operation. For Claude Code, the available hook events are:
 
 | Event | When it fires |
-|-------|---------------|
+| ------- | --------------- |
 | `PreToolUse` | Before a tool executes (e.g., before running a Bash command) |
 | `PostToolUse` | After a tool executes (e.g., after a file is written) |
 | `Notification` | When the agent sends a notification |
@@ -39,17 +40,20 @@ Hooks are event-driven automations that run in response to AI agent lifecycle ev
 | `SubagentStop` | When a subagent (Task tool) completes |
 
 **Exit code conventions**:
+
 - `0` — Allow (no output means allow too)
 - `2` — Block the action (stderr is shown to the user as the reason)
 - Any other non-zero — Error (logged but doesn't block)
 
 **Hook types**:
+
 - `command` — Runs a shell command. Receives JSON on stdin with tool name and input. Example: `bash .minispec/hooks/scripts/protect-main.sh "$TOOL_INPUT"`
 - `prompt` — Sends output to the AI model as additional context (no blocking capability)
 
 **Matcher syntax**: The `matcher` field filters which tool invocations trigger the hook. Use tool names like `Bash`, `Write`, `Edit`, `Read`, or a regex pattern.
 
 **Configuration** (Claude Code `settings.json`):
+
 ```json
 {
   "hooks": {
@@ -74,9 +78,9 @@ For other agents, hooks are installed as shell scripts in `.minispec/hooks/scrip
 
 Commands are markdown templates that users invoke via `/command-name` in their AI agent. They provide structured instructions that guide the agent through a specific workflow.
 
-**Location**: Commands live in the agent's commands directory (e.g., `.claude/commands/`, `.cursor/commands/`).
+**Location**: Commands live in the agent's skills/commands directory (e.g., `.claude/skills/`, `.cursor/skills/`, `.gemini/commands/`).
 
-**Format**: Markdown with YAML frontmatter for agents that support it (Claude, Cursor, Copilot). TOML format for Gemini and Qwen.
+**Format**: Markdown with YAML frontmatter for agents that support it (Claude, Cursor, Copilot). TOML format for Gemini.
 
 ````markdown
 ---
@@ -93,6 +97,7 @@ $ARGUMENTS
 ````
 
 **Key features**:
+
 - `$ARGUMENTS` is replaced with whatever the user types after the command name
 - Phase-based structure (Philosophy → Execution Flow → Output Artifacts) is the MiniSpec convention
 - Commands are stateless — each invocation starts fresh
@@ -119,6 +124,7 @@ disable-model-invocation: false
 ````
 
 **Frontmatter options**:
+
 - `description` — Shown in skill picker; also used for auto-invocation (if the user's request matches, Claude may suggest the skill)
 - `context: fork` — Runs the skill in an isolated subagent context (protects main conversation)
 - `allowed-tools` — Restricts which tools the skill can use
@@ -137,7 +143,7 @@ When creating a **skill package**, the `package.yaml` should map files to `.clau
 Registries created with `minispec init-registry` include three reference packages in `packages/`. Use these as examples when helping authors create new packages:
 
 | Package | Type | Demonstrates |
-|---------|------|-------------|
+| --------- | ------ | ------------- |
 | `protect-main` | hook | PreToolUse event guard, exit code 2 blocking, `settings.json` merge config |
 | `quick-review` | command | Multi-agent file mappings (Claude, Cursor, Copilot), `$ARGUMENTS` usage, phase-based structure |
 | `changelog-writer` | skill | `.claude/skills/` path, `context: fork` frontmatter, supporting files (`template.md`) |
@@ -172,7 +178,7 @@ Walk through each field conversationally. Don't present a form — ask one quest
 
 2. **Type**: "What type of package is this?"
    - `hook` — A guardrail or automation that runs on events (pre-commit, file save, etc.)
-   - `command` — A slash command template that users invoke (e.g., `/minispec.my-command`)
+   - `command` — A slash command template that users invoke (e.g., `/minispec-my-command`)
    - `skill` — A capability or knowledge module for AI agents
 
 3. **Version**: "What version? (default: 1.0.0)"
@@ -196,31 +202,33 @@ Based on the package type and target agents, generate the `files:` section of `p
 
 **Agent folder conventions:**
 
-| Agent | Commands/Skills Path | Hooks Path | Config Path | Format |
-|-------|---------------------|------------|-------------|--------|
-| claude | `.claude/commands/` | `.minispec/hooks/` | `.claude/settings.json` | Markdown |
-| cursor | `.cursor/commands/` | `.minispec/hooks/` | `.cursor/rules/` | Markdown |
-| copilot | `.github/agents/` | `.minispec/hooks/` | `.github/copilot-instructions.md` | Markdown |
+| Agent | Skills/Commands Path | Hooks Path | Config Path | Format |
+| ------- | --------------------- | ------------ | ------------- | -------- |
+| claude | `.claude/skills/` | `.minispec/hooks/` | `.claude/settings.json` | SKILL.md |
+| cursor | `.cursor/skills/` | `.minispec/hooks/` | `.cursor/rules/` | SKILL.md |
+| copilot | `.github/skills/` | `.minispec/hooks/` | `.github/copilot-instructions.md` | SKILL.md |
 | gemini | `.gemini/commands/` | `.minispec/hooks/` | `.gemini/settings.json` | TOML |
-| qwen | `.qwen/commands/` | `.minispec/hooks/` | `.qwen/settings.json` | TOML |
+| qwen | `.qwen/commands/` | `.minispec/hooks/` | `.qwen/settings.json` | Markdown |
 | opencode | `.opencode/command/` | `.minispec/hooks/` | `.opencode/` | Markdown |
 | windsurf | `.windsurf/workflows/` | `.minispec/hooks/` | `.windsurf/rules/` | Markdown |
-| codex | `.codex/prompts/` | `.minispec/hooks/` | `.codex/` | Markdown |
+| codex | `.agents/skills/` | `.minispec/hooks/` | `.agents/` | SKILL.md |
 | roo | `.roo/commands/` | `.minispec/hooks/` | `.roo/` | Markdown |
 | q | `.amazonq/prompts/` | `.minispec/hooks/` | `.amazonq/` | Markdown |
 
 For each target agent, create appropriate file mappings:
 
 **For command packages:**
+
 ```yaml
 files:
-  - source: command.md
-    target: .claude/commands/package-name.md
-  - source: command.md
-    target: .cursor/commands/package-name.md
+  - source: SKILL.md
+    target: .claude/skills/package-name/SKILL.md
+  - source: SKILL.md
+    target: .cursor/skills/package-name/SKILL.md
 ```
 
 **For hook packages:**
+
 ```yaml
 files:
   - source: hook.sh
@@ -231,6 +239,7 @@ files:
 ```
 
 **For skill packages:**
+
 ```yaml
 files:
   - source: SKILL.md
@@ -308,6 +317,7 @@ set -euo pipefail
 ```
 
 Common hook patterns:
+
 - **Pre-commit guard**: Check branch name, file contents, or staged changes
 - **File watcher**: React to file changes (lint, format, validate)
 - **Environment check**: Verify tools, configs, or permissions
@@ -315,6 +325,7 @@ Common hook patterns:
 If the hook needs agent configuration (e.g., Claude Code hooks config), also create a `settings.json` with `merge: true` in the file mapping.
 
 Example Claude hooks config:
+
 ```json
 {
   "hooks": {
@@ -346,6 +357,7 @@ After creating all files:
 > "Package created! Here's what I generated:
 >
 > `packages/[name]/`
+>
 > - `package.yaml` — metadata and file mappings
 > - `[source files]` — package content
 > - `README.md` — package documentation
@@ -359,6 +371,7 @@ Run through three tiers of validation checks:
 ### Tier 1: Schema (Critical)
 
 Check and report:
+
 - [ ] `registry.yaml` exists at repo root
 - [ ] `registry.yaml` has required fields: `name`, `description`
 - [ ] Every `packages/*/package.yaml` exists and parses as valid YAML
@@ -371,6 +384,7 @@ For each issue found, show the problem and offer to fix it.
 ### Tier 2: Quality (Recommended)
 
 Check and suggest improvements:
+
 - [ ] Every package has a `description`
 - [ ] Every package declares `agents` compatibility
 - [ ] Every package has `review` metadata
@@ -380,6 +394,7 @@ Check and suggest improvements:
 ### Tier 3: Cross-Agent (If Multi-Agent)
 
 For packages that declare multiple agents:
+
 - [ ] File mappings exist for each declared agent
 - [ ] Target paths match the expected conventions per agent
 - [ ] Markdown commands don't need TOML wrapping for Gemini/Qwen (flag if they do)
@@ -401,6 +416,7 @@ Present results:
 ## Mode 3: Update Metadata
 
 Help edit `registry.yaml` fields:
+
 - `name` — registry display name
 - `description` — what this registry provides
 - `maintainers` — list of contact emails or team names

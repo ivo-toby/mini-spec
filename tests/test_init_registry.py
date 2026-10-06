@@ -29,25 +29,32 @@ class TestFormatSkillForAgent:
         assert "body content" in result
 
     def test_toml_escapes_backslashes(self):
-        result = _format_skill_for_agent("desc", "path\\to\\file", "qwen")
+        result = _format_skill_for_agent("desc", "path\\to\\file", "gemini")
         assert "path\\\\to\\\\file" in result
 
 
 class TestReadRegistrySkill:
-    def test_claude_returns_md(self):
+    def test_claude_returns_skill_dir(self):
         filename, content = _read_registry_skill("claude")
-        assert filename == "minispec.registry.md"
+        assert filename == "minispec-registry/SKILL.md"
         assert content.startswith("---\n")
+        assert "name: minispec-registry" in content
         assert "description:" in content
 
     def test_gemini_returns_toml(self):
         filename, content = _read_registry_skill("gemini")
-        assert filename == "minispec.registry.toml"
+        assert filename == "minispec-registry.toml"
         assert content.startswith('description = "')
 
-    def test_copilot_returns_agent_md(self):
+    def test_copilot_returns_skill_dir(self):
         filename, content = _read_registry_skill("copilot")
-        assert filename == "minispec.registry.agent.md"
+        assert filename == "minispec-registry/SKILL.md"
+        assert "name: minispec-registry" in content
+
+    def test_non_skill_agents_keep_flat_file(self):
+        for agent in ("gemini", "qwen", "opencode", "windsurf"):
+            filename, _content = _read_registry_skill(agent)
+            assert filename == f"minispec-registry.{AGENT_COMMAND_CONFIG[agent]['ext']}"
 
     def test_content_includes_registry_knowledge(self):
         _, content = _read_registry_skill("claude")
@@ -66,6 +73,8 @@ class TestAgentCommandConfig:
 
     def test_config_has_required_keys(self):
         for agent, config in AGENT_COMMAND_CONFIG.items():
+            assert "kind" in config, f"{agent} missing 'kind'"
+            assert config["kind"] in ("skill", "command"), f"{agent} invalid kind"
             assert "path" in config, f"{agent} missing 'path'"
             assert "ext" in config, f"{agent} missing 'ext'"
             assert "fmt" in config, f"{agent} missing 'fmt'"
@@ -97,16 +106,16 @@ class TestInitRegistryScaffold:
         (registry_dir / "README.md").write_text("# my-registry\n")
 
         config = AGENT_COMMAND_CONFIG["claude"]
-        skill_dir = registry_dir / config["path"]
-        skill_dir.mkdir(parents=True)
         filename, content = _read_registry_skill("claude")
-        (skill_dir / filename).write_text(content)
+        skill_path = registry_dir / config["path"] / filename
+        skill_path.parent.mkdir(parents=True)
+        skill_path.write_text(content)
 
         # Verify
         assert (registry_dir / "registry.yaml").exists()
         assert (registry_dir / "packages" / ".gitkeep").exists()
         assert (registry_dir / "README.md").exists()
-        assert (skill_dir / "minispec.registry.md").exists()
+        assert skill_path.exists()
 
     def test_registry_yaml_content(self, tmp_path):
         registry_yaml = tmp_path / "registry.yaml"
@@ -120,11 +129,14 @@ class TestInitRegistryScaffold:
 
     def test_skill_placed_correctly_per_agent(self, tmp_path):
         """Verify skill files go to correct paths for different agents."""
-        test_agents = ["claude", "copilot", "gemini", "windsurf", "opencode"]
-        for agent in test_agents:
+        for agent in AGENT_COMMAND_CONFIG:
             config = AGENT_COMMAND_CONFIG[agent]
             filename, content = _read_registry_skill(agent)
-            assert filename == f"minispec.registry.{config['ext']}"
+            if config["kind"] == "skill":
+                assert filename == "minispec-registry/SKILL.md"
+                assert "name: minispec-registry" in content
+            else:
+                assert filename == f"minispec-registry.{config['ext']}"
             assert len(content) > 100, f"Content too short for {agent}"
 
     def test_does_not_overwrite_existing_registry_yaml(self, tmp_path):

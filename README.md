@@ -53,31 +53,31 @@ claude
 
 ### The Workflow
 
-1. **`/minispec.constitution`** - Set up project principles and preferences (chunk size, autonomy level)
+1. **`/minispec-constitution`** - Set up project principles and preferences (chunk size, autonomy level)
 
-2. **`/minispec.walkthrough`** - Get oriented in an existing codebase (skip for greenfield)
+2. **`/minispec-walkthrough`** - Get oriented in an existing codebase (skip for greenfield)
 
-3. **`/minispec.design "feature description"`** - Interactive design conversation. AI asks questions, presents options with trade-offs, you make decisions.
+3. **`/minispec-design "feature description"`** - Interactive design conversation. AI asks questions, presents options with trade-offs, you make decisions.
 
-4. **`/minispec.tasks`** - Break design into reviewable chunks. You adjust groupings and priorities.
+4. **`/minispec-tasks`** - Break design into reviewable chunks. You adjust groupings and priorities.
 
-5. **`/minispec.analyze`** - Validate design-to-task alignment before implementing.
+5. **`/minispec-analyze`** - Validate design-to-task alignment before implementing.
 
-6. **`/minispec.next`** - Implement one chunk at a time. AI explains, implements 20-80 lines, you review and approve. Repeat.
+6. **`/minispec-next`** - Implement one chunk at a time. AI explains, implements 20-80 lines, you review and approve. Repeat.
 
-7. **`/minispec.status`** - See where you are, what's next.
+7. **`/minispec-status`** - See where you are, what's next.
 
 ## The Documentation Side Effect
 
 Something powerful happens when AI has to explain its reasoning to you, and you have to make decisions: **documentation writes itself**.
 
-During `/minispec.design`:
+During `/minispec-design`:
 
 - Every trade-off discussion becomes a **decision record** (ADR)
 - Architecture choices are captured as you make them
 - The "why" behind decisions is preserved automatically
 
-During `/minispec.next`:
+During `/minispec-next`:
 
 - Code patterns get documented as they're implemented
 - Module documentation grows as features complete
@@ -89,11 +89,11 @@ The result: a living knowledge base that stays fresh because it's created during
 .minispec/knowledge/
 ├── architecture.md          # System overview (grows over time)
 ├── conventions.md           # Code patterns and style
-├── decisions/               # ADRs created during /minispec.design
+├── decisions/               # ADRs created during /minispec-design
 │   ├── 20260327-1006-jwt-auth.md
 │   ├── 20260327-1045-postgres-over-mongo.md
 │   └── ...
-├── patterns/                # Patterns documented during /minispec.next
+├── patterns/                # Patterns documented during /minispec-next
 │   ├── error-handling.md
 │   └── api-response.md
 └── modules/                 # Module docs as features complete
@@ -101,22 +101,22 @@ The result: a living knowledge base that stays fresh because it's created during
     └── payments.md
 ```
 
-Use `/minispec.validate-docs` to check documentation freshness against code changes.
+Use `/minispec-validate-docs` to check documentation freshness against code changes.
 
 ## Commands
 
 | Command                   | Purpose                                      |
 | ------------------------- | -------------------------------------------- |
-| `/minispec.constitution`  | Set up project principles + preferences      |
-| `/minispec.walkthrough`   | Guided codebase tour                         |
-| `/minispec.import`        | Import SpecKit/OpenSpec specs into workflow  |
-| `/minispec.design`        | Interactive design conversation              |
-| `/minispec.tasks`         | Break design into reviewable chunks          |
-| `/minispec.analyze`       | Validate design ↔ tasks alignment            |
-| `/minispec.next`          | Implement next chunk (pair programming loop) |
-| `/minispec.checklist`     | Generate quality checklists for requirements |
-| `/minispec.validate-docs` | Check documentation freshness                |
-| `/minispec.status`        | Show progress dashboard                      |
+| `/minispec-constitution`  | Set up project principles + preferences      |
+| `/minispec-walkthrough`   | Guided codebase tour                         |
+| `/minispec-import`        | Import SpecKit/OpenSpec specs into workflow  |
+| `/minispec-design`        | Interactive design conversation              |
+| `/minispec-tasks`         | Break design into reviewable chunks          |
+| `/minispec-analyze`       | Validate design ↔ tasks alignment            |
+| `/minispec-next`          | Implement next chunk (pair programming loop) |
+| `/minispec-checklist`     | Generate quality checklists for requirements |
+| `/minispec-validate-docs` | Check documentation freshness                |
+| `/minispec-status`        | Show progress dashboard                      |
 | `minispec init-registry`  | Scaffold a new package registry repo         |
 | `minispec registry`       | Manage package registries (add/remove/list)  |
 | `minispec search`         | Search packages across registries            |
@@ -124,7 +124,7 @@ Use `/minispec.validate-docs` to check documentation freshness against code chan
 | `minispec list`           | List installed packages                      |
 | `minispec uninstall`      | Uninstall a package                          |
 | `minispec update`         | Update packages to latest versions           |
-| `minispec upgrade`        | Upgrade scaffolding to latest release         |
+| `minispec upgrade`        | Upgrade scaffolding to latest release        |
 
 ## How It's Different
 
@@ -140,7 +140,7 @@ Use `/minispec.validate-docs` to check documentation freshness against code chan
 ## Example Session
 
 ```text
-> /minispec.design "add user authentication"
+> /minispec-design "add user authentication"
 
 AI: "Let's design authentication. First: what's your expected user scale?"
 
@@ -158,7 +158,7 @@ AI: "Documenting this in decisions/20260327-1006-jwt-auth.md.
 
 [conversation continues through all decisions]
 
-> /minispec.tasks
+> /minispec-tasks
 
 AI: "Based on your 'medium chunk' preference (40-80 lines),
     I propose 8 tasks:
@@ -169,7 +169,7 @@ AI: "Based on your 'medium chunk' preference (40-80 lines),
 
 > Looks good
 
-> /minispec.next
+> /minispec-next
 
 AI: "Task 1/8: User model + migration
 
@@ -188,12 +188,12 @@ AI: "It's null until first login - distinguishes 'never logged in'
 
 > Nullable is fine. Commit.
 
-AI: "Committed. 7 tasks remaining. /minispec.next when ready."
+AI: "Committed. 7 tasks remaining. /minispec-next when ready."
 ```
 
 ## Configurable Preferences
 
-Set these during `/minispec.constitution`:
+Set these during `/minispec-constitution`:
 
 ### Review Chunk Size
 
@@ -267,7 +267,7 @@ Registries are Git repos with a `packages/` directory. Each package has a `packa
 
 ### Creating a Registry
 
-Use `init-registry` to scaffold a new registry repo with example packages, then use the `/minispec.registry` skill to create more packages interactively:
+Use `init-registry` to scaffold a new registry repo with example packages, then use the `/minispec-registry` skill to create more packages interactively:
 
 ```bash
 # Scaffold a registry
@@ -276,7 +276,7 @@ cd my-registry
 
 # Open your AI agent and create packages
 claude
-/minispec.registry create-package
+/minispec-registry create-package
 ```
 
 The skill guides you through package creation, content authoring, and validation.
@@ -305,13 +305,13 @@ This downloads the latest release package and applies it to your project. The up
 
 #### What gets updated — and how
 
-| File type | What happens |
-|-----------|-------------|
-| `specs/**`, `.minispec/memory/**`, `.minispec/knowledge/**` | **Never touched.** Your content, always. |
-| `.claude/settings.json`, `.vscode/settings.json` | Deep-merged — your custom keys are preserved. |
-| `minispec.*.md` command files | **Diff shown, you decide.** Accept or decline each change. |
-| `.minispec/templates/**` | **Diff shown, you decide.** Accept or decline each change. |
-| Scripts, hooks | Silently overwritten — these are infrastructure, not user content. |
+| File type                                                   | What happens                                                                                                                    |
+| -----------                                                 | -------------                                                                                                                   |
+| `specs/**`, `.minispec/memory/**`, `.minispec/knowledge/**` | **Never touched.** Your content, always.                                                                                        |
+| `.claude/settings.json`, `.vscode/settings.json`            | Deep-merged — your custom keys are preserved.                                                                                   |
+| Legacy `minispec.*.md` command files                        | **Migrated.** Deleted when the new hyphenated or skills replacement exists; kept otherwise. Each action appears in the summary. |
+| `.minispec/templates/**`                                    | **Diff shown, you decide.** Accept or decline each change.                                                                      |
+| Scripts, hooks                                              | Silently overwritten — these are infrastructure, not user content.                                                              |
 
 #### Reviewing changes with git
 
@@ -372,13 +372,14 @@ minispec upgrade --debug        # Show verbose diagnostic output
 
 ## Supported AI Agents
 
-MiniSpec works with any AI agent that supports slash commands:
+MiniSpec works with any AI agent that supports slash commands or agent skills:
 
 - Claude Code
 - Cursor
 - GitHub Copilot
 - Gemini CLI
 - Qwen Code
+- Pi Coding Agent
 - And [many more](./AGENTS.md)
 
 ## Why "MiniSpec"?

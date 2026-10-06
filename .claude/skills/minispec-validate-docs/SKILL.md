@@ -1,6 +1,12 @@
 ---
+name: minispec-validate-docs
 description: Check documentation freshness against code and fix stale docs.
+compatibility: Requires MiniSpec project structure with .minispec/ directory
+metadata:
+  author: ivo-toby/minispec
+  source: templates/commands/validate-docs.md
 ---
+
 
 ## User Input
 
@@ -263,7 +269,7 @@ After fixes:
 ### Severity Levels
 
 | Level | Meaning | Action |
-| --- | --- | --- |
+| ------- | --------- | -------- |
 | **Critical** | Broken reference, doc is actively misleading | Must fix |
 | **Warning** | Likely stale, needs human verification | Should fix |
 | **Info** | Minor drift, still mostly accurate | Optional fix |
@@ -272,8 +278,8 @@ After fixes:
 
 This command can be run:
 
-- Manually with `/minispec.validate-docs`
-- Before `/minispec.walkthrough` (auto-check to warn about stale docs)
+- Manually with `/minispec-validate-docs`
+- Before `/minispec-walkthrough` (auto-check to warn about stale docs)
 - Periodically as maintenance
 
 ## Important Guidelines

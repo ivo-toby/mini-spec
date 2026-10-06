@@ -1,6 +1,12 @@
 ---
+name: minispec-analyze
 description: Validate design-task alignment and cross-artifact consistency before implementation begins.
+compatibility: Requires MiniSpec project structure with .minispec/ directory
+metadata:
+  author: ivo-toby/minispec
+  source: templates/commands/analyze.md
 ---
+
 
 ## User Input
 
@@ -32,8 +38,8 @@ If any required artifact is missing:
 > "I can't run a full analysis yet. Missing:
 >
 > - [x] Constitution ✓
-> - [ ] Design - Run `/minispec.design` first
-> - [ ] Tasks - Run `/minispec.tasks` first
+> - [ ] Design - Run `/minispec-design` first
+> - [ ] Tasks - Run `/minispec-tasks` first
 >
 > Want me to help with the missing piece?"
 
@@ -164,7 +170,7 @@ Perform each analysis area. Track findings by severity:
 > - Tasks sized appropriately for your [size] preference
 > - No constitution violations
 >
-> Ready to implement. Run `/minispec.next` when you're ready."
+> Ready to implement. Run `/minispec-next` when you're ready."
 
 **If issues found:**
 > "Analysis found [N] items to review before implementing:
@@ -260,7 +266,7 @@ If the engineer wants a formal report, generate:
 
 - [ ] Resolve critical issues
 - [ ] Review warnings
-- [ ] Run `/minispec.next` to begin implementation
+- [ ] Run `/minispec-next` to begin implementation
 ```
 
 ## Important Guidelines

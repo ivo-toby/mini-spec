@@ -26,6 +26,8 @@
     ".genreleases/",
     "templates/",
     "memory/",
-    "scripts/"
+    "scripts/",
+    ".pytest_cache/",
+    ".venv/"
   ]
 }

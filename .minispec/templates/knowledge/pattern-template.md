@@ -49,10 +49,10 @@ related_decisions: [decision-id-1, decision-id-2]
 
 ## Examples in This Codebase
 
-| Location | Description |
-| --------------------- | ------------------------------------- |
+| Location              | Description                          |
+| --------------------- | ------------------------------------ |
 | `src/path/to/file.ts` | [Brief description of how it's used] |
-| `src/another/file.ts` | [Brief description] |
+| `src/another/file.ts` | [Brief description]                  |
 
 ## Variations
 

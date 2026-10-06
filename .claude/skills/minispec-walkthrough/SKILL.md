@@ -1,6 +1,12 @@
 ---
+name: minispec-walkthrough
 description: Guided tour of the codebase to build mental models before implementation.
+compatibility: Requires MiniSpec project structure with .minispec/ directory
+metadata:
+  author: ivo-toby/minispec
+  source: templates/commands/walkthrough.md
 ---
+
 
 ## User Input
 
@@ -48,7 +54,7 @@ If knowledge base is sparse, that's okay—build understanding from the code its
 Based on constitution preference:
 
 | Depth | Duration | Coverage |
-| --- | --- | --- |
+| ------- | ---------- | ---------- |
 | Quick | 5-10 min | Architecture overview, key entry points |
 | Standard | 15-20 min | Architecture + patterns + conventions |
 | Deep | 30+ min | Full tour with all modules explained |
@@ -222,7 +228,7 @@ End with actionable summary:
 >
 > **Next steps:**
 >
-> - `/minispec.design` to start designing your feature
+> - `/minispec-design` to start designing your feature
 > - Ask me anything about the codebase anytime
 >
 > What questions do you have?"
@@ -245,7 +251,7 @@ If codebase is mostly empty:
 >
 > As we build, I'll document patterns in `.minispec/knowledge/`.
 >
-> Ready to `/minispec.design` your first feature?"
+> Ready to `/minispec-design` your first feature?"
 
 ### Large/Complex Codebase
 

@@ -1,6 +1,12 @@
 ---
+name: minispec-checklist
 description: Generate quality checklists that validate design completeness, clarity, and consistency - "unit tests for requirements."
+compatibility: Requires MiniSpec project structure with .minispec/ directory
+metadata:
+  author: ivo-toby/minispec
+  source: templates/commands/checklist.md
 ---
+
 
 ## User Input
 
@@ -36,7 +42,7 @@ Check for design artifacts:
 3. **Tasks** at `specs/[feature-name]/tasks.md` (if exists)
 
 If no design exists:
-> "No design found. Run `/minispec.design` first to create requirements to validate."
+> "No design found. Run `/minispec-design` first to create requirements to validate."
 
 ## Execution Flow
 
@@ -144,7 +150,7 @@ status: [draft|active|completed]
 Group items by what they validate:
 
 | Dimension | What It Checks |
-| --- | --- |
+| ----------- | ---------------- |
 | Completeness | Are all necessary requirements present? |
 | Clarity | Are requirements unambiguous and specific? |
 | Consistency | Do requirements align without conflicts? |
@@ -218,7 +224,7 @@ Once approved:
 > "Checklist saved to `specs/[feature]/checklists/[domain].md`
 >
 > Use this to validate your design before implementation.
-> Run `/minispec.analyze` to check design-task alignment."
+> Run `/minispec-analyze` to check design-task alignment."
 
 ## Important Guidelines
 

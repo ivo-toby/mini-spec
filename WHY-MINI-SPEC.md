@@ -63,7 +63,7 @@ This isn't about removing human judgment. It's about putting it where it matters
 ## What It Actually Looks Like
 
 ```text
-> /minispec.design "add user authentication"
+> /minispec-design "add user authentication"
 
 AI: "Let's design authentication. First: what's your expected user scale?"
 
@@ -99,7 +99,7 @@ uv tool install minispec-cli --from git+https://github.com/ivo-toby/mini-spec.gi
 minispec init my-project --ai claude
 ```
 
-The repo has all the commands documented. Start with `/minispec.constitution` to set your preferences, then run through a feature with `/minispec.design` and `/minispec.next`.
+The repo has all the commands documented. Start with `/minispec-constitution` to set your preferences, then run through a feature with `/minispec-design` and `/minispec-next`.
 
 I'd be curious what you find. The workflow assumes certain things about how people work with AI—I'm probably wrong about some of them.
 

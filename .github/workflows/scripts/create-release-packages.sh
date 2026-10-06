@@ -31,26 +31,38 @@ mkdir -p "$GENRELEASES_DIR"
 rm -rf "$GENRELEASES_DIR"/* || true
 
 rewrite_paths() {
+  # Expand bare .minispec-relative dir names, but only where they are not
+  # already prefixed: an earlier form of these rules turned `.minispec/memory/`
+  # into `.minispec.minispec/memory/` and `.minispec/hooks/scripts/` into
+  # `.minispec/hooks.minispec/scripts/`.
   sed -E \
-    -e 's@(/?)memory/@.minispec/memory/@g' \
-    -e 's@(/?)scripts/@.minispec/scripts/@g' \
-    -e 's@(/?)templates/@.minispec/templates/@g'
+    -e 's@([^/]|^)memory/@\1.minispec/memory/@g' \
+    -e 's@([^/]|^)scripts/@\1.minispec/scripts/@g' \
+    -e 's@([^/]|^)templates/@\1.minispec/templates/@g'
 }
 
-generate_commands() {
-  local agent=$1 ext=$2 arg_format=$3 output_dir=$4 script_variant=$5
-  mkdir -p "$output_dir"
-  for template in templates/commands/*.md; do
-    [[ -f "$template" ]] || continue
-    local name description script_command agent_script_command body
-    name=$(basename "$template" .md)
+template_description() {
+  # Echo the description: value from a template's YAML frontmatter.
+  # awk reads the file itself: `tr -d '\r' < "$template" | awk ...; exit}`
+  # aborted under pipefail with SIGPIPE (141) when awk quit mid-pipe.
+  local template=$1
+  awk '{sub(/\r$/, "")} /^description:/ && !done {sub(/^description:[[:space:]]*/, ""); print; done=1}' "$template"
+}
+
+render_command_body() {
+  # $1=template file, $2=script_variant (sh|ps), $3=agent, $4=arg_format.
+  # Emits the processed body to stdout. Description extraction lives in
+  # template_description: callers read body via command substitution, which is
+  # a bash subshell, so function-set "globals" cannot flow back.
+  local template=$1 script_variant=$2 agent=$3 arg_format=$4
+  local script_command agent_script_command body file_content
     
     # Normalize line endings
     file_content=$(tr -d '\r' < "$template")
     
-    # Extract description and script command from YAML frontmatter
-    description=$(printf '%s\n' "$file_content" | awk '/^description:/ {sub(/^description:[[:space:]]*/, ""); print; exit}')
-    script_command=$(printf '%s\n' "$file_content" | awk -v sv="$script_variant" '/^[[:space:]]*'"$script_variant"':[[:space:]]*/ {sub(/^[[:space:]]*'"$script_variant"':[[:space:]]*/, ""); print; exit}')
+    # Extract script command from YAML frontmatter
+    # guard instead of exit: an early awk exit SIGPIPEs the writer under pipefail
+    script_command=$(printf '%s\n' "$file_content" | awk -v sv="$script_variant" '!done && $0 ~ "^[[:space:]]*" sv ":[[:space:]]*" {sub("^[[:space:]]*" sv ":[[:space:]]*", ""); print; done=1}')
     
     if [[ -z $script_command ]]; then
       echo "Warning: no script command found for $script_variant in $template" >&2
@@ -60,10 +72,10 @@ generate_commands() {
     # Extract agent_script command from YAML frontmatter if present
     agent_script_command=$(printf '%s\n' "$file_content" | awk '
       /^agent_scripts:$/ { in_agent_scripts=1; next }
-      in_agent_scripts && /^[[:space:]]*'"$script_variant"':[[:space:]]*/ {
+      in_agent_scripts && !done && /^[[:space:]]*'"$script_variant"':[[:space:]]*/ {
         sub(/^[[:space:]]*'"$script_variant"':[[:space:]]*/, "")
         print
-        exit
+        done=1
       }
       in_agent_scripts && /^[a-zA-Z]/ { in_agent_scripts=0 }
     ')
@@ -88,39 +100,71 @@ generate_commands() {
     
     # Apply other substitutions
     body=$(printf '%s\n' "$body" | sed "s/{ARGS}/$arg_format/g" | sed "s/__AGENT__/$agent/g" | rewrite_paths)
+
+  printf '%s\n' "$body"
+}
+
+generate_commands() {
+  local agent=$1 ext=$2 arg_format=$3 output_dir=$4 script_variant=$5
+  mkdir -p "$output_dir"
+  for template in templates/commands/*.md; do
+    [[ -f "$template" ]] || continue
+    local name description body
+    name=$(basename "$template" .md)
+    body=$(render_command_body "$template" "$script_variant" "$agent" "$arg_format")
+    description=$(template_description "$template")
     
     case $ext in
       toml)
         body=$(printf '%s\n' "$body" | sed 's/\\/\\\\/g')
-        { echo "description = \"$description\""; echo; echo "prompt = \"\"\""; echo "$body"; echo "\"\"\""; } > "$output_dir/minispec.$name.$ext" ;;
+        { echo "description = \"$description\""; echo; echo "prompt = \"\"\""; echo "$body"; echo "\"\"\""; } > "$output_dir/minispec-$name.$ext" ;;
       md)
-        echo "$body" > "$output_dir/minispec.$name.$ext" ;;
+        echo "$body" > "$output_dir/minispec-$name.$ext" ;;
       agent.md)
-        echo "$body" > "$output_dir/minispec.$name.$ext" ;;
+        echo "$body" > "$output_dir/minispec-$name.$ext" ;;
     esac
   done
 }
 
-generate_copilot_prompts() {
-  local agents_dir=$1 prompts_dir=$2
-  mkdir -p "$prompts_dir"
-
-  # Generate a .prompt.md file for each .agent.md file
-  for agent_file in "$agents_dir"/minispec.*.agent.md; do
-    [[ -f "$agent_file" ]] || continue
-
-    local basename=$(basename "$agent_file" .agent.md)
-    local prompt_file="$prompts_dir/${basename}.prompt.md"
-
-    # Create prompt file with agent frontmatter
-    cat > "$prompt_file" <<EOF
+generate_skills() {
+  # Agentskills.io SKILL.md layout: <output_dir>/minispec-<stem>/SKILL.md.
+  # Same body pipeline as generate_commands; the SKILL.md frontmatter replaces
+  # the template's own description/scripts frontmatter.
+  local agent=$1 output_dir=$2 script_variant=$3
+  mkdir -p "$output_dir"
+  for template in templates/commands/*.md; do
+    [[ -f "$template" ]] || continue
+    local name stem description body skill_dir
+    name=$(basename "$template" .md)
+    stem=${name//./-}
+    if [[ ! "minispec-$stem" =~ ^minispec-[a-z0-9-]+$ ]]; then
+      echo "Error: invalid skill name 'minispec-$stem' from $template (must match ^minispec-[a-z0-9-]+\$)" >&2
+      exit 1
+    fi
+    body=$(render_command_body "$template" "$script_variant" "$agent" "\$ARGUMENTS")
+    description=$(template_description "$template")
+    body=$(printf '%s\n' "$body" | awk '
+      NR==1 && $0=="---" { in_frontmatter=1; next }
+      in_frontmatter && $0=="---" { in_frontmatter=0; next }
+      in_frontmatter { next }
+      { print }
+    ')
+    skill_dir="$output_dir/minispec-$stem"
+    mkdir -p "$skill_dir"
+    cat > "$skill_dir/SKILL.md" <<EOF
 ---
-agent: ${basename}
+name: minispec-$stem
+description: $description
+compatibility: Requires MiniSpec project structure with .minispec/ directory
+metadata:
+  author: ivo-toby/minispec
+  source: templates/commands/$(basename "$template")
 ---
+
+$body
 EOF
   done
 }
-
 build_variant() {
   local agent=$1 script=$2
   local base_dir="$GENRELEASES_DIR/minispec-${agent}-package-${script}"
@@ -155,34 +199,29 @@ build_variant() {
   [[ -d hooks ]] && { cp -r hooks "$SPEC_DIR/"; echo "Copied hooks -> .minispec/hooks"; }
 
   # NOTE: We substitute {ARGS} internally. Outward tokens differ intentionally:
-  #   * Markdown/prompt (claude, copilot, cursor-agent, opencode): $ARGUMENTS
-  #   * TOML (gemini, qwen): {{args}}
+  #   * Markdown command-file agents + skill bodies: $ARGUMENTS
+  #   * TOML (gemini): {{args}}
   # This keeps formats readable without extra abstraction.
 
   case $agent in
     claude)
-      mkdir -p "$base_dir/.claude/commands"
-      generate_commands claude md "\$ARGUMENTS" "$base_dir/.claude/commands" "$script"
+      generate_skills claude "$base_dir/.claude/skills" "$script"
       [[ -f hooks/adapters/claude-code.json ]] && cp hooks/adapters/claude-code.json "$base_dir/.claude/settings.json" ;;
     gemini)
       mkdir -p "$base_dir/.gemini/commands"
       generate_commands gemini toml "{{args}}" "$base_dir/.gemini/commands" "$script"
       [[ -f agent_templates/gemini/GEMINI.md ]] && cp agent_templates/gemini/GEMINI.md "$base_dir/GEMINI.md" ;;
     copilot)
-      mkdir -p "$base_dir/.github/agents"
-      generate_commands copilot agent.md "\$ARGUMENTS" "$base_dir/.github/agents" "$script"
-      # Generate companion prompt files
-      generate_copilot_prompts "$base_dir/.github/agents" "$base_dir/.github/prompts"
+      generate_skills copilot "$base_dir/.github/skills" "$script"
       # Create VS Code workspace settings
       mkdir -p "$base_dir/.vscode"
       [[ -f templates/vscode-settings.json ]] && cp templates/vscode-settings.json "$base_dir/.vscode/settings.json"
       ;;
     cursor-agent)
-      mkdir -p "$base_dir/.cursor/commands"
-      generate_commands cursor-agent md "\$ARGUMENTS" "$base_dir/.cursor/commands" "$script" ;;
+      generate_skills cursor-agent "$base_dir/.cursor/skills" "$script" ;;
     qwen)
       mkdir -p "$base_dir/.qwen/commands"
-      generate_commands qwen toml "{{args}}" "$base_dir/.qwen/commands" "$script"
+      generate_commands qwen md "\$ARGUMENTS" "$base_dir/.qwen/commands" "$script"
       [[ -f agent_templates/qwen/QWEN.md ]] && cp agent_templates/qwen/QWEN.md "$base_dir/QWEN.md" ;;
     opencode)
       mkdir -p "$base_dir/.opencode/command"
@@ -191,11 +230,10 @@ build_variant() {
       mkdir -p "$base_dir/.windsurf/workflows"
       generate_commands windsurf md "\$ARGUMENTS" "$base_dir/.windsurf/workflows" "$script" ;;
     codex)
-      mkdir -p "$base_dir/.codex/prompts"
-      generate_commands codex md "\$ARGUMENTS" "$base_dir/.codex/prompts" "$script" ;;
+      generate_skills codex "$base_dir/.agents/skills" "$script" ;;
     kilocode)
-      mkdir -p "$base_dir/.kilocode/workflows"
-      generate_commands kilocode md "\$ARGUMENTS" "$base_dir/.kilocode/workflows" "$script" ;;
+      mkdir -p "$base_dir/.kilo/commands"
+      generate_commands kilocode md "\$ARGUMENTS" "$base_dir/.kilo/commands" "$script" ;;
     auggie)
       mkdir -p "$base_dir/.augment/commands"
       generate_commands auggie md "\$ARGUMENTS" "$base_dir/.augment/commands" "$script" ;;
@@ -206,14 +244,16 @@ build_variant() {
       mkdir -p "$base_dir/.codebuddy/commands"
       generate_commands codebuddy md "\$ARGUMENTS" "$base_dir/.codebuddy/commands" "$script" ;;
     qoder)
-      mkdir -p "$base_dir/.qoder/commands"
-      generate_commands qoder md "\$ARGUMENTS" "$base_dir/.qoder/commands" "$script" ;;
+      generate_skills qoder "$base_dir/.qoder/skills" "$script" ;;
     amp)
       mkdir -p "$base_dir/.agents/commands"
       generate_commands amp md "\$ARGUMENTS" "$base_dir/.agents/commands" "$script" ;;
     shai)
       mkdir -p "$base_dir/.shai/commands"
       generate_commands shai md "\$ARGUMENTS" "$base_dir/.shai/commands" "$script" ;;
+    pi)
+      mkdir -p "$base_dir/.pi/prompts"
+      generate_commands pi md "\$ARGUMENTS" "$base_dir/.pi/prompts" "$script" ;;
     q)
       mkdir -p "$base_dir/.amazonq/prompts"
       generate_commands q md "\$ARGUMENTS" "$base_dir/.amazonq/prompts" "$script" ;;
@@ -221,12 +261,30 @@ build_variant() {
       mkdir -p "$base_dir/.bob/commands"
       generate_commands bob md "\$ARGUMENTS" "$base_dir/.bob/commands" "$script" ;;
   esac
-  ( cd "$base_dir" && zip -r "../minispec-template-${agent}-${script}.zip" . )
+  ( cd "$base_dir" && zip -r "../minispec-template-${agent}-${script}.zip" . ) > /dev/null
   echo "Created $GENRELEASES_DIR/minispec-template-${agent}-${script}.zip"
+
+  # Post-build assertions: skills agents get the skills layout, and no zip may
+  # contain dot-named command files.
+  local zipfile="$GENRELEASES_DIR/minispec-template-${agent}-${script}.zip"
+  # grep -q would SIGPIPE unzip under pipefail, so capture the listing first.
+  local zip_contents
+  zip_contents=$(unzip -l "$zipfile")
+  case $agent in
+    claude|cursor-agent|copilot|codex|qoder)
+      if ! grep -q "skills/minispec-design/SKILL.md" <<<"$zip_contents"; then
+        echo "Assertion failed: $zipfile is missing skills/minispec-design/SKILL.md" >&2
+        exit 1
+      fi ;;
+  esac
+  if grep -qE 'minispec\.[a-z-]+\.(md|toml|agent\.md)' <<<"$zip_contents"; then
+    echo "Assertion failed: $zipfile contains dot-named command files" >&2
+    exit 1
+  fi
 }
 
 # Determine agent list
-ALL_AGENTS=(claude gemini copilot cursor-agent qwen opencode windsurf codex kilocode auggie roo codebuddy amp shai q bob qoder)
+ALL_AGENTS=(claude gemini copilot cursor-agent qwen opencode windsurf codex kilocode auggie roo codebuddy amp shai q bob qoder pi)
 ALL_SCRIPTS=(sh ps)
 
 norm_list() {

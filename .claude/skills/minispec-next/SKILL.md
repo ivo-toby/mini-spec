@@ -1,6 +1,12 @@
 ---
+name: minispec-next
 description: Implement the next task chunk in pair programming style - AI drives, engineer navigates.
+compatibility: Requires MiniSpec project structure with .minispec/ directory
+metadata:
+  author: ivo-toby/minispec
+  source: templates/commands/next.md
 ---
+
 
 ## User Input
 
@@ -32,6 +38,7 @@ Before implementing, verify:
 
 1. **Constitution** at `.minispec/memory/constitution.md`
    - Read MiniSpec preferences (chunk size, autonomy, doc review)
+   - Read **Complexity Tolerance** preferences (change size, abstraction threshold, review findings, deletion permission)
 
 2. **Tasks** at `specs/[feature-name]/tasks.md`
    - Identify the next incomplete task
@@ -44,7 +51,7 @@ Before implementing, verify:
    - Relevant decisions, patterns, conventions
 
 If no tasks exist:
-> "No tasks found. Run `/minispec.tasks` first to break down the implementation."
+> "No tasks found. Run `/minispec-tasks` first to break down the implementation."
 
 ## Execution Flow
 
@@ -102,19 +109,38 @@ If no tasks exist:
 
 ### Phase 3: Implement
 
-1. **Create/modify files** according to the task
+Check the constitution's **Complexity Tolerance** before writing code.
 
-2. **Follow conventions** from `.minispec/knowledge/conventions.md`
+1. **Smallest change first** (if constitution says `minimal first`):
+   - Implement the most direct solution that satisfies the task's acceptance criteria
+   - Do not extract helpers, modules, or abstractions unless the task explicitly requires them
+   - Do not add error handling for scenarios that can't happen in this context
+   - Do not add configurability or extensibility unless the task asks for it
+   - If a more thorough version exists, mention it after presenting the minimal one:
+     > "This is the minimal version. If you want, I could also [extract X / add handling for Y / make Z configurable]. Worth it?"
 
-3. **Follow patterns** from `.minispec/knowledge/patterns/`
+2. **Before extracting any abstraction**, justify it:
+   - If the constitution's abstraction threshold is `conservative`: only extract when code is duplicated 3+ times or exceeds 50 lines
+   - Ask yourself: "What breaks if I inline this?" If the answer is "nothing breaks, it's just cleaner" — inline it
+   - If you're about to create a new file for a helper/utility: present the inline version first
 
-4. **Size appropriately**: Stay within chunk size preference
+3. **Create/modify files** according to the task
+
+4. **Follow conventions** from `.minispec/knowledge/conventions.md`
+
+5. **Follow patterns** from `.minispec/knowledge/patterns/`
+
+6. **Size appropriately**: Stay within chunk size preference
    - Small: 20-40 lines
    - Medium: 40-80 lines
    - Large: 80-150 lines
    - Adaptive: adjust to complexity
 
-5. **Include tests** if specified in task
+7. **Include tests** if specified in task — but only tests that verify the task's acceptance criteria. Do not add speculative tests for edge cases the task doesn't mention.
+
+8. **Suggest deletions** (if constitution permits):
+   - If you notice dead code, unused imports, or unnecessary abstractions adjacent to your changes, flag them:
+     > "While implementing this, I noticed [X] appears unused. Want me to remove it?"
 
 ### Phase 4: Present for Review
 
@@ -140,6 +166,10 @@ After implementing, present the code:
 > "Committing: '[commit message]'"
 >
 > - Stage and commit the changes
+> - Check evidence: verify the task's **Evidence** field is satisfied before marking complete
+>   - If evidence says "tests pass" — run the tests and confirm
+>   - If evidence says "build succeeds" — run the build and confirm
+>   - If evidence can't be verified automatically, ask the engineer to confirm
 > - Update tasks.md to mark task complete
 > - Update documentation if needed
 
@@ -160,6 +190,24 @@ After implementing, present the code:
 - Acknowledge the catch
 - Fix it
 - Thank them—this is the value of pairing
+
+**If a code review tool flags an issue:**
+
+Check the constitution's **Review Findings** preference:
+
+- **Always fix**: Address it, present the fix
+- **Triage first**: Present the finding and explicitly offer three options:
+  > "[Tool] flagged: [description].
+  >
+  > Options:
+  > a) **Fix it** — [describe the fix, estimate ~N lines]
+  > b) **Decline** — mark as 'known, acceptable' with a one-line reason
+  > c) **Defer** — create a follow-up task for later
+  >
+  > What do you want to do?"
+- **Your call**: Present and let them decide
+
+Declining a finding is a first-class option, not a failure. Not every review finding deserves a commit.
 
 ### Phase 6: Documentation (Based on Preference)
 
@@ -197,7 +245,7 @@ After task completion:
 > **Next task:** [Task N+1 name]
 > [Brief preview]
 >
-> `/minispec.next` when ready, or ask me anything about what we just built."
+> `/minispec-next` when ready, or ask me anything about what we just built."
 
 ## Handling Special Situations
 
@@ -301,13 +349,16 @@ fix(module): resolve [what was fixed]
 - **Respect chunk size**: This is their preference for a reason
 - **Document as you go**: Don't leave it for later
 - **Celebrate progress**: Small acknowledgments maintain momentum
+- **Less is more**: Three lines of inline code beats a premature abstraction. The engineer maintains this code — minimize what they need to hold in their head.
+- **Verify before claiming done**: Check the task's Evidence field. "Implementation complete" is not the same as "evidence exists."
+- **Decline is valid**: When a review finding or edge case surfaces, "not worth fixing" is a legitimate answer. Present it as an option.
 
 ## Autonomy Levels (from Constitution)
 
 Respect the configured autonomy:
 
 | Level | Behavior |
-| --- | --- |
+| ------- | ---------- |
 | `always-confirm` | Pause after every chunk for explicit approval |
 | `tests-passing` | If tests pass, auto-proceed; pause on failure |
 | `familiar-areas` | Proceed in areas reviewed this session; pause in new areas |
@@ -315,7 +366,7 @@ Respect the configured autonomy:
 
 ## Output Artifacts
 
-Each `/minispec.next` invocation may create/update:
+Each `/minispec-next` invocation may create/update:
 
 1. **Source files** - The actual implementation
 2. **Test files** - If tests are part of the task

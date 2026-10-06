@@ -1,6 +1,12 @@
 ---
+name: minispec-design
 description: Interactively design a feature through collaborative conversation, making architectural decisions together.
+compatibility: Requires MiniSpec project structure with .minispec/ directory
+metadata:
+  author: ivo-toby/minispec
+  source: templates/commands/design.md
 ---
+
 
 ## User Input
 
@@ -26,11 +32,32 @@ The engineer should feel like they designed this, because they did—you just he
 Before starting, verify:
 
 1. Constitution exists at `.minispec/memory/constitution.md`
-   - If not: "I notice we haven't set up a constitution yet. Want to run `/minispec.constitution` first, or proceed with defaults?"
+   - If not: "I notice we haven't set up a constitution yet. Want to run `/minispec-constitution` first, or proceed with defaults?"
 2. Knowledge base exists at `.minispec/knowledge/`
    - If not: Create the directory structure
 
 ## Execution Flow
+
+### Phase 0: Set Up Feature Structure
+
+**IMPORTANT: Before doing anything else, run the setup script to create the feature branch and spec directory.**
+
+Run this command:
+
+```bash
+.minispec/scripts/bash/create-new-feature.sh --json "$ARGUMENTS"
+```
+
+This will:
+
+- Create a date-prefixed feature branch (e.g., `20260327-1130-feature-name`)
+- Create the `specs/[branch-name]/` directory
+- Copy the design template to `design.md`
+- Set the `MINISPEC_FEATURE` environment variable
+
+Parse the JSON output to get `BRANCH_NAME`, `DESIGN_FILE`, and `FEATURE_NUM`. Use these throughout the design conversation.
+
+If the script fails (e.g., already on a feature branch, or no git), proceed without it — you can create the spec directory and design file manually.
 
 ### Phase 1: Understand the Request
 
@@ -96,6 +123,7 @@ Work through design decisions **one at a time**. For each decision point:
    - Create/update a decision file in `.minispec/knowledge/decisions/`
    - Use the decision-template format
    - Include the reasoning from the conversation
+   - Name the file using the current date and time: `YYYYMMDD-HHmm-[decision-slug].md`
 
 ### Common Design Areas to Cover
 
@@ -139,9 +167,35 @@ Depending on the feature, explore relevant areas:
 
 Don't cover all areas—focus on what's relevant to this feature.
 
-### Phase 4: Synthesize Design Summary
+### Phase 4: Scope Challenge
 
-After key decisions are made:
+Before finalizing, actively challenge the design's complexity. Read the constitution's **Complexity Tolerance** preferences to calibrate how hard to push.
+
+This phase exists because AI-assisted design has a natural bias toward more components, more abstractions, and more coverage than the problem requires. The engineer may not notice because each piece is individually reasonable.
+
+1. **Challenge scope**:
+   > "Before we finalize — let me push back on scope for a moment.
+   >
+   > [For each component or abstraction in the design, ask ONE of:]
+   > - 'What breaks if we skip [component] entirely and inline it?'
+   > - 'Is [component] solving a real problem you have today, or a hypothetical future one?'
+   > - 'Could [X and Y] be the same thing instead of two separate abstractions?'"
+
+2. **Challenge feature parity**:
+   If the design mirrors an existing feature's structure:
+   > "I notice this design follows the same pattern as [existing feature]. Does it actually need all of that, or are we matching structure out of symmetry?"
+
+3. **Count the pieces**:
+   > "This design has [N] components and [N] new files. For the problem we're solving, does that feel like the right amount? Could we get 90% of the value with fewer moving parts?"
+
+4. **Offer the minimal version**:
+   > "If we stripped this to the absolute minimum that solves your stated problem, it would be: [describe minimal version]. Want to start there and add complexity only when we hit a wall?"
+
+The engineer decides. If they want the full version, proceed. The point is to make the decision explicit rather than drifting toward maximal design by default.
+
+### Phase 5: Synthesize Design Summary
+
+After key decisions are made (and scope is challenged):
 
 1. **Summarize the design**:
    > "Here's what we've designed:
@@ -166,7 +220,7 @@ After key decisions are made:
 3. **Confirm scope boundaries**:
    > "To be clear, this design covers [X, Y, Z] but NOT [A, B, C]. Those could be follow-up features. Sound right?"
 
-### Phase 5: Write Design Artifacts
+### Phase 6: Write Design Artifacts
 
 Once confirmed, create the design artifacts:
 
@@ -210,18 +264,18 @@ Once confirmed, create the design artifacts:
 
 3. **Update architecture.md** if this feature changes system structure
 
-### Phase 6: Handoff
+### Phase 7: Handoff
 
 End with clear next steps:
 
 > "Design complete! I've created:
 >
 > - `specs/[feature-name]/design.md` - The design document
-> - `.minispec/knowledge/decisions/[NNN]-[decision].md` - [N] decision records
+> - `.minispec/knowledge/decisions/[YYYYMMDD-HHmm]-[decision].md` - [N] decision records
 >
 > **Next steps:**
 >
-> - `/minispec.tasks` - Break this into implementable chunks
+> - `/minispec-tasks` - Break this into implementable chunks
 > - Or if you want to refine: just tell me what to adjust
 >
 > Ready when you are."
@@ -250,5 +304,5 @@ When updating an existing design:
 By the end of this command, you will have created/updated:
 
 1. `specs/[feature-name]/design.md` - The design document
-2. `.minispec/knowledge/decisions/[NNN]-*.md` - Decision records (1 or more)
+2. `.minispec/knowledge/decisions/[YYYYMMDD-HHmm]-*.md` - Decision records (1 or more)
 3. `.minispec/knowledge/architecture.md` - If system structure changed

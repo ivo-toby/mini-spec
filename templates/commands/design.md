@@ -16,6 +16,7 @@ You are facilitating an **interactive design conversation** for a new feature. T
 ## Philosophy
 
 Design emerges from dialogue. Your role is to:
+
 - Ask clarifying questions
 - Present options with trade-offs
 - Guide the engineer toward decisions
@@ -26,8 +27,9 @@ The engineer should feel like they designed this, because they did—you just he
 ## Prerequisites
 
 Before starting, verify:
+
 1. Constitution exists at `.minispec/memory/constitution.md`
-   - If not: "I notice we haven't set up a constitution yet. Want to run `/minispec.constitution` first, or proceed with defaults?"
+   - If not: "I notice we haven't set up a constitution yet. Want to run `/minispec-constitution` first, or proceed with defaults?"
 2. Knowledge base exists at `.minispec/knowledge/`
    - If not: Create the directory structure
 
@@ -38,11 +40,13 @@ Before starting, verify:
 **IMPORTANT: Before doing anything else, run the setup script to create the feature branch and spec directory.**
 
 Run this command:
-```
+
+```bash
 {SCRIPT}
 ```
 
 This will:
+
 - Create a date-prefixed feature branch (e.g., `20260327-1130-feature-name`)
 - Create the `specs/[branch-name]/` directory
 - Copy the design template to `design.md`
@@ -123,31 +127,37 @@ Work through design decisions **one at a time**. For each decision point:
 Depending on the feature, explore relevant areas:
 
 **Data & State:**
+
 - What data does this feature need?
 - Where does it come from? Where is it stored?
 - What's the shape/schema?
 
 **API/Interface:**
+
 - How will other parts of the system interact with this?
 - What endpoints/functions are needed?
 - What are the inputs and outputs?
 
 **User Experience (if applicable):**
+
 - What's the user flow?
 - What happens on errors?
 - What feedback does the user get?
 
 **Integration:**
+
 - How does this connect to existing code?
 - What dependencies does it have?
 - Are there shared components to reuse?
 
 **Edge Cases:**
+
 - What happens when [X fails]?
 - What about [boundary condition]?
 - How do we handle [concurrent scenario]?
 
 **Non-functional:**
+
 - Are there performance considerations?
 - Security implications?
 - Scalability concerns?
@@ -197,8 +207,6 @@ After key decisions are made (and scope is challenged):
    > 3. ...
    >
    > **Components:**
-   > - [Component 1]: [Purpose]
-   > - [Component 2]: [Purpose]
    >
    > **Data Model:** [Brief description]
    >
@@ -214,6 +222,7 @@ After key decisions are made (and scope is challenged):
 Once confirmed, create the design artifacts:
 
 1. **Create/update feature spec** at `specs/[feature-name]/design.md`:
+
    ```markdown
    ---
    feature: [feature-name]
@@ -257,11 +266,13 @@ Once confirmed, create the design artifacts:
 End with clear next steps:
 
 > "Design complete! I've created:
+>
 > - `specs/[feature-name]/design.md` - The design document
 > - `.minispec/knowledge/decisions/[YYYYMMDD-HHmm]-[decision].md` - [N] decision records
 >
 > **Next steps:**
-> - `/minispec.tasks` - Break this into implementable chunks
+>
+> - `/minispec-tasks` - Break this into implementable chunks
 > - Or if you want to refine: just tell me what to adjust
 >
 > Ready when you are."
